@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Portfolio Creator",
-  description: "Build a portfolio that gives your work a clear, confident home.",
+  title: "Portfolio Creator — Your GitHub. Your Work. One Link.",
+  description:
+    "Build a developer portfolio from your GitHub projects, contribution activity, skills, and career story.",
   icons: "/tab-icon.png",
 };
 
