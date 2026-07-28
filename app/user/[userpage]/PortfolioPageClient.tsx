@@ -14,6 +14,7 @@ import { UserProvider, useUser } from "../../context/UserContext";
 import PortfolioViewCount from "../../components/PortfolioViewCount";
 import GitHubHeatmap from "../../components/GitHubHeatmap";
 import NotFoundState from "../../components/NotFoundState";
+import PortfolioLoader from "../../components/PortfolioLoader";
 import { LogOut } from "lucide-react";
 
 interface Card {
@@ -24,14 +25,10 @@ interface Card {
 }
 
 function PortfolioRouteGate({ children }: { children: React.ReactNode }) {
-  const { loading, userDetails } = useUser();
+  const { loading, userDetails, portfolioUsername } = useUser();
 
   if (loading) {
-    return (
-      <main className="grid min-h-screen place-items-center bg-zinc-950 text-zinc-500">
-        <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-sky-300" />
-      </main>
-    );
+    return <PortfolioLoader username={portfolioUsername} />;
   }
   if (!userDetails) return <NotFoundState kind="portfolio" />;
   return children;

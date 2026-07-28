@@ -30,11 +30,37 @@ body {
 
 html {
   scroll-behavior: smooth;
+  background: #07080a;
+}
+
+.portfolio-loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: 100dvw;
+  min-height: 100dvh;
+}
+
+@media (min-width: 1024px) {
+  .portfolio-loading-screen {
+    width: calc(100dvw / 0.9);
+    min-height: calc(100dvh / 0.9);
+  }
+}
+
+@keyframes portfolio-loader-trace {
+  to {
+    stroke-dashoffset: -192;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  .portfolio-loading-screen * {
+    animation: none !important;
   }
 }
 
