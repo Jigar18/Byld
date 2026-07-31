@@ -118,6 +118,7 @@ export default function Home() {
         <main className="relative mx-auto w-full max-w-7xl px-4 pb-6 pt-16 sm:px-8 sm:pb-9 sm:pt-20 lg:px-10 lg:pb-12 lg:pt-20">
           <div className="space-y-12 sm:space-y-16 lg:space-y-24">
           <motion.div
+            style={{ fontFamily: "var(--font-geist-sans), Arial, Helvetica, sans-serif" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}

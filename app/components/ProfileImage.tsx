@@ -25,7 +25,7 @@ export default function ProfileImage() {
         transition={{ duration: 0.5 }}
         whileHover={{ scale: 1.05 }}
       >
-        <div className="relative z-10 h-24 w-24 overflow-hidden rounded-full border-4 border-white/15 shadow-[0_0_0_8px_rgba(255,255,255,0.035)] sm:h-28 sm:w-28">
+        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-slate-700 relative z-10">
           <img
             src={userDetails?.imageUrl || "/placeholder.png"}
             alt="Profile"
