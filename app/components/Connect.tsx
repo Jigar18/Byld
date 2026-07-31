@@ -50,7 +50,7 @@ const socialIconColors: Record<string, string> = {
   hackerrank: "#2ec866",
   instagram: "#e4405f",
   leetcode: "#f89f1b",
-  linkedin: "#0a66c2",
+  linkedin: "#f4f4f5",
   medium: "#f4f4f5",
   portfolio: "#a78bfa",
   twitter: "#f4f4f5",

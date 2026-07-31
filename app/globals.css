@@ -119,13 +119,13 @@ html {
 }
 
 .portfolio-profile {
-  --profile-accent: 34 211 238;
+  --profile-accent: 251 113 133;
   font-family: var(--font-profile-body), Arial, Helvetica, sans-serif;
 }
 
 .portfolio-profile ::selection {
   color: #f8fafc;
-  background: rgb(14 116 144 / 0.75);
+  background: rgb(159 18 57 / 0.78);
 }
 
 .portfolio-display {
@@ -133,16 +133,20 @@ html {
   letter-spacing: -0.035em;
 }
 
-.profile-accent-cyan {
-  --profile-accent: 34 211 238;
+.profile-accent-rose {
+  --profile-accent: 251 113 133;
 }
 
-.profile-accent-violet {
-  --profile-accent: 167 139 250;
+.profile-accent-plum {
+  --profile-accent: 232 121 249;
 }
 
 .profile-accent-amber {
   --profile-accent: 251 191 36;
+}
+
+.profile-accent-lime {
+  --profile-accent: 163 230 53;
 }
 
 .profile-accent-green {
@@ -150,47 +154,72 @@ html {
 }
 
 .profile-section-rule {
-  border-color: rgb(var(--profile-accent, 34 211 238) / 0.2);
+  border-color: rgb(var(--profile-accent, 251 113 133) / 0.2);
 }
 
 .profile-section-label {
-  color: rgb(var(--profile-accent, 34 211 238) / 0.82);
+  color: rgb(var(--profile-accent, 251 113 133) / 0.82);
 }
 
 .profile-icon {
-  color: rgb(var(--profile-accent, 34 211 238) / 0.9);
-  border-color: rgb(var(--profile-accent, 34 211 238) / 0.24);
-  background: rgb(var(--profile-accent, 34 211 238) / 0.08);
-  box-shadow: 0 10px 30px rgb(var(--profile-accent, 34 211 238) / 0.08);
+  color: rgb(var(--profile-accent, 251 113 133) / 0.9);
+  border-color: rgb(var(--profile-accent, 251 113 133) / 0.24);
+  background: rgb(var(--profile-accent, 251 113 133) / 0.08);
+  box-shadow: 0 10px 30px rgb(var(--profile-accent, 251 113 133) / 0.08);
 }
 
 .profile-card {
-  border-color: rgb(var(--profile-accent, 34 211 238) / 0.18);
+  border-color: rgb(var(--profile-accent, 251 113 133) / 0.18);
   background:
     linear-gradient(
       145deg,
-      rgb(var(--profile-accent, 34 211 238) / 0.055),
+      rgb(var(--profile-accent, 251 113 133) / 0.055),
       rgb(255 255 255 / 0.025) 42%,
       rgb(255 255 255 / 0.015)
     );
 }
 
 .profile-card:hover {
-  border-color: rgb(var(--profile-accent, 34 211 238) / 0.32);
+  border-color: rgb(var(--profile-accent, 251 113 133) / 0.32);
 }
 
 .profile-card-header {
-  border-color: rgb(var(--profile-accent, 34 211 238) / 0.16);
+  border-color: rgb(var(--profile-accent, 251 113 133) / 0.16);
 }
 
 .profile-chip {
-  color: rgb(var(--profile-accent, 34 211 238) / 0.9);
-  border-color: rgb(var(--profile-accent, 34 211 238) / 0.22);
-  background: rgb(var(--profile-accent, 34 211 238) / 0.08);
+  color: rgb(var(--profile-accent, 251 113 133) / 0.9);
+  border-color: rgb(var(--profile-accent, 251 113 133) / 0.22);
+  background: rgb(var(--profile-accent, 251 113 133) / 0.08);
 }
 
 .profile-chip:hover {
-  background: rgb(var(--profile-accent, 34 211 238) / 0.14);
+  background: rgb(var(--profile-accent, 251 113 133) / 0.14);
+}
+
+.profile-card-soft {
+  border-color: rgb(var(--profile-accent, 163 230 53) / 0.14);
+  background:
+    linear-gradient(
+      145deg,
+      rgb(var(--profile-accent, 163 230 53) / 0.018),
+      rgb(255 255 255 / 0.018) 42%,
+      rgb(255 255 255 / 0.01)
+    );
+}
+
+.profile-card-soft .profile-chip {
+  border-color: rgb(var(--profile-accent, 163 230 53) / 0.15);
+  background: rgb(var(--profile-accent, 163 230 53) / 0.038);
+}
+
+.profile-card-soft .profile-chip:hover {
+  background: rgb(var(--profile-accent, 163 230 53) / 0.075);
+}
+
+.profile-skill-icon {
+  filter: grayscale(1);
+  opacity: 0.82;
 }
 
 @layer base {

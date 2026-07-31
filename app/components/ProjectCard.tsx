@@ -62,7 +62,7 @@ export default function ProjectCard({
   return (
     <motion.div
       {...{className:"profile-card relative group min-h-[19rem] overflow-hidden rounded-2xl border shadow-lg shadow-black/20 sm:min-h-[23.75rem]"}}
-      whileHover={{ y: -5, boxShadow: "0 18px 40px -22px rgba(139, 92, 246, 0.42)" }}
+      whileHover={{ y: -5, boxShadow: "0 18px 40px -22px rgba(217, 70, 239, 0.34)" }}
       transition={{ duration: 0.3 }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -109,7 +109,7 @@ export default function ProjectCard({
 
       <div className="p-4">
         <h3
-          className="portfolio-display cursor-pointer text-lg font-semibold text-slate-100 transition-colors hover:text-violet-300"
+          className="portfolio-display cursor-pointer text-lg font-semibold text-slate-100 transition-colors hover:text-fuchsia-300"
           onClick={handleClick}
         >
           {project.title}
@@ -122,14 +122,14 @@ export default function ProjectCard({
           {project.tags.slice(0, 3).map((tech) => (
             <span
               key={tech}
-              className="inline-flex items-center gap-1.5 rounded-md border border-violet-300/15 bg-violet-300/[0.07] px-2 py-1 text-xs text-violet-100/90 shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded-md border border-fuchsia-300/15 bg-fuchsia-300/[0.055] px-2 py-1 text-xs text-fuchsia-100/90 shadow-sm"
             >
               <SkillIcon skill={tech} iconMap={skillIcons} className="h-3.5 w-3.5 shrink-0" />
               {tech}
             </span>
           ))}
           {project.tags.length > 3 && (
-            <span className="rounded-md border border-violet-300/15 bg-violet-300/[0.07] px-2 py-1 text-xs text-violet-100/90 shadow-sm">
+            <span className="rounded-md border border-fuchsia-300/15 bg-fuchsia-300/[0.055] px-2 py-1 text-xs text-fuchsia-100/90 shadow-sm">
               +{project.tags.length - 3} more
             </span>
           )}
@@ -141,7 +141,7 @@ export default function ProjectCard({
               href={project.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-slate-300 transition-colors hover:text-violet-300"
+              className="text-slate-300 transition-colors hover:text-fuchsia-300"
               onClick={(e) => e.stopPropagation()}
               aria-label="Open project on GitHub"
               title="Open project on GitHub"
@@ -154,7 +154,7 @@ export default function ProjectCard({
               href={project.liveUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-slate-300 transition-colors hover:text-violet-300"
+              className="text-slate-300 transition-colors hover:text-fuchsia-300"
               onClick={(e) => e.stopPropagation()}
               aria-label="Open live project"
               title="Open live project"

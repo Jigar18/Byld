@@ -41,5 +41,11 @@ export default function SkillIcon({
   className = "h-4 w-4 shrink-0",
 }: SkillIconProps) {
   const icon = getSkillIcon(skill, iconMap);
-  return icon ? <Icon icon={icon} className={className} aria-hidden="true" /> : null;
+  return icon ? (
+    <Icon
+      icon={icon}
+      className={`profile-skill-icon ${className}`}
+      aria-hidden="true"
+    />
+  ) : null;
 }

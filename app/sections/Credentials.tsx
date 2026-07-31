@@ -35,11 +35,11 @@ export default function Credentials({ onOpenCertificate }: CredentialsProps) {
         transition: { duration: 0.5 },
       }}
     >
-      <aside className="profile-accent-cyan md:col-span-1 lg:col-span-4">
+      <aside className="profile-accent-lime md:col-span-1 lg:col-span-4">
         <Skills />
       </aside>
 
-      <section className="profile-accent-violet md:col-span-1 lg:col-span-8">
+      <section className="profile-accent-plum md:col-span-1 lg:col-span-8">
         <Certifications onOpenCertificate={onOpenCertificate} />
       </section>
 
@@ -47,7 +47,7 @@ export default function Credentials({ onOpenCertificate }: CredentialsProps) {
         <Education />
       </section>
 
-      <aside className="profile-accent-cyan md:col-span-1 lg:col-span-4">
+      <aside className="profile-accent-rose md:col-span-1 lg:col-span-4">
         <Connect />
       </aside>
     </motion.div>

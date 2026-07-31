@@ -32,12 +32,12 @@ export default function CurrentOrganization() {
     <motion.div
       {...{
         className:
-          "flex max-w-full items-center gap-2 rounded-lg border border-cyan-300/20 bg-cyan-400/[0.07] px-4 py-2",
+          "flex max-w-full items-center gap-2 rounded-lg border border-rose-300/20 bg-rose-400/[0.06] px-4 py-2",
       }}
       whileHover={{ scale: 1.05 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-300/10">
+      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-300/10">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -46,7 +46,7 @@ export default function CurrentOrganization() {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="h-4 w-4 text-cyan-300/80"
+          className="h-4 w-4 text-rose-300/80"
         >
           <path d="M2 22h20"></path>
           <path d="M18 2H6l-4 4v10h20V6l-4-4Z"></path>
@@ -56,7 +56,7 @@ export default function CurrentOrganization() {
           <path d="M10 16h4"></path>
         </svg>
       </div>
-      <h2 className="min-w-0 break-words text-center text-sm font-medium text-cyan-50/85 sm:text-base">
+      <h2 className="min-w-0 break-words text-center text-sm font-medium text-rose-50/85 sm:text-base">
         {userDetails?.college
           ? formatCollegeName(userDetails.college)
           : "UNIVERSITY"}

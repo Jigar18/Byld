@@ -75,7 +75,7 @@ export default function About() {
         <motion.div
           {...{
             className:
-              "profile-accent-cyan profile-section-rule relative group border-l py-3 pl-4 pr-2 sm:pl-8 sm:pr-4",
+              "profile-accent-rose profile-section-rule relative group border-l py-3 pl-4 pr-2 sm:pl-8 sm:pr-4",
             initial: { y: 50, opacity: 0 },
             animate: isInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 },
             transition: { duration: 0.8, ease: "easeOut" },

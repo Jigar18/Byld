@@ -244,7 +244,7 @@ export default function Projects() {
   return (
     <motion.div
       ref={ref}
-      {...{ className: "profile-accent-violet profile-section-rule w-full border-t pt-7" }}
+      {...{ className: "profile-accent-plum profile-section-rule w-full border-t pt-7" }}
       initial={{ opacity: 0, y: 24 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
       transition={{ duration: 0.55 }}

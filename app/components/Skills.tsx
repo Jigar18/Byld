@@ -226,7 +226,7 @@ export default function Skills() {
       <motion.div
         {...{
           className:
-            "profile-card group flex h-[336px] flex-col rounded-xl border p-5 shadow-md backdrop-blur-sm",
+            "profile-card profile-card-soft group flex h-[336px] flex-col rounded-xl border p-5 shadow-md backdrop-blur-sm",
         }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -421,7 +421,7 @@ export default function Skills() {
                                 title={iconName}
                                 aria-label={`Use ${iconName} for ${iconPickerSkill}`}
                               >
-                                <Icon icon={iconName} className="h-7 w-7" aria-hidden="true" />
+                                <Icon icon={iconName} className="profile-skill-icon h-7 w-7" aria-hidden="true" />
                               </button>
                             );
                           })}

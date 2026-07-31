@@ -228,19 +228,19 @@ export default function ProjectVideoDropzone({ video, onUploaded, onRemove, disa
         onDragOver={(event) => { event.preventDefault(); if (!disabled) setIsDragging(true); }}
         onDragLeave={(event) => { event.preventDefault(); if (!event.currentTarget.contains(event.relatedTarget as Node)) setIsDragging(false); }}
         onDrop={(event) => { event.preventDefault(); setIsDragging(false); uploadFile(event.dataTransfer.files[0]); }}
-        className={`relative grid min-h-40 place-items-center rounded-xl border border-dashed p-5 text-center transition duration-200 ${isDragging ? "border-sky-300 bg-sky-400/15 shadow-[0_0_30px_rgba(125,211,252,0.14)]" : "border-white/15 bg-black/20 hover:border-white/30 hover:bg-white/[0.04]"} ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+        className={`relative grid min-h-40 place-items-center rounded-xl border border-dashed p-5 text-center transition duration-200 ${isDragging ? "border-rose-300 bg-rose-400/10 shadow-[0_0_30px_rgba(251,113,133,0.12)]" : "border-white/15 bg-black/20 hover:border-white/30 hover:bg-white/[0.04]"} ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
         onClick={() => !disabled && !uploading && inputRef.current?.click()}
       >
         <input ref={inputRef} type="file" accept="video/mp4,video/webm,.mp4,.webm" className="sr-only" onChange={(event) => uploadFile(event.target.files?.[0])} disabled={disabled || uploading} />
         <div>
-          <span className={`mx-auto grid h-11 w-11 place-items-center rounded-xl border ${isDragging ? "border-sky-200/40 bg-sky-300/15 text-sky-100" : "border-white/10 bg-white/[0.06] text-zinc-300"}`}>
+          <span className={`mx-auto grid h-11 w-11 place-items-center rounded-xl border ${isDragging ? "border-rose-200/40 bg-rose-300/10 text-rose-100" : "border-white/10 bg-white/[0.06] text-zinc-300"}`}>
             {uploading ? <LoaderCircle className="h-5 w-5 animate-spin" /> : isDragging ? <Film className="h-5 w-5" /> : <UploadCloud className="h-5 w-5" />}
           </span>
-          <p className={`mt-3 text-sm font-medium ${isDragging ? "text-sky-100" : "text-zinc-200"}`}>{optimizingProgress !== null ? `Optimizing video… ${optimizingProgress}%` : uploading ? "Uploading project demo…" : isDragging ? "Drop the video here" : video ? "Replace the demo video" : "Drag and drop the demo video"}</p>
+          <p className={`mt-3 text-sm font-medium ${isDragging ? "text-rose-100" : "text-zinc-200"}`}>{optimizingProgress !== null ? `Optimizing video… ${optimizingProgress}%` : uploading ? "Uploading project demo…" : isDragging ? "Drop the video here" : video ? "Replace the demo video" : "Drag and drop the demo video"}</p>
           <p className="mt-1 text-xs leading-5 text-zinc-500">or click to browse · MP4 or WebM · up to 2 minutes · optimized to 30 MB</p>
           {optimizingProgress !== null && (
             <div className="mx-auto mt-3 h-1.5 w-48 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full bg-sky-400 transition-[width]" style={{ width: `${optimizingProgress}%` }} />
+              <div className="h-full rounded-full bg-rose-400 transition-[width]" style={{ width: `${optimizingProgress}%` }} />
             </div>
           )}
         </div>

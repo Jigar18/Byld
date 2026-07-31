@@ -49,7 +49,7 @@ export default function PortfolioViewCount() {
     <motion.div
       {...{
         className:
-          "absolute left-5 top-6 z-10 inline-flex items-center gap-1.5 text-sky-400/60 sm:left-8 lg:left-10 lg:top-8",
+          "absolute left-5 top-6 z-10 inline-flex items-center gap-1.5 text-rose-300/55 sm:left-8 lg:left-10 lg:top-8",
         "aria-label": count === null
           ? "Loading unique portfolio views"
           : `${count} unique portfolio views`,
