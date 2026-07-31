@@ -44,7 +44,7 @@ export default function SkillIcon({
   return icon ? (
     <Icon
       icon={icon}
-      className={`profile-skill-icon ${className}`}
+      className={className}
       aria-hidden="true"
     />
   ) : null;

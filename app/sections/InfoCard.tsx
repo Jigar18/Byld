@@ -147,7 +147,7 @@ function InfoCard() {
       <motion.div
         {...{
           className:
-            "profile-card profile-accent-rose relative group w-full overflow-hidden rounded-3xl border p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-9 before:pointer-events-none before:absolute before:inset-x-12 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-rose-300/55 before:to-transparent",
+            "profile-card profile-identity-surface profile-accent-rose relative group w-full overflow-hidden rounded-3xl border p-6 shadow-2xl shadow-black/30 sm:p-9",
         }}
         whileHover={{ y: -3, boxShadow: "0 24px 80px rgba(190, 18, 60, 0.12)" }}
         initial={{ y: -50, opacity: 0 }}

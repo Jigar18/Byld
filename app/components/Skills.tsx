@@ -421,7 +421,7 @@ export default function Skills() {
                                 title={iconName}
                                 aria-label={`Use ${iconName} for ${iconPickerSkill}`}
                               >
-                                <Icon icon={iconName} className="profile-skill-icon h-7 w-7" aria-hidden="true" />
+                                <Icon icon={iconName} className="h-7 w-7" aria-hidden="true" />
                               </button>
                             );
                           })}

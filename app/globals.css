@@ -186,6 +186,11 @@ html {
   background: rgb(15 15 16 / 0.96);
 }
 
+.profile-identity-surface {
+  border-color: rgb(var(--profile-accent, 251 113 133) / 0.24);
+  background: rgb(18 18 19 / 0.98);
+}
+
 .profile-card-lift {
   transition: border-color 200ms ease, box-shadow 250ms ease;
 }
@@ -208,11 +213,6 @@ html {
 
 .profile-chip:hover {
   background: rgb(255 255 255 / 0.06);
-}
-
-.profile-skill-icon {
-  filter: grayscale(1);
-  opacity: 0.82;
 }
 
 @layer base {

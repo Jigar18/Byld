@@ -42,7 +42,7 @@ export default function NameBlock() {
         {displayName}
       </motion.h1>
       {displayLocation && <motion.p
-        {...{ className: "mt-1 break-words text-center text-base font-medium text-rose-200/75 sm:text-left sm:text-lg" }}
+        {...{ className: "mt-1 break-words text-center text-base font-medium text-zinc-300 sm:text-left sm:text-lg" }}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -58,7 +58,7 @@ export default function NameBlock() {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <svg
-          className="h-4 w-4 text-rose-300/80"
+          className="h-4 w-4 text-zinc-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
