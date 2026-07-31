@@ -425,14 +425,14 @@ export default function Experience() {
                   <div className="flex flex-col gap-5 md:flex-row md:gap-6">
                     {/* Timeline dot and line */}
                     <div className="relative hidden w-4 flex-shrink-0 flex-col items-center md:flex">
-                      <div className="z-10 h-4 w-4 rounded-full border-2 border-amber-200/70 bg-amber-400/70 shadow-[0_0_18px_rgba(251,191,36,0.28)]"></div>
+                      <div className="z-10 h-4 w-4 rounded-full border-2 border-white/20 bg-zinc-700"></div>
                       {index < experience.length - 1 && (
-                        <div className="absolute -bottom-7 left-[7px] top-4 w-px bg-amber-300/25"></div>
+                        <div className="absolute -bottom-7 left-[7px] top-4 w-px bg-white/10"></div>
                       )}
                     </div>
 
                     <div className="group flex flex-1 flex-col gap-5 md:flex-row">
-                      <div className="relative flex-shrink-0 border-l border-amber-300/30 pl-4 md:w-64 md:border-l-0 md:pl-0">
+                      <div className="relative flex-shrink-0 border-l border-white/10 pl-4 md:w-64 md:border-l-0 md:pl-0">
                         {/* Individual edit button for each experience */}
                         {isOwner && <button
                           className="absolute right-0 top-0 rounded-md p-1.5 text-slate-400 opacity-100 transition-all duration-200 hover:bg-white/5 hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
@@ -445,7 +445,7 @@ export default function Experience() {
                         <h3 className="portfolio-display text-xl font-semibold text-slate-100">
                           {level.company}
                         </h3>
-                        <p className="font-medium text-amber-300/80">
+                        <p className="font-medium text-zinc-300">
                           {level.position}
                         </p>
                         <p className="text-slate-400 text-sm mt-1">
@@ -494,7 +494,7 @@ export default function Experience() {
             <div className="mt-6 flex justify-center">
               <button
                 type="button"
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-md transition-colors flex items-center gap-2 hover:shadow-lg"
+                className="flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.035] px-4 py-2 text-zinc-300 transition-colors hover:bg-white/[0.07] hover:text-white"
               >
                 <span>View More</span>
                 <svg

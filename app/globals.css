@@ -164,8 +164,7 @@ html {
 .profile-icon {
   color: rgb(var(--profile-accent, 251 113 133) / 0.9);
   border-color: rgb(var(--profile-accent, 251 113 133) / 0.24);
-  background: rgb(var(--profile-accent, 251 113 133) / 0.08);
-  box-shadow: 0 10px 30px rgb(var(--profile-accent, 251 113 133) / 0.08);
+  background: rgb(255 255 255 / 0.025);
 }
 
 .profile-card {
@@ -183,38 +182,32 @@ html {
   border-color: rgb(var(--profile-accent, 251 113 133) / 0.32);
 }
 
+.profile-surface-neutral {
+  background: rgb(15 15 16 / 0.96);
+}
+
+.profile-card-lift {
+  transition: border-color 200ms ease, box-shadow 250ms ease;
+}
+
+.profile-card-lift:hover {
+  box-shadow:
+    0 18px 40px -24px rgb(var(--profile-accent, 251 113 133) / 0.42),
+    0 8px 24px -18px rgb(var(--profile-accent, 251 113 133) / 0.28);
+}
+
 .profile-card-header {
   border-color: rgb(var(--profile-accent, 251 113 133) / 0.16);
 }
 
 .profile-chip {
-  color: rgb(var(--profile-accent, 251 113 133) / 0.9);
-  border-color: rgb(var(--profile-accent, 251 113 133) / 0.22);
-  background: rgb(var(--profile-accent, 251 113 133) / 0.08);
+  color: rgb(212 212 216 / 0.92);
+  border-color: rgb(255 255 255 / 0.11);
+  background: rgb(255 255 255 / 0.025);
 }
 
 .profile-chip:hover {
-  background: rgb(var(--profile-accent, 251 113 133) / 0.14);
-}
-
-.profile-card-soft {
-  border-color: rgb(var(--profile-accent, 163 230 53) / 0.14);
-  background:
-    linear-gradient(
-      145deg,
-      rgb(var(--profile-accent, 163 230 53) / 0.018),
-      rgb(255 255 255 / 0.018) 42%,
-      rgb(255 255 255 / 0.01)
-    );
-}
-
-.profile-card-soft .profile-chip {
-  border-color: rgb(var(--profile-accent, 163 230 53) / 0.15);
-  background: rgb(var(--profile-accent, 163 230 53) / 0.038);
-}
-
-.profile-card-soft .profile-chip:hover {
-  background: rgb(var(--profile-accent, 163 230 53) / 0.075);
+  background: rgb(255 255 255 / 0.06);
 }
 
 .profile-skill-icon {

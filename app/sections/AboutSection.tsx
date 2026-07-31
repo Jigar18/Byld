@@ -115,9 +115,9 @@ export default function About() {
           {userLoading ? (
             <div className="text-slate-300 leading-relaxed whitespace-pre-wrap">
               <div className="space-y-2">
-                <div className="h-4 bg-slate-700 rounded animate-pulse"></div>
-                <div className="h-4 bg-slate-700 rounded animate-pulse w-3/4"></div>
-                <div className="h-4 bg-slate-700 rounded animate-pulse w-1/2"></div>
+                <div className="h-4 rounded bg-white/[0.055] animate-pulse"></div>
+                <div className="h-4 rounded bg-white/[0.055] animate-pulse w-3/4"></div>
+                <div className="h-4 rounded bg-white/[0.055] animate-pulse w-1/2"></div>
               </div>
             </div>
           ) : (

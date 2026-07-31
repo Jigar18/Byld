@@ -123,7 +123,7 @@ export default function Education() {
       <motion.div
         {...{
           className:
-            "h-[250px] bg-slate-800/50 rounded-xl border border-slate-700 p-5 shadow-md",
+            "profile-card profile-surface-neutral profile-card-lift h-[250px] rounded-xl border p-5 shadow-md",
         }}
         whileHover={{ y: -5 }}
         transition={{ duration: 0.3 }}
@@ -141,7 +141,7 @@ export default function Education() {
     <>
       <motion.div
         {...{
-          className: "profile-card group relative flex h-[250px] flex-col rounded-xl border p-5 shadow-md"
+          className: "profile-card profile-surface-neutral profile-card-lift group relative flex h-[250px] flex-col rounded-xl border p-5 shadow-md"
         }}
         whileHover={{ y: -5 }}
         transition={{ duration: 0.3 }}
@@ -196,7 +196,7 @@ export default function Education() {
                       {formatYears(edu.startYear, edu.endYear, edu.isCurrently)}
                     </span>
                   </div>
-                  <p className="mb-1 font-medium text-amber-300/80">{edu.degree}</p>
+                  <p className="mb-1 font-medium text-zinc-300">{edu.degree}</p>
                   <p className="text-sm text-slate-300">{edu.field}</p>
                 </div>
               </motion.div>

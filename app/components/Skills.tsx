@@ -202,7 +202,7 @@ export default function Skills() {
       <motion.div
         {...{
           className:
-            "h-[336px] rounded-xl border border-slate-700 bg-slate-800/50 p-5 shadow-md backdrop-blur-sm",
+            "profile-card profile-surface-neutral profile-card-lift h-[336px] rounded-xl border p-5 shadow-md",
         }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -213,7 +213,7 @@ export default function Skills() {
         <div className="animate-pulse space-y-2 pt-5">
           <div className="flex flex-wrap gap-2">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-6 bg-slate-700 rounded-full w-16"></div>
+              <div key={i} className="h-6 rounded-full bg-white/[0.055] w-16"></div>
             ))}
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function Skills() {
       <motion.div
         {...{
           className:
-            "profile-card profile-card-soft group flex h-[336px] flex-col rounded-xl border p-5 shadow-md backdrop-blur-sm",
+            "profile-card profile-surface-neutral profile-card-lift group flex h-[336px] flex-col rounded-xl border p-5 shadow-md",
         }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

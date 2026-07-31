@@ -110,7 +110,7 @@ export default function Certifications({
       <motion.div
         {...{
           className:
-            "h-[336px] bg-slate-800/50 rounded-xl border border-slate-700 p-5 shadow-md backdrop-blur-sm",
+            "profile-card profile-surface-neutral profile-card-lift h-[336px] rounded-xl border p-5 shadow-md",
         }}
         whileHover={{ y: -5 }}
         transition={{ duration: 0.3 }}
@@ -129,7 +129,7 @@ export default function Certifications({
     <motion.div
       {...{
         className:
-          "profile-card group flex h-[336px] flex-col rounded-xl border p-5 shadow-md backdrop-blur-sm",
+          "profile-card profile-surface-neutral profile-card-lift group flex h-[336px] flex-col rounded-xl border p-5 shadow-md",
       }}
       whileHover={{ y: -5 }}
       transition={{ duration: 0.3 }}

@@ -26,11 +26,11 @@ type ContributionResponse = {
 };
 
 const contributionLevels = [
-  "bg-white/[0.045]",
-  "bg-emerald-950",
-  "bg-emerald-800",
-  "bg-emerald-500",
-  "bg-emerald-300",
+  "bg-white/[0.035]",
+  "bg-zinc-800",
+  "bg-zinc-700",
+  "bg-zinc-500",
+  "bg-zinc-300",
 ];
 
 const getContributionLevel = (count: number) => {
@@ -145,7 +145,7 @@ export default function GitHubHeatmap() {
       <motion.div
         {...{
           className:
-            "profile-card w-full overflow-hidden rounded-3xl border p-5 shadow-xl shadow-black/20 backdrop-blur-sm sm:p-7",
+            "profile-card profile-surface-neutral profile-card-lift w-full overflow-hidden rounded-3xl border p-5 shadow-xl shadow-black/20 sm:p-7",
         }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

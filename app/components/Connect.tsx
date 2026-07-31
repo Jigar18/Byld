@@ -43,22 +43,7 @@ const arrangeSocialLinks = (links: SocialLink[]) => {
   return arranged;
 };
 
-const socialIconColors: Record<string, string> = {
-  blog: "#f97316",
-  email: "#ea4335",
-  github: "#f4f4f5",
-  hackerrank: "#2ec866",
-  instagram: "#e4405f",
-  leetcode: "#f89f1b",
-  linkedin: "#f4f4f5",
-  medium: "#f4f4f5",
-  portfolio: "#a78bfa",
-  twitter: "#f4f4f5",
-  youtube: "#ff0033",
-};
-
-const getSocialIconColor = (platform: string) =>
-  socialIconColors[platform.toLowerCase()] ?? "#a1a1aa";
+const getSocialIconColor = (_platform: string) => "#d4d4d8";
 
 export default function Connect() {
   const { isOwner, portfolioApiUrl } = useUser();
@@ -381,7 +366,7 @@ export default function Connect() {
         <motion.div
           {...{
             className:
-              "profile-card relative flex h-[250px] flex-col overflow-hidden rounded-xl border p-5 shadow-md backdrop-blur-sm",
+              "profile-card profile-surface-neutral profile-card-lift relative flex h-[250px] flex-col overflow-hidden rounded-xl border p-5 shadow-md",
             whileHover: { y: -5 },
             transition: { duration: 0.3 },
           }}
@@ -408,7 +393,7 @@ export default function Connect() {
               <button
                 key={link.name}
                 onClick={() => copyToClipboard(link.url, link.name)}
-                className="inline-flex h-10 w-fit items-center gap-2.5 whitespace-nowrap rounded-xl border border-slate-600 bg-slate-700/75 px-3.5 text-sm font-medium text-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-500 hover:bg-slate-600"
+                className="inline-flex h-10 w-fit items-center gap-2.5 whitespace-nowrap rounded-xl border border-white/10 bg-white/[0.025] px-3.5 text-sm font-medium text-zinc-300 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.06] hover:text-white"
                 title={`Copy ${link.name} link`}
               >
                 <span style={{ color: getSocialIconColor(link.name) }}>
