@@ -244,20 +244,20 @@ export default function Projects() {
   return (
     <motion.div
       ref={ref}
-      {...{ className: "w-full border-t border-white/10 pt-7" }}
+      {...{ className: "profile-accent-violet profile-section-rule w-full border-t pt-7" }}
       initial={{ opacity: 0, y: 24 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
       transition={{ duration: 0.55 }}
     >
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
-            <span className="inline-flex rounded-lg border border-white/10 bg-white/[0.04] p-2">
+          <p className="profile-section-label flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em]">
+            <span className="profile-icon inline-flex rounded-lg border p-2">
               <Code2 className="h-4 w-4" />
             </span>
             Projects
           </p>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-500">
+          <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400">
             Selected work, experiments, and proof of craft.
           </p>
         </div>

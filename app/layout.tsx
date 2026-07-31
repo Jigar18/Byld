@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Kaushan_Script } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Kaushan_Script,
+  Manrope,
+  Sora,
+} from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,6 +22,16 @@ const loaderMark = Kaushan_Script({
   variable: "--font-loader-mark",
   subsets: ["latin"],
   weight: ["400"],
+});
+
+const profileBody = Manrope({
+  variable: "--font-profile-body",
+  subsets: ["latin"],
+});
+
+const profileDisplay = Sora({
+  variable: "--font-profile-display",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -38,7 +54,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${loaderMark.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${loaderMark.variable} ${profileBody.variable} ${profileDisplay.variable} antialiased`}
       >
         {children}
       </body>

@@ -369,7 +369,7 @@ export default function Experience() {
         <motion.div
           {...{
             className:
-              "relative group border-t border-white/10 pt-8",
+              "profile-accent-amber profile-section-rule relative group border-t pt-8",
           }}
           whileHover={{ y: -2 }}
           transition={{ duration: 0.3 }}
@@ -385,8 +385,8 @@ export default function Experience() {
             <Edit3 className="h-4 w-4" />
           </button>}
 
-          <h2 className="mb-10 flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
-            <span className="inline-flex p-2 rounded-lg bg-zinc-900/20 text-zinc-400 shadow-lg shadow-zinc-500/20 border border-zinc-800/30">
+          <h2 className="profile-section-label mb-10 flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em]">
+            <span className="profile-icon inline-flex rounded-lg border p-2">
               <Briefcase className="h-5 w-5" />
             </span>
             Experience
@@ -425,14 +425,14 @@ export default function Experience() {
                   <div className="flex flex-col gap-5 md:flex-row md:gap-6">
                     {/* Timeline dot and line */}
                     <div className="relative hidden w-4 flex-shrink-0 flex-col items-center md:flex">
-                      <div className="z-10 h-4 w-4 rounded-full bg-zinc-600"></div>
+                      <div className="z-10 h-4 w-4 rounded-full border-2 border-amber-200/70 bg-amber-400/70 shadow-[0_0_18px_rgba(251,191,36,0.28)]"></div>
                       {index < experience.length - 1 && (
-                        <div className="absolute -bottom-7 left-[7px] top-4 w-px bg-slate-600"></div>
+                        <div className="absolute -bottom-7 left-[7px] top-4 w-px bg-amber-300/25"></div>
                       )}
                     </div>
 
                     <div className="group flex flex-1 flex-col gap-5 md:flex-row">
-                      <div className="relative flex-shrink-0 border-l border-zinc-600/70 pl-4 md:w-64 md:border-l-0 md:pl-0">
+                      <div className="relative flex-shrink-0 border-l border-amber-300/30 pl-4 md:w-64 md:border-l-0 md:pl-0">
                         {/* Individual edit button for each experience */}
                         {isOwner && <button
                           className="absolute right-0 top-0 rounded-md p-1.5 text-slate-400 opacity-100 transition-all duration-200 hover:bg-white/5 hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
@@ -442,10 +442,10 @@ export default function Experience() {
                           <Edit3 className="h-3 w-3" />
                         </button>}
 
-                        <h3 className="text-xl font-bold text-slate-100">
+                        <h3 className="portfolio-display text-xl font-semibold text-slate-100">
                           {level.company}
                         </h3>
-                        <p className="text-zinc-400 font-medium">
+                        <p className="font-medium text-amber-300/80">
                           {level.position}
                         </p>
                         <p className="text-slate-400 text-sm mt-1">

@@ -226,7 +226,7 @@ export default function Skills() {
       <motion.div
         {...{
           className:
-            "group flex h-[336px] flex-col rounded-xl border border-slate-700 bg-slate-800/50 p-5 shadow-md backdrop-blur-sm hover:border-slate-600",
+            "profile-card group flex h-[336px] flex-col rounded-xl border p-5 shadow-md backdrop-blur-sm",
         }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -269,7 +269,7 @@ export default function Skills() {
                 exit="exit"
                 {...{
                   className:
-                    "inline-flex items-center gap-2 px-3 py-1 bg-zinc-600/20 text-zinc-300 rounded-full text-sm font-medium border border-zinc-600/30 hover:bg-zinc-600/30 transition-colors",
+                    "profile-chip inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium transition-colors",
                 }}
               >
                 <SkillIcon skill={skill} iconMap={skillIcons} />

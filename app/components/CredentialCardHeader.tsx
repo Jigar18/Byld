@@ -15,9 +15,9 @@ export default function CredentialCardHeader({
   action,
 }: CredentialCardHeaderProps) {
   return (
-    <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-white/[0.09]">
-      <h2 className="flex min-w-0 items-center gap-3 text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800/30 bg-zinc-900/20 text-zinc-400 shadow-lg shadow-zinc-500/10">
+    <div className="profile-card-header flex h-12 shrink-0 items-center justify-between gap-3 border-b">
+      <h2 className="profile-section-label flex min-w-0 items-center gap-3 text-xs font-medium uppercase tracking-[0.22em]">
+        <span className="profile-icon inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border">
           {icon}
         </span>
         <span className="truncate">{title}</span>

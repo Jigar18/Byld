@@ -75,7 +75,7 @@ export default function About() {
         <motion.div
           {...{
             className:
-              "relative group border-l border-white/15 py-3 pl-4 pr-2 sm:pl-8 sm:pr-4",
+              "profile-accent-cyan profile-section-rule relative group border-l py-3 pl-4 pr-2 sm:pl-8 sm:pr-4",
             initial: { y: 50, opacity: 0 },
             animate: isInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 },
             transition: { duration: 0.8, ease: "easeOut" },
@@ -91,8 +91,8 @@ export default function About() {
             <Edit3 className="h-4 w-4" />
           </button>}
 
-          <h2 className="mb-6 flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
-            <span className="inline-flex p-2 rounded-lg bg-zinc-900/20 text-zinc-400 shadow-lg shadow-zinc-500/20 border border-zinc-800/30">
+          <h2 className="profile-section-label mb-6 flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em]">
+            <span className="profile-icon inline-flex rounded-lg border p-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"

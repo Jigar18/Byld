@@ -34,7 +34,7 @@ export default function NameBlock() {
   return (
     <div className="min-w-0 flex flex-col items-center sm:items-start">
       <motion.h1
-        {...{ className: "break-words text-center text-3xl font-bold text-slate-100 sm:text-left sm:text-4xl" }}
+        {...{ className: "portfolio-display break-words text-center text-3xl font-semibold text-white sm:text-left sm:text-4xl" }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -42,7 +42,7 @@ export default function NameBlock() {
         {displayName}
       </motion.h1>
       {displayLocation && <motion.p
-        {...{ className: "mt-1 break-words text-center text-base text-zinc-400 sm:text-left sm:text-lg" }}
+        {...{ className: "mt-1 break-words text-center text-base font-medium text-cyan-200/75 sm:text-left sm:text-lg" }}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -51,14 +51,14 @@ export default function NameBlock() {
       </motion.p>}
       <motion.p
         {...{
-          className: "text-sm text-slate-400 mt-1 flex items-center gap-1",
+          className: "mt-1 flex items-center gap-1 text-sm text-slate-400",
         }}
         initial={{ opacity: 0, y: -5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <svg
-          className="h-4 w-4"
+          className="h-4 w-4 text-cyan-300/80"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

@@ -381,7 +381,7 @@ export default function Connect() {
         <motion.div
           {...{
             className:
-              "flex h-[250px] flex-col bg-slate-800/50 rounded-xl border border-slate-700 p-5 shadow-md backdrop-blur-sm overflow-hidden relative",
+              "profile-card relative flex h-[250px] flex-col overflow-hidden rounded-xl border p-5 shadow-md backdrop-blur-sm",
             whileHover: { y: -5 },
             transition: { duration: 0.3 },
           }}

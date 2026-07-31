@@ -55,14 +55,14 @@ export default function CertificateList({
 
           <div>
             <div>
-              <h3 className="pr-8 font-medium text-slate-100">{card.title}</h3>
+              <h3 className="portfolio-display pr-8 font-medium text-slate-100">{card.title}</h3>
               <p className="text-slate-400 text-sm mt-1 line-clamp-2">
                 {card.description}
               </p>
               <div className="mt-2 flex gap-4">
                 <a
                   href={`/api/download-certificate?id=${card.id}&username=${encodeURIComponent(portfolioUsername)}`}
-                  className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-300 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs text-zinc-400 transition-colors hover:text-violet-300"
                   onClick={(e) => e.stopPropagation()}
                   download
                 >
@@ -70,7 +70,7 @@ export default function CertificateList({
                   <span>Download</span>
                 </a>
                 <button
-                  className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-300 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs text-zinc-400 transition-colors hover:text-violet-300"
                   onClick={(e) => {
                     e.stopPropagation();
                     onOpenCertificate(card);

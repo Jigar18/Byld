@@ -27,10 +27,10 @@ type ContributionResponse = {
 
 const contributionLevels = [
   "bg-white/[0.045]",
-  "bg-zinc-700",
-  "bg-zinc-500",
-  "bg-zinc-300",
-  "bg-zinc-50",
+  "bg-emerald-950",
+  "bg-emerald-800",
+  "bg-emerald-500",
+  "bg-emerald-300",
 ];
 
 const getContributionLevel = (count: number) => {
@@ -141,11 +141,11 @@ export default function GitHubHeatmap() {
   if (!isOwner && !loading && !visible) return null;
 
   return (
-    <section className="w-full border-t border-white/10 pt-8">
+    <section className="profile-accent-green profile-section-rule w-full border-t pt-8">
       <motion.div
         {...{
           className:
-            "w-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] p-5 shadow-xl shadow-black/20 backdrop-blur-sm sm:p-7",
+            "profile-card w-full overflow-hidden rounded-3xl border p-5 shadow-xl shadow-black/20 backdrop-blur-sm sm:p-7",
         }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -153,8 +153,8 @@ export default function GitHubHeatmap() {
         transition={{ duration: 0.3 }}
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
-            <span className="inline-flex rounded-lg border border-white/10 bg-white/[0.05] p-2 text-zinc-300">
+          <p className="profile-section-label flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em]">
+            <span className="profile-icon inline-flex rounded-lg border p-2">
               <Github className="h-4 w-4" />
             </span>
             GitHub activity

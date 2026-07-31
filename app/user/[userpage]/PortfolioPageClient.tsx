@@ -110,11 +110,11 @@ export default function Home() {
   return (
     <UserProvider>
       <PortfolioRouteGate>
-      <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-zinc-200">
+      <div className="portfolio-profile relative min-h-screen overflow-hidden bg-[#07090d] text-zinc-200">
         <LogoutButton />
         <PortfolioViewCount />
-        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_76%_8%,rgba(255,255,255,0.08),transparent_28rem),radial-gradient(circle_at_5%_55%,rgba(255,255,255,0.04),transparent_24rem)]" />
-        <div className="pointer-events-none fixed inset-0 opacity-[0.025] [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:72px_72px]" />
+        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_76%_8%,rgba(34,211,238,0.10),transparent_28rem),radial-gradient(circle_at_5%_55%,rgba(139,92,246,0.075),transparent_24rem),radial-gradient(circle_at_80%_92%,rgba(251,191,36,0.055),transparent_26rem)]" />
+        <div className="pointer-events-none fixed inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(125,211,252,.45)_1px,transparent_1px),linear-gradient(90deg,rgba(167,139,250,.4)_1px,transparent_1px)] [background-size:72px_72px]" />
         <main className="relative mx-auto w-full max-w-7xl px-4 pb-6 pt-16 sm:px-8 sm:pb-9 sm:pt-20 lg:px-10 lg:pb-12 lg:pt-20">
           <div className="space-y-12 sm:space-y-16 lg:space-y-24">
           <motion.div
@@ -163,7 +163,7 @@ export default function Home() {
           </motion.div>
 
           <motion.footer
-            {...{ className: "py-8 border-t border-slate-800 mt-10" }}
+            {...{ className: "mt-10 border-t border-white/10 py-8" }}
             custom={6}
             initial="hidden"
             animate="visible"

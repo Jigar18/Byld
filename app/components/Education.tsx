@@ -141,7 +141,7 @@ export default function Education() {
     <>
       <motion.div
         {...{
-          className: "group flex h-[250px] flex-col bg-slate-800/50 rounded-xl border border-slate-700 p-5 shadow-md relative"
+          className: "profile-card group relative flex h-[250px] flex-col rounded-xl border p-5 shadow-md"
         }}
         whileHover={{ y: -5 }}
         transition={{ duration: 0.3 }}
@@ -189,14 +189,14 @@ export default function Education() {
                 )}
                 <div>
                   <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                    <h3 className="text-lg font-semibold text-slate-200">
+                    <h3 className="portfolio-display text-lg font-semibold text-slate-100">
                       {edu.school}
                     </h3>
                     <span className="shrink-0 text-xs font-medium text-slate-400 sm:text-sm">
                       {formatYears(edu.startYear, edu.endYear, edu.isCurrently)}
                     </span>
                   </div>
-                  <p className="mb-1 font-medium text-zinc-400">{edu.degree}</p>
+                  <p className="mb-1 font-medium text-amber-300/80">{edu.degree}</p>
                   <p className="text-sm text-slate-300">{edu.field}</p>
                 </div>
               </motion.div>
