@@ -43,7 +43,7 @@ export default function Credentials({ onOpenCertificate }: CredentialsProps) {
         <Certifications onOpenCertificate={onOpenCertificate} />
       </section>
 
-      <section className="profile-accent-amber md:col-span-1 lg:col-span-8">
+      <section className="profile-accent-clay md:col-span-1 lg:col-span-8">
         <Education />
       </section>
 

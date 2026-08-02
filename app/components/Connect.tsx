@@ -43,7 +43,22 @@ const arrangeSocialLinks = (links: SocialLink[]) => {
   return arranged;
 };
 
-const getSocialIconColor = (_platform: string) => "#d4d4d8";
+const socialIconColors: Record<string, string> = {
+  blog: "#f97316",
+  email: "#ea4335",
+  github: "#f4f4f5",
+  hackerrank: "#2ec866",
+  instagram: "#e4405f",
+  leetcode: "#f89f1b",
+  linkedin: "#0a66c2",
+  medium: "#f4f4f5",
+  portfolio: "#a78bfa",
+  twitter: "#1da1f2",
+  youtube: "#ff0033",
+};
+
+const getSocialIconColor = (platform: string) =>
+  socialIconColors[platform.toLowerCase()] ?? "#a1a1aa";
 
 export default function Connect() {
   const { isOwner, portfolioApiUrl } = useUser();

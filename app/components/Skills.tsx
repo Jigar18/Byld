@@ -80,10 +80,15 @@ export default function Skills() {
     if (!viewport) return;
 
     const frame = requestAnimationFrame(measureHiddenSkills);
+    const settledMeasurement = window.setTimeout(measureHiddenSkills, 400);
     const observer = new ResizeObserver(measureHiddenSkills);
     observer.observe(viewport);
+    viewport
+      .querySelectorAll<HTMLElement>("[data-skill]")
+      .forEach((item) => observer.observe(item));
     return () => {
       cancelAnimationFrame(frame);
+      window.clearTimeout(settledMeasurement);
       observer.disconnect();
     };
   }, [skills, measureHiddenSkills]);

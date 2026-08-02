@@ -145,6 +145,10 @@ html {
   --profile-accent: 251 191 36;
 }
 
+.profile-accent-clay {
+  --profile-accent: 190 124 92;
+}
+
 .profile-accent-lime {
   --profile-accent: 163 230 53;
 }

@@ -34,7 +34,7 @@ export default function NameBlock() {
   return (
     <div className="min-w-0 flex flex-col items-center sm:items-start">
       <motion.h1
-        {...{ className: "break-words text-center text-3xl font-bold text-slate-100 sm:text-left sm:text-4xl" }}
+        {...{ className: "portfolio-display break-words text-center text-3xl font-bold text-slate-100 sm:text-left sm:text-4xl" }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
