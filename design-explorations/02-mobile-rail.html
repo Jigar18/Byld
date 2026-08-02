@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jigar Rajput — Mobile Rail</title>
+  <style>
+    :root { --ink:#eaf2ff; --muted:#8d9ab0; --bg:#07101f; --panel:#0d192b; --line:#20304a; --blue:#65a7ff; --orange:#ff9c66; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin:0; color:var(--ink); background:var(--bg); font:14px/1.55 "IBM Plex Mono", "Cascadia Code", Consolas, monospace; }
+    a { color:inherit; text-decoration:none; }
+    .layout { width:min(100%, 1320px); margin:auto; display:grid; grid-template-columns:270px 1fr; min-height:100vh; }
+    aside { position:sticky; top:0; height:100vh; padding:34px 26px; border-right:1px solid var(--line); background:#081221; display:flex; flex-direction:column; }
+    .avatar { width:72px; height:72px; border-radius:18px; object-fit:cover; border:1px solid #375174; }
+    .name { margin:18px 0 2px; font:700 22px/1.1 ui-sans-serif,system-ui,sans-serif; letter-spacing:-.03em; }
+    .role { color:var(--blue); font-size:12px; }
+    .status { margin:24px 0; padding:11px 12px; border:1px solid var(--line); border-radius:10px; color:var(--muted); font-size:11px; }
+    .status::before { content:""; display:inline-block; width:7px; height:7px; margin-right:8px; border-radius:50%; background:#65f7a6; }
+    nav { display:grid; gap:7px; }
+    nav a { padding:10px 12px; border-radius:9px; color:var(--muted); }
+    nav a:hover { color:var(--ink); background:var(--panel); }
+    nav b { color:var(--blue); font-weight:400; margin-right:8px; }
+    .rail-footer { margin-top:auto; color:#627088; font-size:10px; }
+    main { padding:28px 34px 90px; min-width:0; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; color:var(--muted); font-size:11px; }
+    .resume { padding:9px 14px; color:#07101f; background:var(--blue); border-radius:8px; font-weight:700; }
+    .hero { padding:44px; border:1px solid var(--line); border-radius:20px; background:linear-gradient(135deg,#101e33,#0a1424); position:relative; overflow:hidden; }
+    .hero::after { content:"</>"; position:absolute; right:22px; bottom:-35px; font:800 160px/1 ui-sans-serif,system-ui; color:#65a7ff0c; }
+    .kicker { color:var(--orange); font-size:11px; text-transform:uppercase; letter-spacing:.14em; }
+    h1 { max-width:760px; margin:18px 0 20px; font:700 clamp(38px,6vw,72px)/.98 ui-sans-serif,system-ui,sans-serif; letter-spacing:-.055em; }
+    h1 span { color:var(--blue); }
+    .hero p { max-width:650px; color:var(--muted); font-size:14px; }
+    .hero-meta { display:flex; gap:24px; margin-top:32px; color:#bcc9da; font-size:11px; }
+    .dashboard { display:grid; grid-template-columns:1.45fr .55fr; gap:16px; margin-top:16px; }
+    .panel { border:1px solid var(--line); border-radius:16px; background:var(--panel); padding:24px; min-width:0; }
+    .panel-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .panel h2 { margin:0; font:700 23px/1.2 ui-sans-serif,system-ui,sans-serif; letter-spacing:-.03em; }
+    .label { color:var(--blue); font-size:10px; text-transform:uppercase; letter-spacing:.12em; }
+    .projects { display:grid; gap:10px; }
+    .project { display:grid; grid-template-columns:42px 1fr auto; align-items:center; gap:13px; padding:14px; border:1px solid var(--line); border-radius:12px; }
+    .project:hover { border-color:#3d5e89; background:#111f34; }
+    .project-id { width:42px; height:42px; display:grid; place-items:center; border-radius:10px; background:#172942; color:var(--blue); }
+    .project h3 { margin:0; font-size:13px; }
+    .project p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+    .arrow { color:var(--orange); }
+    .metrics { display:grid; gap:10px; }
+    .metric { padding:16px; border:1px solid var(--line); border-radius:12px; background:#091425; }
+    .metric strong { display:block; font:700 30px/1 ui-sans-serif,system-ui; }
+    .metric span { color:var(--muted); font-size:10px; }
+    .activity { margin-top:16px; }
+    .heatmap { display:grid; grid-template-columns:repeat(18,1fr); gap:4px; }
+    .heatmap i { aspect-ratio:1; border-radius:2px; background:#162238; }
+    .heatmap i:nth-child(5n), .heatmap i:nth-child(7n) { background:#285b8f; }
+    .heatmap i:nth-child(11n) { background:var(--blue); }
+    .experience { margin-top:16px; }
+    .job { display:grid; grid-template-columns:130px 1fr; gap:22px; padding:22px 0; border-top:1px solid var(--line); }
+    .job time { color:var(--orange); font-size:10px; }
+    .job h3 { margin:0 0 7px; font:700 17px ui-sans-serif,system-ui; }
+    .job p { margin:0; color:var(--muted); }
+    .bottom-nav { display:none; }
+    @media (max-width:800px) {
+      .layout { display:block; }
+      aside { position:relative; height:auto; border:0; border-bottom:1px solid var(--line); padding:24px 18px; display:grid; grid-template-columns:58px 1fr; gap:0 14px; }
+      .avatar { width:58px; height:58px; border-radius:15px; grid-row:1 / span 3; }
+      .name { margin:3px 0 0; font-size:20px; }
+      .status, aside nav, .rail-footer { display:none; }
+      main { padding:18px 14px 92px; }
+      .topbar { margin-bottom:14px; }
+      .hero { padding:28px 22px; border-radius:16px; }
+      h1 { font-size:42px; }
+      .hero-meta { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+      .dashboard { grid-template-columns:1fr; }
+      .panel { padding:18px; }
+      .project { grid-template-columns:38px 1fr auto; padding:12px; }
+      .project-id { width:38px; height:38px; }
+      .heatmap { grid-template-columns:repeat(12,1fr); }
+      .job { grid-template-columns:1fr; gap:7px; }
+      .bottom-nav { position:fixed; z-index:10; left:12px; right:12px; bottom:12px; padding:11px 8px; display:flex; justify-content:space-around; border:1px solid #314665; border-radius:15px; background:#0c1829ee; backdrop-filter:blur(14px); }
+      .bottom-nav a { color:var(--muted); font-size:10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <img class="avatar" src="https://vadqtghahevoepfabrdd.supabase.co/storage/v1/object/public/profile-picture/user-image/23fb3c9d-4db7-4fca-b72a-117d831ffbba-1783869260446-profile-picture.jpg" alt="Jigar Rajput">
+      <div class="name">Jigar Rajput</div>
+      <div class="role">@ associate software engineer</div>
+      <div class="status">available for opportunities</div>
+      <nav><a href="#home"><b>01</b>overview</a><a href="#projects"><b>02</b>projects</a><a href="#activity"><b>03</b>activity</a><a href="#experience"><b>04</b>experience</a></nav>
+      <div class="rail-footer">Faridabad, India<br>UTC +05:30</div>
+    </aside>
+
+    <main>
+      <div class="topbar"><span>portfolio / Jigar18</span><a class="resume" href="#experience">view résumé ↗</a></div>
+      <section class="hero" id="home">
+        <div class="kicker">Hello, I build for the web</div>
+        <h1>Full-stack thinking.<br><span>Product-level detail.</span></h1>
+        <p>Computer Science engineer working across React, Next.js, Node.js, Java, and Spring Boot. I turn complex workflows into interfaces and systems that are clear, fast, and maintainable.</p>
+        <div class="hero-meta"><span>● Faridabad, India</span><span>↗ GitHub / Jigar18</span><span>⌁ Sharda University</span></div>
+      </section>
+
+      <div class="dashboard" id="projects">
+        <section class="panel">
+          <div class="panel-head"><h2>Selected projects</h2><span class="label">03 builds</span></div>
+          <div class="projects">
+            <article class="project"><div class="project-id">RD</div><div><h3>Recruitment Dashboard</h3><p>React · Node.js · Internal platform</p></div><span class="arrow">↗</span></article>
+            <article class="project"><div class="project-id">CS</div><div><h3>CSD Smart Card</h3><p>.NET · SQL · Performance</p></div><span class="arrow">↗</span></article>
+            <article class="project"><div class="project-id">PC</div><div><h3>Portfolio Creator</h3><p>Next.js · PostgreSQL · GitHub</p></div><span class="arrow">↗</span></article>
+          </div>
+        </section>
+        <aside class="panel metrics">
+          <div class="metric"><strong>500+</strong><span>DSA problems solved</span></div>
+          <div class="metric"><strong>130</strong><span>contributions this year</span></div>
+          <div class="metric"><strong>20+</strong><span>tools in the stack</span></div>
+        </aside>
+      </div>
+
+      <section class="panel activity" id="activity">
+        <div class="panel-head"><h2>Build activity</h2><span class="label">2026 · live rhythm</span></div>
+        <div class="heatmap" aria-label="Decorative contribution heatmap">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+      </section>
+
+      <section class="panel experience" id="experience">
+        <div class="panel-head"><h2>Experience</h2><span class="label">Currently</span></div>
+        <article class="job"><time>2025.11 — NOW</time><div><h3>Associate Software Engineer · Credex Technology</h3><p>Building recruitment dashboard modules, improving production stability, and tuning pagination and data queries across React and .NET systems.</p></div></article>
+        <article class="job"><time>2022 — 2026</time><div><h3>B.Tech, Computer Science · Sharda University</h3><p>Full-stack engineering, data structures, algorithms, and published research on LLM evaluation.</p></div></article>
+      </section>
+    </main>
+  </div>
+  <nav class="bottom-nav"><a href="#home">HOME</a><a href="#projects">WORK</a><a href="#activity">LOG</a><a href="#experience">CAREER</a></nav>
+</body>
+</html>
