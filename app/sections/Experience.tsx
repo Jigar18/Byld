@@ -415,20 +415,26 @@ export default function Experience() {
               experience.map((level, index) => (
                 <motion.div
                   key={level.id ?? level.level}
-                  {...{ className: "relative border-b border-white/10 py-7 last:border-b-0" }}
+                  {...{ className: "relative py-7" }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={
                     isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }
                   }
                   transition={{ duration: 0.5, delay: index * 0.2 + 0.3 }}
                 >
+                  {index > 0 && (
+                    <span className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                  )}
                   <div className="flex flex-col gap-5 md:flex-row md:gap-6">
                     {/* Timeline dot and line */}
                     <div className="relative hidden w-4 flex-shrink-0 flex-col items-center md:flex">
-                      <div className="z-10 h-4 w-4 rounded-full border-2 border-white/20 bg-zinc-700"></div>
-                      {index < experience.length - 1 && (
-                        <div className="absolute -bottom-7 left-[7px] top-4 w-px bg-white/10"></div>
+                      {index > 0 && (
+                        <div className="absolute -top-7 left-[7px] h-9 w-px bg-white/10" />
                       )}
+                      {index < experience.length - 1 && (
+                        <div className="absolute -bottom-7 left-[7px] top-2 w-px bg-white/10" />
+                      )}
+                      <div className="z-10 h-4 w-4 rounded-full border-2 border-white/20 bg-zinc-700"></div>
                     </div>
 
                     <div className="group flex flex-1 flex-col gap-5 md:flex-row">
