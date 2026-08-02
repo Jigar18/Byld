@@ -15,7 +15,7 @@ import PortfolioViewCount from "../../components/PortfolioViewCount";
 import GitHubHeatmap from "../../components/GitHubHeatmap";
 import NotFoundState from "../../components/NotFoundState";
 import PortfolioLoader from "../../components/PortfolioLoader";
-import { LogOut } from "lucide-react";
+import { Copyright, LogOut } from "lucide-react";
 
 interface Card {
   id: string;
@@ -169,6 +169,10 @@ export default function Home() {
             animate="visible"
             variants={sectionVariants}
           >
+            <p className="flex items-center justify-center gap-1.5 text-xs text-zinc-500">
+              <Copyright aria-hidden="true" className="h-3.5 w-3.5" />
+              Copyright {new Date().getFullYear()}
+            </p>
           </motion.footer>
           </div>
         </main>
