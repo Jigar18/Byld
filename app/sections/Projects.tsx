@@ -15,6 +15,7 @@ import AddProjectModal, {
   PortfolioProject,
 } from "../components/AddProjectModal";
 import ProjectModal from "../components/ProjectModal";
+import ProjectSourceModal from "../components/ProjectSourceModal";
 import {
   ProjectVideo,
   removeUnsavedProjectVideo,
@@ -63,6 +64,7 @@ export default function Projects() {
   const [skillIcons, setSkillIcons] = useState<SkillIconMap>({});
   const [loading, setLoading] = useState(true);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [sourceOpen, setSourceOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<PortfolioProject | null>(
     null,
   );
@@ -185,7 +187,22 @@ export default function Projects() {
   const openEditor = (project: PortfolioProject | null = null) => {
     if (!project && projects.length >= MAX_PROJECTS) return;
     setEditingProject(project);
-    setEditorOpen(true);
+    if (project) setEditorOpen(true);
+    else setSourceOpen(true);
+  };
+
+  const importProject = async (repositoryId: number) => {
+    const response = await fetch("/api/projects/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ repositoryId }),
+    });
+    const data = (await response.json()) as { project?: PortfolioProject; error?: string };
+    if (!response.ok || !data.project) throw new Error(data.error || "Unable to import project");
+    setProjects((current) => [data.project!, ...current]);
+    setSourceOpen(false);
+    setSelectedProject(toModalProject(data.project));
   };
 
   const scrollProjects = (direction: -1 | 1) => {
@@ -394,6 +411,18 @@ export default function Projects() {
           onClose={() => setProjectToDelete(null)}
           onConfirm={deleteProject}
           project={projectToDelete ? toModalProject(projectToDelete) : null}
+        />
+      )}
+      {isOwner && (
+        <ProjectSourceModal
+          isOpen={sourceOpen}
+          onClose={() => setSourceOpen(false)}
+          onManual={() => {
+            setSourceOpen(false);
+            setEditingProject(null);
+            setEditorOpen(true);
+          }}
+          onImport={importProject}
         />
       )}
       {isOwner && (

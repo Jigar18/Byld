@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button, primaryActionButtonClass } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { X, Plus, Search } from "lucide-react";
+import { Github, X, Plus, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import SkillIcon, { SkillIconMap } from "@/app/components/SkillIcon";
@@ -30,9 +30,33 @@ export default function SkillsPage() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [selectedSkillIcons, setSelectedSkillIcons] = useState<SkillIconMap>({});
   const [isSearching, setIsSearching] = useState(false);
+  const [isDiscovering, setIsDiscovering] = useState(true);
+  const [discoveredRepositoryCount, setDiscoveredRepositoryCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const hasEditedSkillsRef = useRef(false);
 
   const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+    const discoverSkills = async () => {
+      try {
+        const response = await fetch("/api/github/skills", { credentials: "include" });
+        const data = await response.json() as { skills?: string[]; repositoryCount?: number };
+        if (!active || !response.ok || hasEditedSkillsRef.current) return;
+        const skills = data.skills ?? [];
+        setSelectedSkills(skills);
+        setDiscoveredRepositoryCount(data.repositoryCount ?? 0);
+        skills.forEach((skill) => void findSkillIcon(skill));
+      } catch {
+        // Repository discovery is optional; manual skill entry remains available.
+      } finally {
+        if (active) setIsDiscovering(false);
+      }
+    };
+    void discoverSkills();
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     const fetchSkills = async () => {
@@ -75,6 +99,7 @@ export default function SkillsPage() {
   };
 
   const handleSkillSelect = (skill: string) => {
+    hasEditedSkillsRef.current = true;
     const formattedSkill = formatSkill(skill);
     if (!selectedSkills.includes(formattedSkill)) {
       setSelectedSkills([...selectedSkills, formattedSkill]);
@@ -88,6 +113,7 @@ export default function SkillsPage() {
   };
 
   const handleRemoveSkill = (skill: string) => {
+    hasEditedSkillsRef.current = true;
     setSelectedSkills(selectedSkills.filter((s) => s !== skill));
     setSelectedSkillIcons((current) => {
       const updated = { ...current };
@@ -97,6 +123,7 @@ export default function SkillsPage() {
   };
 
   const handleAddCustomSkill = () => {
+    hasEditedSkillsRef.current = true;
     const formattedSkill = formatSkill(skillInput.trim());
     if (formattedSkill && !selectedSkills.includes(formattedSkill)) {
       setSelectedSkills([...selectedSkills, formattedSkill]);
@@ -231,7 +258,16 @@ export default function SkillsPage() {
                   Your skills
                 </Label>
                 <div className="flex flex-wrap gap-2.5 mt-3 min-h-[50px]">
-                  {selectedSkills.length === 0 && (
+                  {isDiscovering && (
+                    <div className="flex w-full items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/70 px-4 py-3">
+                      <span className="relative grid h-9 w-9 place-items-center rounded-full border border-slate-600">
+                        <Github className="h-4 w-4 text-slate-200" />
+                        <span className="absolute inset-[-4px] animate-spin rounded-full border border-transparent border-t-zinc-300" />
+                      </span>
+                      <div><p className="text-sm text-slate-200">Finding your strongest GitHub skills</p><p className="text-xs text-slate-500">Scanning the languages in your recent repositories…</p></div>
+                    </div>
+                  )}
+                  {!isDiscovering && selectedSkills.length === 0 && (
                     <div className="flex items-center w-full">
                       <p className="text-slate-500 text-sm italic">
                         No skills added yet
@@ -266,6 +302,9 @@ export default function SkillsPage() {
                     ))}
                   </AnimatePresence>
                 </div>
+                {!isDiscovering && discoveredRepositoryCount > 0 && selectedSkills.length > 0 && (
+                  <p className="mt-3 flex items-center gap-2 text-xs text-slate-500"><Github className="h-3.5 w-3.5" />Suggested from {discoveredRepositoryCount} recent {discoveredRepositoryCount === 1 ? "repository" : "repositories"}. Remove or add anything before continuing.</p>
+                )}
               </div>
 
               {/* Continue button */}

@@ -52,37 +52,31 @@ export default function Details() {
   const totalSteps = 5;
 
   useEffect(() => {
-    const fetchEmail = async () => {
+    const fetchGitHubDetails = async () => {
       try {
-        const response = await fetch("/api/emailFetch");
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.log("Authentication error: User needs to be logged in");
-            setIsLoadingEmail(false);
-            return;
-          }
-
-          const errorData = await response.json();
-          console.error(`Failed to fetch email: ${response.status}`, errorData);
-          setIsLoadingEmail(false);
-          return;
-        }
-
-        const data = await response.json();
-        if (data.email) {
-          setFormData((prev) => ({ ...prev, email: data.email }));
-        } else {
-          console.log("No email found in response");
-        }
-      } catch (error) {
-        console.error("Failed to fetch email:", error);
+        const [profileResponse, emailResponse] = await Promise.all([
+          fetch("/api/github/profile"),
+          fetch("/api/emailFetch"),
+        ]);
+        const profile = profileResponse.ok
+          ? await profileResponse.json() as { firstName?: string; lastName?: string; location?: string }
+          : {};
+        const email = emailResponse.ok ? await emailResponse.json() as { email?: string } : {};
+        setFormData((current) => ({
+          ...current,
+          firstName: current.firstName || profile.firstName || "",
+          lastName: current.lastName || profile.lastName || "",
+          location: current.location || profile.location || "",
+          email: current.email || email.email || "",
+        }));
+      } catch {
+        // GitHub profile data is optional; all fields remain editable.
       } finally {
         setIsLoadingEmail(false);
       }
     };
 
-    fetchEmail();
+    void fetchGitHubDetails();
   }, []);
 
   useEffect(() => {
