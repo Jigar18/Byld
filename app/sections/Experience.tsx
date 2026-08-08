@@ -346,10 +346,8 @@ export default function Experience() {
         throw new Error("Failed to delete experience");
       }
 
-      // Refresh the experiences from the database
       await fetchExperiences();
       setExperienceToDelete(null);
-      handleCloseModal();
     } catch (error) {
       console.error("Error deleting experience:", error);
     } finally {
@@ -438,15 +436,31 @@ export default function Experience() {
                     </div>
 
                     <div className="group flex flex-1 flex-col gap-5 md:flex-row">
-                      <div className="relative flex-shrink-0 border-l border-white/10 pl-4 md:w-64 md:border-l-0 md:pl-0">
-                        {/* Individual edit button for each experience */}
-                        {isOwner && <button
-                          className="absolute right-0 top-0 rounded-md p-1.5 text-slate-400 opacity-100 transition-all duration-200 hover:bg-white/5 hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
-                          onClick={() => handleOpenModal(index)}
-                          type="button"
-                        >
-                          <Edit3 className="h-3 w-3" />
-                        </button>}
+                      <div
+                        className={`relative flex-shrink-0 border-l border-white/10 pl-4 md:w-64 md:border-l-0 md:pl-0 ${isOwner ? "pr-20" : ""}`}
+                      >
+                        {isOwner && (
+                          <div className="absolute right-0 top-0 flex gap-1 opacity-100 transition-opacity duration-200 sm:opacity-0 sm:group-hover:opacity-100">
+                            <button
+                              className="rounded-md p-2 text-slate-400 transition-all duration-200 hover:scale-110 hover:bg-white/10 hover:text-white"
+                              onClick={() => handleOpenModal(index)}
+                              type="button"
+                              aria-label={`Edit ${level.company} experience`}
+                              title="Edit experience"
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </button>
+                            <button
+                              className="rounded-md p-2 text-slate-400 transition-all duration-200 hover:scale-110 hover:bg-red-500/10 hover:text-red-300"
+                              onClick={() => setExperienceToDelete(level)}
+                              type="button"
+                              aria-label={`Delete ${level.company} experience`}
+                              title="Delete experience"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
 
                         <h3 className="portfolio-display text-xl font-semibold text-slate-100">
                           {level.company}
@@ -724,19 +738,6 @@ export default function Experience() {
                     >
                       Cancel
                     </Button>
-                    {editingIndex !== null && (
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          setExperienceToDelete(experience[editingIndex])
-                        }
-                        className="bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-300 hover:text-zinc-200"
-                        disabled={saving}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </Button>
-                    )}
                   </div>
                   <Button
                     onClick={handleSaveChanges}

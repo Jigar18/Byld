@@ -70,17 +70,19 @@ export default function ProjectCard({
       {/* Project actions appear without competing with the content. */}
       {onEditProject && <button
         onClick={handleEdit}
-        className="absolute top-2 right-9 z-10 rounded-full bg-zinc-800/90 p-1.5 text-white opacity-100 transition-opacity duration-200 hover:bg-zinc-700 sm:opacity-0 sm:group-hover:opacity-100"
+        className="absolute right-11 top-2 z-10 rounded-full bg-zinc-800/90 p-2 text-white opacity-100 transition-all duration-200 hover:scale-110 hover:bg-zinc-700 sm:opacity-0 sm:group-hover:opacity-100"
+        aria-label="Edit project"
         title="Edit project"
       >
-        <Pencil className="h-3 w-3" />
+        <Pencil className="h-4 w-4" />
       </button>}
       {onDeleteProject && <button
         onClick={handleDelete}
-        className="absolute top-2 right-2 p-1 bg-zinc-600/80 rounded-full text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 hover:bg-zinc-500 z-10"
+        className="absolute right-2 top-2 z-10 rounded-full bg-zinc-600/80 p-2 text-white opacity-100 transition-all duration-200 hover:scale-110 hover:bg-zinc-500 sm:opacity-0 sm:group-hover:opacity-100"
+        aria-label="Delete project"
         title="Delete project"
       >
-        <X className="h-3 w-3" />
+        <X className="h-4 w-4" />
       </button>}
 
       <button
