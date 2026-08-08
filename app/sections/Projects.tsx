@@ -21,7 +21,7 @@ import {
   removeUnsavedProjectVideo,
 } from "../components/ProjectVideoDropzone";
 import { useUser } from "../context/UserContext";
-import { SkillIconMap } from "../components/SkillIcon";
+import { getSkillIcon, SkillIconMap } from "../components/SkillIcon";
 import { primaryActionButtonClass } from "@/components/ui/button";
 import {
   Tooltip,
@@ -41,6 +41,32 @@ type ModalProject = Omit<PortfolioProject, "githubUrl" | "liveUrl"> & {
 };
 
 const MAX_PROJECTS = 4;
+
+const findMissingSkillIcons = async (
+  techStacks: string[][],
+  currentIcons: SkillIconMap,
+) => {
+  const missingSkills = Array.from(new Set(techStacks.flat())).filter(
+    (skill) => currentIcons[skill] === undefined && !getSkillIcon(skill),
+  );
+
+  const icons = await Promise.all(
+    missingSkills.map(async (skill) => {
+      try {
+        const response = await fetch(
+          `/api/skill-icons?skill=${encodeURIComponent(skill)}`,
+        );
+        if (!response.ok) return null;
+        const data = (await response.json()) as { icons?: string[] };
+        return data.icons?.[0] ? ([skill, data.icons[0]] as const) : null;
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  return Object.fromEntries(icons.filter((icon) => icon !== null));
+};
 
 const toModalProject = (project: PortfolioProject): ModalProject => ({
   ...project,
@@ -99,9 +125,20 @@ export default function Projects() {
       ]);
       if (projectResponse.ok) {
         const data = await projectResponse.json();
-        setProjects(data.projects || []);
+        const loadedProjects = (data.projects || []) as PortfolioProject[];
+        setProjects(loadedProjects);
+        if (skillResponse.ok) {
+          const skillData = await skillResponse.json();
+          const storedIcons = (skillData.iconMap || {}) as SkillIconMap;
+          const projectIcons = await findMissingSkillIcons(
+            loadedProjects.map((project) => project.techStack),
+            storedIcons,
+          );
+          setSkills(skillData.skills || []);
+          setSkillIcons({ ...storedIcons, ...projectIcons });
+        }
       }
-      if (skillResponse.ok) {
+      if (!projectResponse.ok && skillResponse.ok) {
         const data = await skillResponse.json();
         setSkills(data.skills || []);
         setSkillIcons(data.iconMap || {});
@@ -201,6 +238,11 @@ export default function Projects() {
     const data = (await response.json()) as { project?: PortfolioProject; error?: string };
     if (!response.ok || !data.project) throw new Error(data.error || "Unable to import project");
     setProjects((current) => [data.project!, ...current]);
+    const importedIcons = await findMissingSkillIcons(
+      [data.project.techStack],
+      skillIcons,
+    );
+    setSkillIcons((current) => ({ ...current, ...importedIcons }));
     setSourceOpen(false);
     setSelectedProject(toModalProject(data.project));
   };

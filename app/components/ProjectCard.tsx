@@ -61,7 +61,7 @@ export default function ProjectCard({
 
   return (
     <motion.div
-      {...{className:"profile-card profile-surface-neutral profile-card-lift relative group min-h-[19rem] overflow-hidden rounded-2xl border shadow-lg shadow-black/20 sm:min-h-[23.75rem]"}}
+      {...{className:"profile-card profile-surface-neutral profile-card-lift relative group flex min-h-[19rem] flex-col overflow-hidden rounded-2xl border shadow-lg shadow-black/20 sm:min-h-[23.75rem]"}}
       whileHover={{ y: -5 }}
       transition={{ duration: 0.3 }}
       initial={{ opacity: 0, y: 20 }}
@@ -107,7 +107,7 @@ export default function ProjectCard({
         </span>
       </button>
 
-      <div className="p-4">
+      <div className="flex flex-1 flex-col p-4">
         <h3
           className="portfolio-display cursor-pointer text-lg font-semibold text-slate-100 transition-colors hover:text-white"
           onClick={handleClick}
@@ -135,7 +135,7 @@ export default function ProjectCard({
           )}
         </div>
 
-        <div className="mt-4 flex justify-end gap-3">
+        <div className="mt-auto flex justify-end gap-3 pt-4">
           {project.githubUrl && (
             <a
               href={project.githubUrl}
