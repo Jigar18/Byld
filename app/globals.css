@@ -59,6 +59,47 @@ html {
   }
 }
 
+.byldit-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.15;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+
+.byldit-preview-fade {
+  position: relative;
+}
+
+.byldit-preview-fade::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 10;
+  height: 24%;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(9, 9, 11, 0), rgba(9, 9, 11, 0.84) 58%, #09090b 100%);
+  backdrop-filter: blur(5px);
+  mask-image: linear-gradient(to bottom, transparent, black 35%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .byldit-root,
+  .byldit-root *,
+  .byldit-root *::before,
+  .byldit-root *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

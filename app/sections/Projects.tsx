@@ -20,6 +20,7 @@ import {
   ProjectVideo,
   removeUnsavedProjectVideo,
 } from "../components/ProjectVideoDropzone";
+import { ProjectImage, removeUnsavedProjectImage } from "../components/ProjectImageUploader";
 import { useUser } from "../context/UserContext";
 import { getSkillIcon, SkillIconMap } from "../components/SkillIcon";
 import { primaryActionButtonClass } from "@/components/ui/button";
@@ -70,6 +71,7 @@ const findMissingSkillIcons = async (
 
 const toModalProject = (project: PortfolioProject): ModalProject => ({
   ...project,
+  images: project.images || [],
   githubUrl: project.githubUrl || "",
   liveUrl: project.liveUrl || "",
   image: "",
@@ -226,6 +228,27 @@ export default function Projects() {
     setEditingProject(project);
     if (project) setEditorOpen(true);
     else setSourceOpen(true);
+  };
+
+  const saveProjectImages = async (projectId: string, images: ProjectImage[]) => {
+    const project = projects.find((item) => item.id === projectId);
+    if (!project) throw new Error("Project not found");
+    const addedImages = images.filter((image) => !(project.images || []).some((current) => current.imagePublicId === image.imagePublicId));
+
+    const response = await fetch("/api/projects", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ ...project, images, id: projectId }),
+    });
+    if (!response.ok) {
+      await Promise.all(addedImages.map((image) => removeUnsavedProjectImage(image.imagePublicId)));
+      throw new Error("The images were uploaded but could not be saved to the project");
+    }
+
+    const data = await response.json();
+    setProjects((current) => current.map((item) => item.id === projectId ? data.project : item));
+    setSelectedProject(toModalProject(data.project));
   };
 
   const importProject = async (repositoryId: number) => {
@@ -426,7 +449,7 @@ export default function Projects() {
                   project={toModalProject(project)}
                   index={index}
                   skillIcons={skillIcons}
-                  onOpenProject={(selected) => setSelectedProject(selected)}
+                  onOpenProject={() => setSelectedProject(toModalProject(project))}
                   onEditProject={isOwner ? () => openEditor(project) : undefined}
                   onDeleteProject={
                     isOwner ? () => setProjectToDelete(project) : undefined
@@ -488,6 +511,7 @@ export default function Projects() {
         skillIcons={skillIcons}
         isOwner={isOwner}
         onVideoUploaded={isOwner ? saveProjectVideo : undefined}
+        onImagesChanged={isOwner ? saveProjectImages : undefined}
       />
     </motion.div>
   );

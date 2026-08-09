@@ -3,18 +3,17 @@ import { createHash } from "crypto";
 export const PROJECT_VIDEO_MAX_BYTES = 30 * 1024 * 1024;
 export const PROJECT_VIDEO_MAX_DURATION = 120;
 export const PROJECT_VIDEO_FORMATS = ["mp4", "webm"] as const;
+export const PROJECT_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+export const PROJECT_IMAGE_FORMATS = ["jpg", "jpeg", "png", "webp", "avif"] as const;
 
 function getCloudinaryConfig() {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
-  const uploadPreset = process.env.CLOUDINARY_VIDEO_UPLOAD_PRESET;
-
-  if (!cloudName || !apiKey || !apiSecret || !uploadPreset) {
-    throw new Error("Cloudinary video uploads are not configured");
+  if (!cloudName || !apiKey || !apiSecret) {
+    throw new Error("Cloudinary uploads are not configured");
   }
-
-  return { cloudName, apiKey, apiSecret, uploadPreset };
+  return { cloudName, apiKey, apiSecret };
 }
 
 function signCloudinaryParams(params: Record<string, string | number | boolean>, apiSecret: string) {
@@ -29,18 +28,47 @@ function signCloudinaryParams(params: Record<string, string | number | boolean>,
 
 export function createProjectVideoUploadSignature(userId: string) {
   const config = getCloudinaryConfig();
+  const uploadPreset = process.env.CLOUDINARY_VIDEO_UPLOAD_PRESET;
+  if (!uploadPreset) throw new Error("Cloudinary video uploads are not configured");
   const timestamp = Math.floor(Date.now() / 1000);
   const folder = `portfolio-videos/${userId}`;
-  const params = { folder, timestamp, upload_preset: config.uploadPreset };
+  const params = { folder, timestamp, upload_preset: uploadPreset };
 
   return {
     apiKey: config.apiKey,
     cloudName: config.cloudName,
     folder,
     timestamp,
-    uploadPreset: config.uploadPreset,
+    uploadPreset,
     signature: signCloudinaryParams(params, config.apiSecret),
   };
+}
+
+export function createProjectImageUploadSignature(userId: string) {
+  const config = getCloudinaryConfig();
+  const timestamp = Math.floor(Date.now() / 1000);
+  const folder = `portfolio-images/${userId}`;
+  return {
+    apiKey: config.apiKey,
+    cloudName: config.cloudName,
+    folder,
+    timestamp,
+    signature: signCloudinaryParams({ folder, timestamp }, config.apiSecret),
+  };
+}
+
+export function isOwnedProjectImage(publicId: string, userId: string) {
+  return publicId.startsWith(`portfolio-images/${userId}/`);
+}
+
+export function isCloudinaryImageUrl(url: string) {
+  const { cloudName } = getCloudinaryConfig();
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && parsed.hostname === "res.cloudinary.com" && parsed.pathname.startsWith(`/${cloudName}/image/upload/`);
+  } catch {
+    return false;
+  }
 }
 
 export function isOwnedProjectVideo(publicId: string, userId: string) {
@@ -84,6 +112,61 @@ export async function deleteProjectVideo(publicId: string) {
   }
 
   throw new Error("Unable to remove the Cloudinary video");
+}
+
+export async function deleteProjectImage(publicId: string) {
+  const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
+  const timestamp = Math.floor(Date.now() / 1000);
+  const params = { invalidate: true, public_id: publicId, timestamp };
+  const body = new URLSearchParams({
+    api_key: apiKey,
+    invalidate: "true",
+    public_id: publicId,
+    signature: signCloudinaryParams(params, apiSecret),
+    timestamp: String(timestamp),
+  });
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, { method: "POST", body });
+      const result = response.ok ? await response.json() as { result?: string } : null;
+      if (result?.result === "ok" || result?.result === "not found") return;
+    } catch (error) {
+      if (attempt === 2) throw error;
+    }
+    if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
+  }
+
+  throw new Error("Unable to remove the Cloudinary image");
+}
+
+export async function getVerifiedProjectImage(publicId: string, userId: string) {
+  const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
+  if (!isOwnedProjectImage(publicId, userId)) throw new Error("Project image not found");
+
+  const authorization = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload/${encodeURIComponent(publicId)}`, {
+    headers: { Authorization: `Basic ${authorization}` },
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error("Cloudinary could not verify the project image");
+
+  const asset = (await response.json()) as { bytes?: number; format?: string; public_id?: string; secure_url?: string };
+  const format = asset.format?.toLowerCase();
+  if (
+    asset.public_id !== publicId ||
+    !asset.secure_url ||
+    !isCloudinaryImageUrl(asset.secure_url) ||
+    !Number.isInteger(asset.bytes) ||
+    !asset.bytes ||
+    asset.bytes > PROJECT_IMAGE_MAX_BYTES ||
+    !format ||
+    !PROJECT_IMAGE_FORMATS.includes(format as (typeof PROJECT_IMAGE_FORMATS)[number])
+  ) {
+    throw new Error("Project images must be JPG, PNG, WebP, or AVIF files up to 10 MB");
+  }
+
+  return { imageUrl: asset.secure_url, imagePublicId: publicId };
 }
 
 export async function getVerifiedProjectVideo(publicId: string, userId: string) {

@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Github, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Github, ExternalLink, ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProjectVideoDropzone, { ProjectVideo } from "./ProjectVideoDropzone";
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
+import ProjectImageUploader, { ProjectImage } from "./ProjectImageUploader";
+import ProjectImageCarousel from "./ProjectImageCarousel";
 
 interface Project {
   id: string;
@@ -21,6 +23,7 @@ interface Project {
   githubUrl?: string;
   liveUrl?: string;
   image?: string;
+  images: ProjectImage[];
 }
 
 interface ProjectModalProps {
@@ -30,6 +33,7 @@ interface ProjectModalProps {
   projects: Project[];
   isOwner?: boolean;
   onVideoUploaded?: (projectId: string, video: ProjectVideo) => Promise<void>;
+  onImagesChanged?: (projectId: string, images: ProjectImage[]) => Promise<void>;
   skillIcons?: SkillIconMap;
 }
 
@@ -40,6 +44,7 @@ export default function ProjectModal({
   projects,
   isOwner = false,
   onVideoUploaded,
+  onImagesChanged,
   skillIcons = {},
 }: ProjectModalProps) {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -283,6 +288,23 @@ export default function ProjectModal({
                     </div>
                   ) : onVideoUploaded ? (
                     <ProjectVideoDropzone onUploaded={(video) => onVideoUploaded(currentProject.id, video)} />
+                  ) : null}
+                </div>}
+
+                {(currentProject.images?.length || isOwner) && <div className="mb-8">
+                  <h4 className="mb-3 flex items-center gap-2 text-lg font-medium text-slate-100">
+                    <span className="inline-flex rounded-md border border-zinc-800/30 bg-zinc-900/20 p-1.5 text-zinc-400 shadow-md shadow-zinc-500/20"><Images className="h-4 w-4" /></span>
+                    Project Images
+                  </h4>
+                  {currentProject.images?.length ? (
+                    <ProjectImageCarousel images={currentProject.images} />
+                  ) : onImagesChanged ? (
+                    <ProjectImageUploader
+                      images={[]}
+                      onUploaded={(image) => onImagesChanged(currentProject.id, [image])}
+                      onReorder={() => undefined}
+                      onRemove={() => undefined}
+                    />
                   ) : null}
                 </div>}
 

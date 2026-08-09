@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { getGitHubOAuthRedirectUri } from "@/lib/githubAuth";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
   const state = randomBytes(32).toString("base64url");
   const oauthUrl = new URL("https://github.com/login/oauth/authorize");
   oauthUrl.searchParams.set("client_id", clientId);
-  oauthUrl.searchParams.set("redirect_uri", new URL("/api/github/callback", req.url).toString());
+  oauthUrl.searchParams.set("redirect_uri", getGitHubOAuthRedirectUri(req.url));
   oauthUrl.searchParams.set("scope", "read:user user:email");
   oauthUrl.searchParams.set("state", state);
 

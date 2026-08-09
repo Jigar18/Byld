@@ -134,23 +134,37 @@ model Education {
 }
 
 model Project {
-  id            String   @id @default(uuid())
+  id            String         @id @default(uuid())
   title         String
   description   String
   techStack     String[]
   githubUrl     String?
   liveUrl       String?
   videoUrl      String?
-  videoPublicId String?  @unique
+  videoPublicId String?        @unique
   videoDuration Float?
   videoBytes    Int?
   videoFormat   String?
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  images        ProjectImage[]
 
   @@index([userId])
+}
+
+model ProjectImage {
+  id            String   @id @default(uuid())
+  imageUrl      String
+  imagePublicId String   @unique
+  position      Int
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId     String
+  createdAt     DateTime @default(now())
+
+  @@unique([projectId, position])
+  @@index([projectId])
 }
 
 model GitHubInstallation {

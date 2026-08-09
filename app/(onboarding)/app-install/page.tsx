@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const INSTALL_URL = "https://github.com/apps/portfolio-creator/installations/new";
+const INSTALL_URL =
+  process.env.NEXT_PUBLIC_GITHUB_APP_INSTALL_URL ??
+  "https://github.com/apps/byld-portfolio/installations/new";
 
 export default function InstallApp() {
   const router = useRouter();

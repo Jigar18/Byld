@@ -35,10 +35,25 @@ const profileDisplay = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "Portfolio Creator — Your GitHub. Your Work. One Link.",
+  metadataBase: new URL("https://byldit.vercel.app"),
+  title: "Byldit — Your GitHub shows the code. Your portfolio tells the story.",
   description:
-    "Build a developer portfolio from your GitHub projects, contribution activity, skills, and career story.",
-  icons: "/tab-icon.png",
+    "Bring your projects, GitHub contributions, skills, and experience into one developer portfolio built to be explored.",
+  icons: "/landing/byldit-mark-mono.webp",
+  openGraph: {
+    title: "Byldit — Give your work a place to speak",
+    description: "Build a developer portfolio from the work already living on your GitHub.",
+    url: "https://byldit.vercel.app",
+    siteName: "Byldit",
+    type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Byldit developer portfolio preview" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Byldit — Give your work a place to speak",
+    description: "Build a developer portfolio from the work already living on your GitHub.",
+    images: ["/og.png"],
+  },
 };
 
 export const viewport: Viewport = {

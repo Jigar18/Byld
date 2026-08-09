@@ -1,605 +1,141 @@
-"use client";
-
+import Image from "next/image";
 import Link from "next/link";
-import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
 import {
   ArrowRight,
   Check,
-  CircleDot,
+  ChevronDown,
   Github,
-  Link2,
+  Layers3,
   Menu,
-  PenLine,
   Sparkles,
-  X,
+  UserRound,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import {
-  ConnectMockup,
-  CredentialsMockup,
-  ExperienceMockup,
-  HeatmapMockup,
-  HeroPortfolioPreview,
-  ProjectMockup,
+  ActivityEvidence,
+  CareerEvidence,
+  OwnershipControls,
+  PortfolioPreview,
+  ProjectFragment,
+  ProjectsEvidence,
 } from "./ProductMockups";
 
-const ThreeCommitField = dynamic(() => import("./ThreeCommitField"), {
-  ssr: false,
-});
-
-const navLinks = [
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Features", href: "#features" },
-  { label: "Compare", href: "#compare" },
-  { label: "Example", href: "/user/Jigar18" },
+const nav = [
+  ["Product", "#product"],
+  ["How it works", "#how-it-works"],
+  ["FAQ", "#faq"],
+  ["See it live", "/user/Jigar18"],
 ];
 
 const steps = [
-  {
-    number: "01",
-    icon: Github,
-    title: "Connect GitHub",
-    copy: "Sign in and we instantly pull your repositories, contribution graph, and languages used.",
-  },
-  {
-    number: "02",
-    icon: PenLine,
-    title: "Customize your story",
-    copy: "Add your bio, experience, certifications, and education. Keep what matters; skip what doesn’t.",
-  },
-  {
-    number: "03",
-    icon: Link2,
-    title: "Share your link",
-    copy: "Get a clean URL for job applications, LinkedIn, your résumé, or your email signature.",
-  },
+  { icon: Github, title: "Connect GitHub", copy: "Sign in using the account where your work already lives." },
+  { icon: Layers3, title: "Connect repositories", copy: "Install the GitHub App for repository access and contribution data." },
+  { icon: UserRound, title: "Set the foundation", copy: "Add your role, location, education, skills, and profile picture." },
+  { icon: Sparkles, title: "Publish and keep building", copy: "Share your public link, then add projects and experience at your pace." },
 ];
 
-const comparison = [
-  ["GitHub project sync", "Manual links", "Usually manual", "Automatic"],
-  ["Contribution history", "Link or embed", "Custom setup", "Synced heatmap"],
-  ["Project storytelling", "Flexible pages", "Template-led", "Case study + demo"],
-  ["Developer credentials", "Build manually", "Assemble sections", "Built in"],
-  ["First polished draft", "Manual curation", "Design + content setup", "About 2 minutes"],
-  ["Best fit", "Pages and link hubs", "Broad portfolios", "Developer careers"],
+const faqs = [
+  ["What comes from GitHub?", "Your GitHub identity and contribution activity are connected. You choose the projects to feature and write their story."],
+  ["Do private repositories appear automatically?", "No. Repositories only become part of your public portfolio when you choose to present them."],
+  ["Do I need to code anything?", "No. Guided forms and simple owner controls handle the portfolio content."],
+  ["Can I update it later?", "Yes. Keep editing your portfolio as your projects, skills, and experience grow."],
+  ["What do visitors see?", "Visitors see the content you publish—not your editing controls or account actions."],
 ];
 
-function Reveal({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.18 }}
-      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-      {...{ className }}
-    >
-      {children}
-    </motion.div>
+    <Link href="/" className="flex items-center gap-2.5" aria-label="Byldit home">
+      <Image src="/landing/byldit-mark-mono.webp" alt="" width={compact ? 30 : 34} height={compact ? 30 : 34} className="rounded-lg" priority />
+      <span className="text-sm font-semibold tracking-[-0.02em] text-white">Byldit</span>
+    </Link>
   );
 }
 
-function SectionLabel({
-  number,
-  children,
-}: {
-  number: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <p className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-cyan-300">
-      <span className="text-zinc-600">{number}</span>
-      <span className="h-px w-8 bg-cyan-300/50" />
-      {children}
-    </p>
-  );
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <p className="max-w-[18rem] font-mono text-[9px] uppercase leading-5 tracking-[0.18em] text-zinc-500 sm:max-w-none sm:text-[10px] sm:tracking-[0.22em]">{children}</p>;
 }
 
-function GithubButton({ className = "" }: { className?: string }) {
+function PrimaryButton({ className = "" }: { className?: string }) {
   return (
-    <a
-      href="/api/github/auth"
-      className={`group inline-flex h-12 items-center justify-center gap-2.5 bg-cyan-300 px-5 text-sm font-semibold text-[#061014] transition hover:-translate-y-0.5 hover:bg-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-[#05080b] ${className}`}
-    >
-      <Github className="h-4.5 w-4.5" />
-      Continue with GitHub
-      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+    <a href="/api/github/auth" className={`group inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-zinc-100 px-5 text-sm font-semibold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-950 ${className}`}>
+      <Github className="h-4 w-4" />Build mine with GitHub<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
     </a>
   );
 }
 
-function FeatureRow({
-  number,
-  eyebrow,
-  title,
-  copy,
-  visual,
-  reverse = false,
-}: {
-  number: string;
-  eyebrow: string;
-  title: string;
-  copy: string;
-  visual: React.ReactNode;
-  reverse?: boolean;
-}) {
-  return (
-    <Reveal
-      className={`grid items-center gap-10 border-t border-white/10 py-20 lg:grid-cols-2 lg:gap-20 ${
-        reverse ? "lg:[&>*:first-child]:order-2" : ""
-      }`}
-    >
-      <div>
-        <SectionLabel number={number}>{eyebrow}</SectionLabel>
-        <h3 className="mt-6 max-w-xl text-3xl font-semibold leading-tight tracking-[-0.035em] text-white sm:text-4xl">
-          {title}
-        </h3>
-        <p className="mt-5 max-w-lg text-base leading-7 text-zinc-400">
-          {copy}
-        </p>
-        <div className="mt-7 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-600">
-          <CircleDot className="h-3.5 w-3.5 text-cyan-300" />
-          Included in every portfolio
-        </div>
-      </div>
-      <div className="min-w-0">{visual}</div>
-    </Reveal>
-  );
-}
-
 export default function LandingPage() {
-  const heroRef = useRef<HTMLElement>(null);
-  const [pastHero, setPastHero] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const updateHeader = () => {
-      const threshold = (heroRef.current?.offsetHeight ?? 720) - 160;
-      setPastHero(window.scrollY > threshold);
-    };
-    updateHeader();
-    window.addEventListener("scroll", updateHeader, { passive: true });
-    return () => window.removeEventListener("scroll", updateHeader);
-  }, []);
-
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#05080b] text-zinc-100 selection:bg-cyan-300 selection:text-[#061014]">
-      <header
-        className={`fixed inset-x-0 top-0 z-50 border-b transition-all duration-300 ${
-          pastHero || menuOpen
-            ? "border-white/10 bg-[rgba(5,8,11,0.78)] shadow-lg shadow-black/10 backdrop-blur-xl"
-            : "border-transparent bg-transparent"
-        }`}
-      >
-        <nav className="mx-auto flex h-[4.75rem] max-w-7xl items-center px-5 sm:px-8 lg:px-10">
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-            aria-label="Portfolio Creator home"
-          >
-            <span className="relative grid h-9 w-9 place-items-center border border-cyan-300/35 bg-cyan-300/[0.07] font-mono text-xs font-bold text-cyan-200">
-              P
-              <span className="absolute -right-1 -top-1 h-2 w-2 bg-cyan-300 shadow-[0_0_12px_#67e8f9]" />
-            </span>
-            <span className="text-sm font-semibold tracking-tight">
-              Portfolio{" "}
-              <span className="hidden font-mono text-[9px] font-normal uppercase tracking-[0.17em] text-zinc-600 min-[420px]:inline">
-                Creator
-              </span>
-            </span>
-          </Link>
-
-          <div className="ml-auto hidden items-center gap-7 lg:flex">
-            {navLinks.map((link) =>
-              link.href.startsWith("#") ? (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="text-xs text-zinc-400 transition hover:text-white"
-                >
-                  {link.label}
-                </a>
-              ) : (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="text-xs text-zinc-400 transition hover:text-white"
-                >
-                  {link.label}
-                </Link>
-              ),
-            )}
+    <main className="byldit-root min-h-screen overflow-hidden bg-[#09090b] text-zinc-100 selection:bg-zinc-100 selection:text-zinc-950">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.07] bg-[#09090b]/85 backdrop-blur-xl">
+        <nav className="mx-auto flex h-[72px] max-w-[1280px] items-center px-5 sm:px-8 lg:px-10" aria-label="Main navigation">
+          <Brand />
+          <div className="ml-auto hidden items-center gap-7 md:flex">
+            {nav.map(([label, href]) => <a key={label} href={href} className="text-xs text-zinc-500 transition hover:text-white">{label}</a>)}
           </div>
-
-          <div className="ml-auto hidden items-center gap-4 sm:flex lg:ml-9">
-            <Link
-              href="/login"
-              className="text-xs font-medium text-zinc-300 transition hover:text-white"
-            >
-              Log in
-            </Link>
-            <a
-              href="/api/github/auth"
-              className="inline-flex h-9 items-center bg-white px-4 text-xs font-semibold text-zinc-950 transition hover:bg-cyan-200"
-            >
-              Get started free
-            </a>
+          <div className="ml-8 hidden items-center gap-4 md:flex">
+            <Link href="/login" className="text-xs font-medium text-zinc-300 transition hover:text-white">Log in</Link>
+            <a href="/api/github/auth" className="inline-flex h-9 items-center rounded-lg bg-zinc-100 px-4 text-xs font-semibold text-zinc-950 transition hover:bg-white">Build yours</a>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setMenuOpen((current) => !current)}
-            className="ml-auto grid h-10 w-10 place-items-center border border-white/10 text-zinc-300 sm:hidden"
-            aria-label={menuOpen ? "Close navigation" : "Open navigation"}
-            aria-expanded={menuOpen}
-          >
-            {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </button>
+          <details className="group relative ml-auto md:hidden">
+            <summary className="grid h-10 w-10 cursor-pointer list-none place-items-center rounded-lg border border-white/10 text-zinc-300 [&::-webkit-details-marker]:hidden"><Menu className="h-4 w-4" /><span className="sr-only">Open navigation</span></summary>
+            <div className="absolute right-0 top-12 w-64 rounded-xl border border-white/10 bg-zinc-950 p-3 shadow-2xl shadow-black/50">
+              {nav.map(([label, href]) => <a key={label} href={href} className="block rounded-lg px-3 py-3 text-sm text-zinc-400 hover:bg-white/5 hover:text-white">{label}</a>)}
+              <div className="mt-2 grid grid-cols-2 gap-2 border-t border-white/[0.07] pt-3"><Link href="/login" className="grid h-10 place-items-center rounded-lg border border-white/10 text-xs">Log in</Link><a href="/api/github/auth" className="grid h-10 place-items-center rounded-lg bg-zinc-100 text-xs font-semibold text-zinc-950">Build yours</a></div>
+            </div>
+          </details>
         </nav>
-        {menuOpen && (
-          <div className="border-t border-white/10 bg-[#05080b] px-5 py-5 sm:hidden">
-            <div className="grid gap-1">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="border-b border-white/[0.06] py-3 text-sm text-zinc-300"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              <Link
-                href="/login"
-                className="grid h-11 place-items-center border border-white/15 text-sm"
-              >
-                Log in
-              </Link>
-              <a
-                href="/api/github/auth"
-                className="grid h-11 place-items-center bg-cyan-300 text-sm font-semibold text-[#061014]"
-              >
-                Get started
-              </a>
-            </div>
-          </div>
-        )}
       </header>
 
-      <section
-        ref={heroRef}
-        className="relative mx-auto grid min-h-[52rem] max-w-7xl items-center gap-12 px-5 pb-20 pt-32 sm:px-8 lg:grid-cols-[0.88fr_1.12fr] lg:px-10 lg:pb-24 lg:pt-28"
-      >
-        <div className="pointer-events-none absolute -right-48 top-10 h-[44rem] w-[52rem] opacity-45 lg:opacity-85">
-          <ThreeCommitField />
-        </div>
-        <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:linear-gradient(rgba(103,232,249,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(103,232,249,.5)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(to_bottom,black,transparent_85%)]" />
-
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-          {...{ className: "relative z-10" }}
-        >
-          <div className="inline-flex items-center gap-2 border border-cyan-300/20 bg-cyan-300/[0.045] px-3 py-2 font-mono text-[9px] uppercase tracking-[0.18em] text-cyan-200">
-            <Sparkles className="h-3.5 w-3.5" />
-            GitHub-native portfolio builder
-          </div>
-          <h1 className="mt-7 max-w-2xl text-[2.8rem] font-semibold leading-[0.9] tracking-[-0.055em] text-white sm:text-[clamp(3.3rem,7vw,6.6rem)] sm:leading-[0.88] sm:tracking-[-0.065em]">
-            Your GitHub.
-            <br />
-            Your Work.
-            <br />
-            <span className="text-cyan-300">One Link.</span>
+      <section className="byldit-grid relative mx-auto grid min-h-[880px] max-w-[1280px] items-center gap-14 px-5 pb-24 pt-32 sm:px-8 lg:grid-cols-[0.82fr_1.18fr] lg:px-10 lg:pt-28">
+        <div className="pointer-events-none absolute right-[-12%] top-20 h-[38rem] w-[52rem] rounded-full bg-white/[0.025] blur-[120px]" />
+        <div className="relative z-10">
+          <Eyebrow>Built from your GitHub. Finished by you.</Eyebrow>
+          <h1 className="mt-7 max-w-3xl text-[2.55rem] font-semibold leading-[0.94] tracking-[-0.055em] text-white sm:text-[clamp(3.3rem,7.2vw,6.45rem)] sm:leading-[0.9] sm:tracking-[-0.065em]">
+            Your GitHub<br />shows the code.<br /><span className="text-zinc-500">Your portfolio</span><br />tells the story.
           </h1>
-          <p className="mt-7 max-w-xl text-base leading-7 text-zinc-400 sm:text-lg sm:leading-8">
-            Sign in with GitHub, and we&apos;ll pull your projects, activity,
-            and skills automatically. Add your story, showcase your work, and
-            share one link people actually want to click.
-          </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <GithubButton />
-            <Link
-              href="/user/Jigar18"
-              className="inline-flex h-12 items-center justify-center gap-2 border border-white/15 px-5 text-sm font-medium text-zinc-200 transition hover:border-cyan-300/40 hover:bg-cyan-300/[0.04] hover:text-white"
-            >
-              See live example
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-          <div className="mt-9 flex flex-wrap gap-x-5 gap-y-2 border-l border-cyan-300/40 pl-4 font-mono text-[9px] uppercase tracking-[0.15em] text-zinc-600">
-            {["2-minute setup", "No design skills", "Free to start"].map(
-              (item) => (
-                <span key={item} className="flex items-center gap-2">
-                  <Check className="h-3 w-3 text-cyan-300" />
-                  {item}
-                </span>
-              ),
-            )}
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.94, x: 20 }}
-          animate={{ opacity: 1, scale: 1, x: 0 }}
-          transition={{
-            duration: 0.9,
-            delay: 0.14,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          {...{ className: "relative z-10 min-w-0" }}
-        >
-          <HeroPortfolioPreview />
-        </motion.div>
+          <p className="mt-7 max-w-xl text-base leading-7 text-zinc-400 sm:text-lg sm:leading-8">Bring your projects, contributions, skills, and experience into one link that shows what you can actually do.</p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row"><PrimaryButton /><Link href="/user/Jigar18" className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-white/12 bg-white/[0.025] px-5 text-sm font-medium text-zinc-300 transition hover:border-white/25 hover:bg-white/[0.06] hover:text-white">See a live portfolio<ArrowRight className="h-4 w-4" /></Link></div>
+          <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[10px] text-zinc-600">{["Guided setup", "No code required", "One link to share"].map(item=><span key={item} className="flex items-center gap-2"><Check className="h-3 w-3 text-zinc-400" />{item}</span>)}</div>
+        </div>
+        <div className="relative z-10 mx-auto w-full max-w-2xl lg:translate-x-8 lg:rotate-[0.5deg]"><PortfolioPreview compact /></div>
       </section>
 
-      <section className="border-y border-white/10 bg-[#070b0f]">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-white/10 px-5 sm:px-8 md:grid-cols-4 lg:px-10">
-          {[
-            ["01", "GitHub connected"],
-            ["365", "days of activity"],
-            ["04", "project deep-dives"],
-            ["01", "link to share"],
-          ].map(([value, label]) => (
-            <div key={label} className="px-4 py-6 first:pl-0 sm:py-7">
-              <p className="font-mono text-xl text-white">{value}</p>
-              <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-zinc-600">
-                {label}
-              </p>
-            </div>
-          ))}
+      <section id="product" className="scroll-mt-24 border-y border-white/[0.07] bg-[#0c0c0e] px-5 py-24 sm:px-8 lg:py-32">
+        <div className="mx-auto max-w-[1120px]">
+          <div className="grid gap-8 lg:grid-cols-[0.68fr_1.32fr] lg:items-end"><div><Eyebrow>See the result</Eyebrow><h2 className="mt-5 text-4xl font-semibold leading-tight tracking-[-0.045em] text-white sm:text-6xl">This is what<br />“done” looks like.</h2></div><p className="max-w-xl text-base leading-7 text-zinc-400 lg:justify-self-end">One focused page for the work, proof, and experience people came to see.</p></div>
+          <div className="relative mx-auto mt-16 max-w-[980px]"><PortfolioPreview /></div>
+          <div className="mt-8 flex flex-wrap justify-center gap-2">{["Profile & story", "Projects & demos", "GitHub activity", "Experience", "Skills & education", "Credentials", "Contact links"].map(item=><span key={item} className="rounded-full border border-white/[0.08] bg-white/[0.025] px-3 py-1.5 text-[10px] text-zinc-600">{item}</span>)}</div>
         </div>
       </section>
 
-      <section
-        id="how-it-works"
-        className="scroll-mt-24 px-5 py-24 sm:px-8 lg:py-32"
-      >
-        <div className="mx-auto max-w-7xl">
-          <Reveal>
-            <SectionLabel number="01">How it works</SectionLabel>
-            <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_0.6fr] lg:items-end">
-              <h2 className="max-w-3xl text-4xl font-semibold leading-[1.04] tracking-[-0.045em] text-white sm:text-5xl">
-                Live in 3 steps.
-                <br />
-                No design skills needed.
-              </h2>
-              <p className="max-w-lg text-sm leading-6 text-zinc-500 lg:justify-self-end">
-                Your repositories are the starting point—not another blank
-                canvas asking you to become a designer.
-              </p>
-            </div>
-          </Reveal>
+      <section className="px-5 py-24 sm:px-8 lg:py-36">
+        <div className="mx-auto max-w-[1120px]">
+          <Eyebrow>Built for proof</Eyebrow>
+          <h2 className="mt-5 max-w-4xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] text-white sm:text-6xl">Show the work.<br /><span className="text-zinc-600">Skip the résumé PDF.</span></h2>
+          <p className="mt-6 max-w-xl text-base leading-7 text-zinc-400">Turn repository links, job titles, and credentials into proof people can actually explore.</p>
 
-          <div className="mt-14 grid border border-white/10 bg-white/10 md:grid-cols-3 md:gap-px">
-            {steps.map(({ number, icon: Icon, title, copy }, index) => (
-              <Reveal
-                key={title}
-                className="group relative bg-[#070b0f] p-7 transition hover:bg-[#091117] sm:p-9"
-              >
-                <div className="flex items-start justify-between">
-                  <span className="grid h-11 w-11 place-items-center border border-cyan-300/20 bg-cyan-300/[0.05] text-cyan-200">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <span className="font-mono text-[10px] text-zinc-700">
-                    {number}
-                  </span>
-                </div>
-                <h3 className="mt-12 text-xl font-medium text-white">{title}</h3>
-                <p className="mt-4 text-sm leading-6 text-zinc-500">{copy}</p>
-                {index < steps.length - 1 && (
-                  <ArrowRight className="absolute -right-3 top-12 z-10 hidden h-5 w-5 text-cyan-300 md:block" />
-                )}
-              </Reveal>
-            ))}
-          </div>
+          <div className="mt-20 grid items-center gap-10 border-t border-white/[0.08] py-20 lg:grid-cols-2 lg:gap-20"><div><span className="font-mono text-[10px] text-zinc-700">01 / PROJECTS</span><h3 className="mt-5 text-3xl font-semibold tracking-[-0.035em] text-white">Projects, with the why.</h3><p className="mt-4 max-w-md text-sm leading-6 text-zinc-500">Add the story, stack, repository, live link, and demo behind what you shipped.</p></div><ProjectsEvidence /></div>
+          <div className="grid items-center gap-10 border-t border-white/[0.08] py-20 lg:grid-cols-2 lg:gap-20"><ActivityEvidence /><div className="lg:pl-8"><span className="font-mono text-[10px] text-zinc-700">02 / ACTIVITY</span><h3 className="mt-5 text-3xl font-semibold tracking-[-0.035em] text-white">Proof that keeps moving.</h3><p className="mt-4 max-w-md text-sm leading-6 text-zinc-500">Your GitHub contribution heatmap stays connected, so your portfolio does not freeze when you publish it.</p></div></div>
+          <div className="grid items-center gap-10 border-y border-white/[0.08] py-20 lg:grid-cols-2 lg:gap-20"><div><span className="font-mono text-[10px] text-zinc-700">03 / CAREER</span><h3 className="mt-5 text-3xl font-semibold tracking-[-0.035em] text-white">More than code.</h3><p className="mt-4 max-w-md text-sm leading-6 text-zinc-500">Bring your experience, skills, education, certifications, and ways to reach you into the same story.</p></div><CareerEvidence /></div>
         </div>
       </section>
 
-      <section
-        id="features"
-        className="scroll-mt-24 border-t border-white/10 bg-[#070a0d] px-5 sm:px-8"
-      >
-        <div className="mx-auto max-w-7xl">
-          <div className="py-24 lg:py-28">
-            <Reveal>
-              <SectionLabel number="02">The portfolio itself</SectionLabel>
-              <h2 className="mt-6 max-w-4xl text-4xl font-semibold leading-[1.04] tracking-[-0.045em] text-white sm:text-5xl">
-                Less telling recruiters what you can do.
-                <br />
-                <span className="text-zinc-600">More showing them.</span>
-              </h2>
-            </Reveal>
-          </div>
+      <section className="border-y border-white/[0.07] bg-[#0c0c0e] px-5 py-24 sm:px-8 lg:py-32">
+        <div className="mx-auto grid max-w-[1120px] gap-12 lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:gap-24"><div><Eyebrow>Yours to keep shaping</Eyebrow><h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-white sm:text-6xl">It grows when<br />you do.</h2><p className="mt-6 max-w-md text-base leading-7 text-zinc-400">Update your portfolio as your work changes—no code, no rebuild, no starting over.</p></div><OwnershipControls /></div>
+      </section>
 
-          <FeatureRow
-            number="02.1"
-            eyebrow="Project deep-dives"
-            title="More Than a Link. A Real Case Study for Every Project."
-            copy="Each project gets its own detail view—description, tech stack, outcomes, source links, and even a demo video. Let your work speak for itself."
-            visual={<ProjectMockup />}
-          />
-          <FeatureRow
-            number="02.2"
-            eyebrow="GitHub activity"
-            title="Your Commit History, Beautifully Displayed."
-            copy="Developers value consistency. Show your real GitHub contribution graph—automatically synced and always ready to back up the story you tell."
-            visual={<HeatmapMockup />}
-            reverse
-          />
-          <FeatureRow
-            number="02.3"
-            eyebrow="Skills and credentials"
-            title="Credibility, Organized."
-            copy="From certifications to your computer science degree, present your qualifications in a clean, scannable format recruiters can understand in seconds."
-            visual={<CredentialsMockup />}
-          />
-          <FeatureRow
-            number="02.4"
-            eyebrow="Experience"
-            title="Your Career Timeline, Not Just a Resume PDF."
-            copy="Show the roles you’ve held, what you built, and the impact you made—in a format far more engaging than a static attachment."
-            visual={<ExperienceMockup />}
-            reverse
-          />
-          <FeatureRow
-            number="02.5"
-            eyebrow="Connect"
-            title="One Link to Rule Them All."
-            copy="LinkedIn, X, email, GitHub, and more—all your ways to connect, presented in one focused place without turning your portfolio into a link dump."
-            visual={<ConnectMockup />}
-          />
+      <section id="how-it-works" className="scroll-mt-24 px-5 py-24 sm:px-8 lg:py-36">
+        <div className="mx-auto max-w-[1120px]"><div className="grid gap-6 lg:grid-cols-2 lg:items-end"><div><Eyebrow>Four steps. No guesswork.</Eyebrow><h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-white sm:text-6xl">From GitHub<br />to live.</h2></div><p className="max-w-md text-sm leading-6 text-zinc-400 lg:justify-self-end">Follow the guided setup once, then keep refining your portfolio whenever your work changes.</p></div>
+          <div className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] sm:grid-cols-2 lg:grid-cols-4">{steps.map(({icon:Icon,title,copy},index)=><article key={title} className="bg-zinc-950 p-6 sm:p-7"><div className="flex items-start justify-between"><span className="grid h-11 w-11 place-items-center rounded-xl border border-white/10 bg-white/[0.04] text-zinc-300"><Icon className="h-5 w-5" /></span><span className="font-mono text-[9px] text-zinc-700">0{index+1}</span></div><h3 className="mt-10 text-base font-semibold text-white">{title}</h3><p className="mt-3 text-xs leading-5 text-zinc-500">{copy}</p></article>)}</div>
         </div>
       </section>
 
-      <section
-        id="compare"
-        className="scroll-mt-24 border-y border-white/10 px-5 py-24 sm:px-8 lg:py-32"
-      >
-        <div className="mx-auto max-w-7xl">
-          <Reveal>
-            <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr]">
-              <div>
-                <SectionLabel number="03">Built for developers</SectionLabel>
-                <h2 className="mt-6 text-4xl font-semibold leading-tight tracking-[-0.04em] text-white">
-                  A portfolio builder should know what a commit is.
-                </h2>
-                <p className="mt-5 max-w-md text-sm leading-6 text-zinc-500">
-                  Link pages are excellent at collecting destinations. Generic
-                  builders offer broad design freedom. Portfolio Creator starts
-                  from the evidence developers already have.
-                </p>
-              </div>
-
-              <div className="overflow-x-auto border border-white/10 bg-[#070b0f]">
-                <table className="w-full min-w-[44rem] border-collapse text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="w-[28%] p-4 font-mono text-[9px] font-normal uppercase tracking-[0.15em] text-zinc-600">
-                        Workflow
-                      </th>
-                      <th className="p-4 font-medium text-zinc-400">
-                        Notion / Linktree
-                      </th>
-                      <th className="p-4 font-medium text-zinc-400">
-                        Generic builders
-                      </th>
-                      <th className="border-l border-cyan-300/20 bg-cyan-300/[0.045] p-4 font-medium text-cyan-200">
-                        Portfolio Creator
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {comparison.map(([label, linkPages, generic, product]) => (
-                      <tr
-                        key={label}
-                        className="border-b border-white/[0.07] last:border-0"
-                      >
-                        <th className="p-4 font-medium text-zinc-300">
-                          {label}
-                        </th>
-                        <td className="p-4 text-zinc-600">{linkPages}</td>
-                        <td className="p-4 text-zinc-600">{generic}</td>
-                        <td className="border-l border-cyan-300/20 bg-cyan-300/[0.025] p-4 font-medium text-white">
-                          <span className="flex items-center gap-2">
-                            <Check className="h-3.5 w-3.5 text-cyan-300" />
-                            {product}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </Reveal>
-        </div>
+      <section id="faq" className="scroll-mt-24 border-y border-white/[0.07] bg-[#0c0c0e] px-5 py-24 sm:px-8 lg:py-32">
+        <div className="mx-auto grid max-w-[1000px] gap-12 lg:grid-cols-[0.65fr_1.35fr] lg:gap-20"><div><Eyebrow>Before you connect</Eyebrow><h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-white sm:text-5xl">Good to know.</h2></div><div className="divide-y divide-white/[0.08] border-y border-white/[0.08]">{faqs.map(([question,answer])=><details key={question} className="group"><summary className="flex cursor-pointer list-none items-center justify-between gap-5 py-6 text-sm font-medium text-white [&::-webkit-details-marker]:hidden">{question}<ChevronDown className="h-4 w-4 shrink-0 text-zinc-600 transition group-open:rotate-180" /></summary><p className="max-w-2xl pb-6 pr-8 text-sm leading-6 text-zinc-400">{answer}</p></details>)}</div></div>
       </section>
 
-      <section className="relative overflow-hidden px-5 py-28 sm:px-8 lg:py-40">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(103,232,249,.55)_1px,transparent_1px),linear-gradient(90deg,rgba(103,232,249,.55)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:radial-gradient(circle_at_center,black,transparent_70%)]" />
-        <Reveal className="relative mx-auto max-w-4xl text-center">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-cyan-300">
-            Ready when your GitHub is
-          </p>
-          <h2 className="mt-7 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] text-white sm:text-6xl">
-            Your Work Deserves Better Than a Resume PDF.
-          </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-zinc-400">
-            Build your developer portfolio in minutes—powered by your actual
-            GitHub activity.
-          </p>
-          <div className="mt-9 flex justify-center">
-            <GithubButton className="w-full sm:w-auto" />
-          </div>
-        </Reveal>
-      </section>
+      <section className="relative overflow-hidden px-5 py-28 sm:px-8 lg:py-40"><div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,.055),transparent_48%)]" /><ProjectFragment /><div className="relative z-10 mx-auto max-w-4xl text-center"><Eyebrow>Ready when your work is</Eyebrow><h2 className="mt-6 text-4xl font-semibold leading-[1.02] tracking-[-0.055em] text-white sm:text-7xl">Stop explaining your work.<br /><span className="text-zinc-500">Show it.</span></h2><p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-zinc-400">Bring the proof, progress, and story together—and share one link that does them justice.</p><div className="mt-9 flex justify-center"><PrimaryButton className="w-full sm:w-auto" /></div></div></section>
 
-      <footer className="border-t border-white/10 bg-[#040608] px-5 py-12 sm:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-12 md:grid-cols-[1.4fr_repeat(3,0.6fr)]">
-            <div>
-              <Link href="/" className="flex items-center gap-3">
-                <span className="grid h-8 w-8 place-items-center border border-cyan-300/30 font-mono text-xs text-cyan-200">
-                  P
-                </span>
-                <span className="text-sm font-semibold">Portfolio Creator</span>
-              </Link>
-              <p className="mt-4 max-w-xs text-sm leading-6 text-zinc-600">
-                Turn real GitHub work into one clear, credible developer
-                portfolio.
-              </p>
-            </div>
-            {[
-              ["Product", ["Features", "How it works", "Examples"]],
-              ["Company", ["About", "Contact", "GitHub"]],
-              ["Legal", ["Privacy", "Terms", "Security"]],
-            ].map(([title, links]) => (
-              <div key={title as string}>
-                <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500">
-                  {title as string}
-                </p>
-                <div className="mt-4 grid gap-3">
-                  {(links as string[]).map((label) => (
-                    <a
-                      key={label}
-                      href={
-                        label === "Features"
-                          ? "#features"
-                          : label === "How it works"
-                            ? "#how-it-works"
-                            : label === "Examples"
-                              ? "/user/Jigar18"
-                              : label === "GitHub"
-                                ? "https://github.com/Jigar18/Portfolio-Creator"
-                                : "#"
-                      }
-                      className="w-fit text-xs text-zinc-600 transition hover:text-zinc-200"
-                    >
-                      {label}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 font-mono text-[9px] uppercase tracking-[0.13em] text-zinc-700 sm:flex-row sm:items-center sm:justify-between">
-            <span>© {new Date().getFullYear()} Portfolio Creator</span>
-            <span className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              Built by developers, for developers
-            </span>
-          </div>
-        </div>
-      </footer>
+      <footer className="border-t border-white/[0.08] bg-[#060607] px-5 py-10 sm:px-8"><div className="mx-auto flex max-w-[1120px] flex-col gap-8 sm:flex-row sm:items-center sm:justify-between"><div><Brand compact /><p className="mt-3 text-xs text-zinc-600">One home for the work behind the developer.</p></div><div className="flex flex-wrap gap-x-5 gap-y-3 text-xs text-zinc-600">{nav.map(([label,href])=><a key={label} href={href} className="transition hover:text-white">{label}</a>)}<a href="https://github.com/Jigar18/Portfolio-Creator" className="transition hover:text-white">GitHub</a><Link href="/login" className="transition hover:text-white">Log in</Link></div></div><div className="mx-auto mt-8 max-w-[1120px] border-t border-white/[0.06] pt-5 font-mono text-[9px] uppercase tracking-[0.14em] text-zinc-800">© {new Date().getFullYear()} Byldit</div></footer>
     </main>
   );
 }

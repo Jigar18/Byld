@@ -7,6 +7,7 @@ import {
   GitHubInstallationData,
   persistGitHubInstallation,
 } from "@/lib/githubInstallation";
+import { getGitHubOAuthRedirectUri } from "@/lib/githubAuth";
 import { hasCompletedPortfolioSetup } from "@/lib/portfolioSetup";
 import { getSession, SESSION_COOKIE } from "@/lib/session";
 
@@ -102,7 +103,7 @@ export async function GET(req: NextRequest) {
         client_id: clientId,
         client_secret: clientSecret,
         code,
-        redirect_uri: new URL("/api/github/callback", req.url).toString(),
+        redirect_uri: getGitHubOAuthRedirectUri(req.url),
       },
       { headers: { Accept: "application/json" }, timeout: 10_000 }
     );
