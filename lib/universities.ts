@@ -6,20 +6,14 @@ export async function getUniversities(query: string): Promise<string[]> {
         if (!response.ok) {
             throw new Error("University search failed");
         }
-        const data = await response.json();
-        if (data.error) {
-            throw new Error(data.msg);
-        }
+        const data = await response.json() as University[] | { error?: string; msg?: string };
+        if (!Array.isArray(data)) throw new Error(data.msg ?? data.error ?? "University search failed");
 
-        const results : string[] = [];
-        // const lowerQuery = query.toLowerCase().trim();
+        const universities = data.map((university: University) =>
+            university.country ? `${university.name}, ${university.country}` : university.name
+        );
 
-        const matchingUniversities = data.map((university: University) => `${university.name}, ${university.country}`);
-        
-        results.push(...matchingUniversities);
-        // console.log(results);
-
-        return results.sort((a, b) => {
+        return universities.sort((a, b) => {
             const aStartsWith = a.toLowerCase().startsWith(query.toLowerCase());
             const bStartsWith = b.toLowerCase().startsWith(query.toLowerCase());
             if (aStartsWith && !bStartsWith) return -1;

@@ -41,9 +41,6 @@ export default function Details() {
   const [universitySuggestions, setUniversitySuggestions] = useState<string[]>(
     []
   );
-  const [jobTitleSuggestions, setJobTitleSuggestions] = useState<string[]>([]);
-  const [isSearchingJobTitles, setIsSearchingJobTitles] = useState(false);
-  const [jobTitleAttribution, setJobTitleAttribution] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
 
@@ -78,34 +75,6 @@ export default function Details() {
 
     void fetchGitHubDetails();
   }, []);
-
-  useEffect(() => {
-    const query = formData.jobTitle.trim();
-    if (query.length < 2) {
-      setJobTitleSuggestions([]);
-      return;
-    }
-
-    const controller = new AbortController();
-    const timer = window.setTimeout(async () => {
-      setIsSearchingJobTitles(true);
-      try {
-        const response = await fetch(`/api/job-titles?q=${encodeURIComponent(query)}`, { signal: controller.signal });
-        const data = await response.json() as { titles?: Array<{ title: string }>; attribution?: string };
-        setJobTitleSuggestions((data.titles ?? []).map((item) => item.title));
-        setJobTitleAttribution(Boolean(data.attribution));
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") setJobTitleSuggestions([]);
-      } finally {
-        setIsSearchingJobTitles(false);
-      }
-    }, 280);
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timer);
-    };
-  }, [formData.jobTitle]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -163,11 +132,6 @@ export default function Details() {
   const handleUniversitySelect = (university: string) => {
     setFormData((prev) => ({ ...prev, school: university }));
     setUniversitySuggestions([]);
-  };
-
-  const handleJobTitleSelect = (jobTitle: string) => {
-    setFormData((prev) => ({ ...prev, jobTitle }));
-    setJobTitleSuggestions([]);
   };
 
   const nextStep = () => {
@@ -517,34 +481,23 @@ export default function Details() {
                     </div>
                   )}
 
-                  <div className={`${currentStep > 4 ? "opacity-70" : ""} relative`}>
+                  <div className={currentStep > 4 ? "opacity-70" : ""}>
                     <Label
                       htmlFor="jobTitle"
                       className="text-slate-300 font-medium"
                     >
                       Most Recent Job Title
                     </Label>
-                    <div className="relative">
-                      <Input
-                        id="jobTitle"
-                        name="jobTitle"
-                        value={formData.jobTitle}
-                        onChange={handleInputChange}
-                        className={inputClassName}
-                        placeholder="e.g. Software Engineer"
-                        disabled={currentStep > 4}
-                        autoComplete="off"
-                      />
-                      {isSearchingJobTitles && currentStep === 4 && <div className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin rounded-full border-2 border-zinc-500 border-t-zinc-100" />}
-                    </div>
-                    {jobTitleSuggestions.length > 0 && currentStep === 4 && (
-                      <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-zinc-700 bg-zinc-900 py-1 shadow-xl">
-                        {jobTitleSuggestions.map((title) => (
-                          <li key={title}><button type="button" onClick={() => handleJobTitleSelect(title)} className="w-full px-4 py-2 text-left text-sm text-zinc-200 transition hover:bg-zinc-800">{title}</button></li>
-                        ))}
-                      </ul>
-                    )}
-                    {jobTitleAttribution && currentStep === 4 && <p className="mt-2 text-xs text-zinc-500">Job titles powered by O*NET Web Services.</p>}
+                    <Input
+                      id="jobTitle"
+                      name="jobTitle"
+                      value={formData.jobTitle}
+                      onChange={handleInputChange}
+                      className={inputClassName}
+                      placeholder="e.g. Software Engineer"
+                      disabled={currentStep > 4}
+                      autoComplete="off"
+                    />
                   </div>
 
                   {currentStep === 4 && (
@@ -560,7 +513,7 @@ export default function Details() {
                       <Button
                         onClick={nextStep}
                         className={primaryActionButtonClass}
-                        disabled={!formData.jobTitle}
+                        disabled={!formData.jobTitle.trim()}
                       >
                         Continue
                       </Button>

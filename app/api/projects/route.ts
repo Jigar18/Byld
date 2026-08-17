@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import {
   deleteProjectImage,
@@ -25,6 +26,32 @@ type ProjectInput = {
 };
 
 const MAX_PROJECTS = 4;
+
+const mergeSkills = (currentSkills: string[], projectSkills: string[]) => {
+  const merged = [...currentSkills];
+  for (const skill of projectSkills) {
+    if (merged.some((current) => current.toLowerCase() === skill.toLowerCase())) continue;
+    merged.push(skill.charAt(0).toUpperCase() + skill.slice(1));
+  }
+  return merged;
+};
+
+async function addProjectSkillsToPortfolio(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  projectSkills: string[],
+) {
+  const existing = await tx.skill.findFirst({ where: { userId } });
+  const skills = mergeSkills(existing?.skills ?? [], projectSkills);
+
+  if (existing && skills.length !== existing.skills.length) {
+    await tx.skill.update({ where: { id: existing.id }, data: { skills } });
+  } else if (!existing && skills.length) {
+    await tx.skill.create({ data: { userId, skills } });
+  }
+
+  return skills;
+}
 
 async function parseProject(body: ProjectInput, userId: string) {
   const title = typeof body.title === "string" ? body.title.trim() : "";
@@ -108,11 +135,15 @@ export async function POST(request: NextRequest) {
       );
     }
     const parsed = await parseProject(await request.json(), userId);
-    const project = await db.project.create({
-      data: { ...parsed.project, userId, images: { create: parsed.images } },
-      include: { images: { orderBy: { position: "asc" } } },
+    const { project, skills } = await db.$transaction(async (tx) => {
+      const project = await tx.project.create({
+        data: { ...parsed.project, userId, images: { create: parsed.images } },
+        include: { images: { orderBy: { position: "asc" } } },
+      });
+      const skills = await addProjectSkillsToPortfolio(tx, userId, parsed.project.techStack);
+      return { project, skills };
     });
-    return NextResponse.json({ success: true, project }, { status: 201 });
+    return NextResponse.json({ success: true, project, skills }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Unable to create project" }, { status: 400 });
   }
@@ -126,18 +157,20 @@ export async function PUT(request: NextRequest) {
     const existing = await db.project.findFirst({ where: { id: body.id, userId }, include: { images: true } });
     if (!existing) return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
     const parsed = await parseProject(body, userId);
-    const updated = await db.$transaction(async (tx) => {
+    const { project: updated, skills } = await db.$transaction(async (tx) => {
       await tx.project.update({ where: { id: body.id }, data: parsed.project });
       await tx.projectImage.deleteMany({ where: { projectId: body.id } });
       if (parsed.images.length) await tx.projectImage.createMany({ data: parsed.images.map((image) => ({ ...image, projectId: body.id! })) });
-      return tx.project.findUnique({ where: { id: body.id }, include: { images: { orderBy: { position: "asc" } } } });
+      const project = await tx.project.findUnique({ where: { id: body.id }, include: { images: { orderBy: { position: "asc" } } } });
+      const skills = await addProjectSkillsToPortfolio(tx, userId, parsed.project.techStack);
+      return { project, skills };
     });
     if (existing.videoPublicId && existing.videoPublicId !== parsed.project.videoPublicId) {
       await removeReplacedVideo(existing.videoPublicId);
     }
     const retainedImageIds = new Set(parsed.images.map((image) => image.imagePublicId));
     await removeProjectImages(existing.images.filter((image) => !retainedImageIds.has(image.imagePublicId)).map((image) => image.imagePublicId));
-    return NextResponse.json({ success: true, project: updated });
+    return NextResponse.json({ success: true, project: updated, skills });
   } catch (error) {
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Unable to update project" }, { status: 400 });
   }

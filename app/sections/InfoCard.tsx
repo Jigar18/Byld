@@ -50,10 +50,6 @@ function InfoCard() {
       errors.push("First name is required");
     }
 
-    if (!tempDetails.lastName.trim()) {
-      errors.push("Last name is required");
-    }
-
     if (tempDetails.email && !/\S+@\S+\.\S+/.test(tempDetails.email)) {
       errors.push("Please enter a valid email address");
     }
@@ -93,6 +89,10 @@ function InfoCard() {
     });
     setTempImagePreview("");
     setIsEditModalOpen(false);
+  };
+
+  const handleBackdropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) handleCloseModal();
   };
 
   const handleImageChange = async (newImageUrl: string) => {
@@ -180,11 +180,10 @@ function InfoCard() {
         createPortal(
           <div
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={handleCloseModal}
+            onPointerDown={handleBackdropPointerDown}
           >
             <div
               className="relative max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl animate-in zoom-in-95 duration-200 sm:max-h-[90vh]"
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
               {/* Close button */}
               <Button
@@ -284,9 +283,12 @@ function InfoCard() {
                     <div className="space-y-2">
                       <Label
                         htmlFor="lastName"
-                        className="text-slate-300 font-medium"
+                        className="flex h-4 items-center gap-2 text-slate-300 font-medium"
                       >
                         Last Name
+                        <span className="text-xs font-normal text-slate-500">
+                          Optional
+                        </span>
                       </Label>
                       <Input
                         id="lastName"
@@ -419,7 +421,6 @@ function InfoCard() {
                     disabled={
                       saving ||
                       !tempDetails.firstName ||
-                      !tempDetails.lastName ||
                       validationErrors.length > 0
                     }
                     className={primaryActionButtonClass}

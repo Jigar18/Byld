@@ -76,6 +76,12 @@ export default function Skills() {
   }, [fetchUserSkills]);
 
   useEffect(() => {
+    const refreshSkills = () => void fetchUserSkills();
+    window.addEventListener("portfolio:skills-updated", refreshSkills);
+    return () => window.removeEventListener("portfolio:skills-updated", refreshSkills);
+  }, [fetchUserSkills]);
+
+  useEffect(() => {
     const viewport = skillsViewportRef.current;
     if (!viewport) return;
 

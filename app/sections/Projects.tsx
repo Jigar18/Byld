@@ -176,7 +176,7 @@ export default function Projects() {
       ),
     });
     if (!response.ok) throw new Error("Unable to save project");
-    const data = await response.json();
+    const data = await response.json() as { project: PortfolioProject; skills?: string[] };
     setProjects((current) =>
       editingProject
         ? current.map((project) =>
@@ -184,6 +184,12 @@ export default function Projects() {
           )
         : [data.project, ...current],
     );
+    if (data.skills) {
+      setSkills(data.skills);
+      window.dispatchEvent(new Event("portfolio:skills-updated"));
+    }
+    const addedIcons = await findMissingSkillIcons([data.project.techStack], skillIcons);
+    setSkillIcons((current) => ({ ...current, ...addedIcons }));
   };
 
   const saveProjectVideo = async (projectId: string, video: ProjectVideo) => {
