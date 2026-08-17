@@ -64,12 +64,12 @@ html {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.15;
+  opacity: 0.11;
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
   background-size: 72px 72px;
-  mask-image: linear-gradient(to bottom, black, transparent 82%);
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
 }
 
 .byldit-preview-fade {
@@ -81,11 +81,38 @@ html {
   position: absolute;
   inset: auto 0 0;
   z-index: 10;
-  height: 24%;
+  height: 13%;
   pointer-events: none;
-  background: linear-gradient(to bottom, rgba(9, 9, 11, 0), rgba(9, 9, 11, 0.84) 58%, #09090b 100%);
-  backdrop-filter: blur(5px);
-  mask-image: linear-gradient(to bottom, transparent, black 35%);
+  background: linear-gradient(to bottom, rgba(8, 8, 9, 0), rgba(8, 8, 9, 0.58) 62%, #080809 100%);
+  backdrop-filter: blur(1.5px);
+  mask-image: linear-gradient(to bottom, transparent, black 52%);
+}
+
+@keyframes byldit-resume-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-2deg); }
+  50% { transform: translate3d(-3px, 6px, 0) rotate(-3deg); }
+}
+
+@keyframes byldit-proof-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(1deg); }
+  50% { transform: translate3d(3px, -7px, 0) rotate(0deg); }
+}
+
+@keyframes byldit-proof-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.75); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+  50% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 9px rgba(255, 255, 255, 0.045); }
+}
+
+.byldit-resume {
+  animation: byldit-resume-drift 7s ease-in-out infinite;
+}
+
+.byldit-proof-stack {
+  animation: byldit-proof-drift 6s ease-in-out infinite;
+}
+
+.byldit-proof-pulse {
+  animation: byldit-proof-pulse 2.6s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

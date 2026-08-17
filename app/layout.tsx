@@ -36,7 +36,7 @@ const profileDisplay = Sora({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://byldit.vercel.app"),
-  title: "Byldit — Your GitHub shows the code. Your portfolio tells the story.",
+  title: "Byldit — The code shows how. The portfolio shows why.",
   description:
     "Bring your projects, GitHub contributions, skills, and experience into one developer portfolio built to be explored.",
   icons: "/landing/byldit-mark-mono.webp",
