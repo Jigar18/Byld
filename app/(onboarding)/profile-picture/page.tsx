@@ -200,7 +200,7 @@ export default function ProfilePicturePage() {
 
       if (imageUrl && username) {
         setUploadSuccess(true);
-        router.push(`/user/${encodeURIComponent(username)}`);
+        router.push(`/${encodeURIComponent(username)}`);
       } else {
         throw new Error("Upload completed without profile information");
       }

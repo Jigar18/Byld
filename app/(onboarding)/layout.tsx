@@ -32,7 +32,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
 
   if (!user) redirect("/login");
   if (hasCompletedPortfolioSetup(user)) {
-    redirect(`/user/${encodeURIComponent(user.username)}`);
+    redirect(`/${encodeURIComponent(user.username)}`);
   }
 
   return children;

@@ -176,7 +176,7 @@ export async function GET(req: NextRequest) {
       returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : null;
     const target = requestedTarget ??
       (hasCompletedPortfolioSetup(userDB)
-        ? `/user/${encodeURIComponent(userDB.username)}`
+        ? `/${encodeURIComponent(userDB.username)}`
         : "/app-install");
     const response = NextResponse.redirect(new URL(target, req.url));
     response.cookies.set(SESSION_COOKIE, session, {

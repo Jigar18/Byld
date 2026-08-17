@@ -4,17 +4,17 @@ import type React from "react";
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import About from "../../sections/AboutSection";
-import Credentials from "../../sections/Credentials";
-import Experience from "../../sections/Experience";
-import InfoCard from "../../sections/InfoCard";
-import Projects from "../../sections/Projects";
-import CertificateModal from "../../components/CertificateModal";
-import { UserProvider, useUser } from "../../context/UserContext";
-import PortfolioViewCount from "../../components/PortfolioViewCount";
-import GitHubHeatmap from "../../components/GitHubHeatmap";
-import NotFoundState from "../../components/NotFoundState";
-import PortfolioLoader from "../../components/PortfolioLoader";
+import About from "../sections/AboutSection";
+import Credentials from "../sections/Credentials";
+import Experience from "../sections/Experience";
+import InfoCard from "../sections/InfoCard";
+import Projects from "../sections/Projects";
+import CertificateModal from "../components/CertificateModal";
+import { UserProvider, useUser } from "../context/UserContext";
+import PortfolioViewCount from "../components/PortfolioViewCount";
+import GitHubHeatmap from "../components/GitHubHeatmap";
+import NotFoundState from "../components/NotFoundState";
+import PortfolioLoader from "../components/PortfolioLoader";
 import { Copyright, LogOut } from "lucide-react";
 
 interface Card {
