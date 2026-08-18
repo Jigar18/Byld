@@ -10,9 +10,7 @@ import {
   Github,
   Linkedin,
   Mail,
-  MapPin,
   Pencil,
-  Radio,
   Share2,
   ShieldCheck,
   Sparkles,
@@ -112,47 +110,44 @@ function ActivityCard({ compact = false }: { compact?: boolean }) {
 
 export function PortfolioPreview() {
   return (
-    <div className="byldit-preview-fade h-[650px] overflow-hidden rounded-[18px] border border-white/[0.11] bg-[#080809] shadow-[0_45px_140px_rgba(0,0,0,.72)] sm:h-[840px] sm:rounded-[24px]">
-      <div className="flex h-9 items-center gap-2 border-b border-white/[0.07] bg-[#111113] px-3 sm:h-11 sm:px-4">
+    <div className="byldit-preview-fade flex h-[760px] flex-col overflow-hidden rounded-[18px] border border-white/[0.11] bg-[#080809] shadow-[0_45px_140px_rgba(0,0,0,.72)] sm:h-[1080px] sm:rounded-[24px]">
+      <div className="relative flex h-9 shrink-0 items-center gap-2 border-b border-white/[0.07] bg-[#111113] px-3 sm:h-11 sm:px-4">
         {levels.slice(2, 5).map((color) => <span key={color} className={`h-2 w-2 rounded-full ${color}`} />)}
-        <span className="mx-auto rounded-md border border-white/[0.06] bg-black/25 px-8 py-1 font-mono text-[6px] text-zinc-700 sm:px-16 sm:text-[7px]">byldit.vercel.app/mark</span>
+        <span className="absolute left-1/2 -translate-x-1/2 rounded-md border border-white/[0.06] bg-black/25 px-8 py-1 font-mono text-[6px] text-zinc-600 sm:px-16 sm:text-[7px]">byldit.vercel.app/alex</span>
       </div>
-
-      <div className="mx-auto max-w-[920px] p-3 sm:p-6 lg:p-8">
-        <div className="flex items-center rounded-xl border border-white/[0.1] bg-[#111113] p-3 sm:rounded-2xl sm:p-5">
-          <Image src="/landing/demo-avatar-mono.webp" alt="Mark, fictional senior software developer" width={66} height={66} className="h-12 w-12 rounded-full border-2 border-zinc-600 grayscale sm:h-[66px] sm:w-[66px]" priority />
-          <div className="ml-3 min-w-0 sm:ml-5">
-            <p className="text-sm font-semibold tracking-[-0.02em] text-white sm:text-xl">Mark</p>
-            <p className="text-[9px] text-zinc-400 sm:text-xs">Senior Software Developer</p>
-            <p className="mt-1 flex items-center gap-1 text-[7px] text-zinc-600 sm:text-[9px]"><MapPin className="h-2.5 w-2.5" />Earth, Milky Way</p>
-          </div>
-          <span className="ml-auto hidden rounded-md border border-white/[0.1] bg-white/[0.035] px-3 py-2 font-mono text-[8px] uppercase tracking-wider text-zinc-400 sm:block">Google</span>
-        </div>
-
-        <div className="mt-6 border-l border-white/[0.11] pl-4 sm:mt-10 sm:pl-6">
-          <SectionTag icon={Radio}>About me</SectionTag>
-          <p className="mt-3 max-w-3xl text-[8px] leading-4 text-zinc-500 sm:mt-4 sm:text-[11px] sm:leading-5">I build reliable developer tools and distributed systems that make complex workflows feel simple. I care about clear architecture, thoughtful interfaces, and software that stays maintainable as it grows.</p>
-        </div>
-
-        <div className="mt-7 border-t border-white/[0.08] pt-5 sm:mt-11 sm:pt-7">
-          <SectionTag icon={Code2}>Projects</SectionTag>
-          <p className="mt-2 text-[7px] text-zinc-600 sm:text-[9px]">Selected work, experiments, and proof of craft.</p>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-3">{projects.map((project) => <ProjectCard key={project.name} project={project} compact />)}</div>
-        </div>
-
-        <div className="mt-7 border-t border-white/[0.08] pt-5 sm:mt-10 sm:pt-7"><ActivityCard compact /></div>
-
-        <div className="mt-7 grid grid-cols-[0.8fr_1.2fr] gap-2 border-t border-white/[0.08] pt-5 sm:mt-10 sm:gap-3 sm:pt-7">
-          <div className="rounded-xl border border-white/[0.09] p-3"><SectionTag icon={Sparkles}>Skills</SectionTag><div className="mt-3 flex flex-wrap gap-1">{skills.slice(0, 5).map((skill) => <span key={skill} className="rounded-full border border-white/10 px-2 py-1 text-[7px] text-zinc-500">{skill}</span>)}</div></div>
-          <div className="rounded-xl border border-white/[0.09] p-3"><SectionTag icon={Award}>Certifications</SectionTag><p className="mt-3 text-[8px] font-medium text-zinc-300">Professional Cloud Developer</p><p className="mt-1 text-[7px] text-zinc-600">View credential</p></div>
-        </div>
+      <div className="relative min-h-0 flex-1">
+        <Image
+          src="/landing/byldit-portfolio-preview.png"
+          alt="A Byldit developer portfolio showing Alex's profile, projects, and GitHub activity"
+          fill
+          priority
+          draggable={false}
+          sizes="(max-width: 640px) 100vw, 1120px"
+          className="pointer-events-none select-none object-cover object-top [-webkit-user-drag:none]"
+        />
       </div>
     </div>
   );
 }
 
 export function ProjectsEvidence() {
-  return <div className="grid gap-3 sm:grid-cols-2">{projects.map((project) => <ProjectCard key={project.name} project={project} />)}</div>;
+  return (
+    <div className="relative flex h-[370px] items-center justify-center sm:h-[410px]">
+      <div
+        aria-hidden="true"
+        className="absolute h-[72%] w-[72%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(105,132,188,0.1),rgba(255,255,255,0.025)_42%,transparent_72%)] blur-2xl"
+      />
+      <Image
+        src="/landing/stratos-project-detail.png"
+        alt="Stratos project details with its story, technology stack, demo, and architecture image"
+        width={1387}
+        height={1546}
+        draggable={false}
+        sizes="(max-width: 1024px) 100vw, 520px"
+        className="pointer-events-none relative z-10 h-full w-auto max-w-full select-none object-contain drop-shadow-[0_24px_55px_rgba(0,0,0,0.38)] [-webkit-user-drag:none]"
+      />
+    </div>
+  );
 }
 
 export function ActivityEvidence() {

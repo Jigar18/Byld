@@ -81,11 +81,14 @@ html {
   position: absolute;
   inset: auto 0 0;
   z-index: 10;
-  height: 13%;
+  height: 8%;
   pointer-events: none;
-  background: linear-gradient(to bottom, rgba(8, 8, 9, 0), rgba(8, 8, 9, 0.58) 62%, #080809 100%);
-  backdrop-filter: blur(1.5px);
-  mask-image: linear-gradient(to bottom, transparent, black 52%);
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 8, 9, 0),
+    rgba(8, 8, 9, 0.52) 58%,
+    rgba(8, 8, 9, 0.94) 100%
+  );
 }
 
 @keyframes byldit-resume-drift {
