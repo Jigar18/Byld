@@ -72,6 +72,40 @@ html {
   mask-image: linear-gradient(to bottom, black, transparent 78%);
 }
 
+.byldit-root {
+  font-family: var(--font-bricolage-grotesque), Arial, Helvetica, sans-serif;
+}
+
+.byldit-shadow-main {
+  box-shadow:
+    0 10px 16px rgba(0, 0, 0, 0.12),
+    0 22px 34px rgba(0, 0, 0, 0.12),
+    0 32px 55px rgba(0, 0, 0, 0.14);
+}
+
+.byldit-shadow-card {
+  box-shadow:
+    0 7px 11px rgba(0, 0, 0, 0.1),
+    0 15px 24px rgba(0, 0, 0, 0.1),
+    0 22px 36px rgba(0, 0, 0, 0.12);
+}
+
+.byldit-shadow-proof {
+  box-shadow:
+    0 4px 7px rgba(0, 0, 0, 0.1),
+    0 8px 13px rgba(0, 0, 0, 0.1),
+    0 12px 18px rgba(0, 0, 0, 0.12);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .byldit-shadow-card:hover {
+    box-shadow:
+      0 9px 14px rgba(0, 0, 0, 0.12),
+      0 19px 31px rgba(0, 0, 0, 0.12),
+      0 28px 46px rgba(0, 0, 0, 0.14);
+  }
+}
+
 .byldit-preview-fade {
   position: relative;
 }

@@ -337,16 +337,13 @@ export default function Projects() {
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
       transition={{ duration: 0.55 }}
     >
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="profile-section-label flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em]">
             <span className="profile-icon inline-flex rounded-lg border p-2">
               <Code2 className="h-4 w-4" />
             </span>
             Projects
-          </p>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400">
-            Selected work, experiments, and proof of craft.
           </p>
         </div>
         {isOwner && projects.length > 0 && (

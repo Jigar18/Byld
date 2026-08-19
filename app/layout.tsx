@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import {
+  Bricolage_Grotesque,
   Geist,
   Geist_Mono,
   Kaushan_Script,
@@ -15,6 +16,11 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const landingDisplay = Bricolage_Grotesque({
+  variable: "--font-bricolage-grotesque",
   subsets: ["latin"],
 });
 
@@ -69,7 +75,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${loaderMark.variable} ${profileBody.variable} ${profileDisplay.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${landingDisplay.variable} ${loaderMark.variable} ${profileBody.variable} ${profileDisplay.variable} antialiased`}
       >
         {children}
       </body>
