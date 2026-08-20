@@ -1,27 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { removeStoredFile, uploadPdfFile } from "@/utils/uploadFiles";
 import { PdfUploadRResponse } from "@/types/api";
 import { db } from "@/lib/db";
+import { isPdf } from "@/utils/fileValidation";
+import { getSession } from "@/lib/session";
+
+const MAX_CERTIFICATE_BYTES = 3 * 1024 * 1024;
+const MAX_MULTIPART_BYTES = MAX_CERTIFICATE_BYTES + 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.cookies.get("id&Uname")?.value;
-
-    if (!token) {
+    const session = await getSession(req);
+    if (!session) {
       return NextResponse.json(
-        { success: false, error: "Authentication token is missing" },
+        { success: false, error: "Authentication required" },
         { status: 401 }
       );
     }
+    const userId = session.userId;
 
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(process.env.JWT_SECRET!)
-    );
-    const userId = payload.userId as string;
-    if (!userId) {
-      return NextResponse.json({ success: false, error: "Authentication token is invalid" }, { status: 401 });
+    const contentLength = Number(req.headers.get("content-length"));
+    if (Number.isFinite(contentLength) && contentLength > MAX_MULTIPART_BYTES) {
+      return NextResponse.json(
+        { success: false, error: "File size must be less than 3MB" },
+        { status: 413 },
+      );
     }
 
     const formData = await req.formData();
@@ -30,7 +33,6 @@ export async function POST(req: NextRequest) {
     const description = String(formData.get("description") || "").trim();
 
     if (!file) {
-      console.log("No file provided in request");
       return NextResponse.json(
         { success: false, error: "No pdf file provided" },
         { status: 400 }
@@ -43,18 +45,21 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    if (title.length > 200 || description.length > 2_000) {
+      return NextResponse.json(
+        { success: false, error: "Certificate details are too long" },
+        { status: 400 },
+      );
+    }
 
     if (file.type !== "application/pdf") {
-      console.log("Invalid file type:", file.type);
       return NextResponse.json(
         { success: false, error: "Only PDF files are allowed" },
         { status: 400 }
       );
     }
 
-    const maxSize = 3 * 1024 * 1024;
-    if (file.size > maxSize) {
-      console.log("File size is larger than 3MB:", file.size);
+    if (file.size > MAX_CERTIFICATE_BYTES) {
       return NextResponse.json(
         { success: false, error: "File size must be less than 3MB" },
         { status: 400 }
@@ -63,6 +68,12 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    if (!isPdf(buffer)) {
+      return NextResponse.json(
+        { success: false, error: "The uploaded file is not a valid PDF" },
+        { status: 400 },
+      );
+    }
 
     const pdfUrl = await uploadPdfFile(
       buffer,
@@ -92,7 +103,7 @@ export async function POST(req: NextRequest) {
     console.error("Error uploading certificate:", error);
     const errorResponse: PdfUploadRResponse = {
       success: false,
-      error: String(error),
+      error: "Unable to upload certificate",
     };
 
     return NextResponse.json(errorResponse, { status: 500 });

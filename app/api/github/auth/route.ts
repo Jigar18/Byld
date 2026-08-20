@@ -1,6 +1,8 @@
 import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getGitHubOAuthRedirectUri } from "@/lib/githubAuth";
+import { getCompletedPortfolioUsername } from "@/lib/portfolioSetup";
+import { getSession } from "@/lib/session";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -15,6 +17,14 @@ function safeReturnPath(value: string | null) {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await getSession(req);
+  if (session) {
+    const username = await getCompletedPortfolioUsername(session.userId);
+    if (username) {
+      return NextResponse.redirect(new URL(`/${encodeURIComponent(username)}`, req.url));
+    }
+  }
+
   const clientId = process.env.NEXT_PUBLIC_GITHUB_APP_CLIENT_ID;
   if (!clientId) {
     return NextResponse.json({ error: "GitHub OAuth is not configured" }, { status: 503 });

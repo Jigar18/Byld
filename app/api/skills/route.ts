@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
       {
         headers: { Accept: "application/vnd.github+json", "User-Agent": "portfolio-creator" },
         next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(5_000),
       }
     );
     if (!response.ok) throw new Error("GitHub topics lookup failed");

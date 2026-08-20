@@ -75,7 +75,7 @@ export default function About() {
         <motion.div
           {...{
             className:
-              "profile-accent-rose profile-section-rule relative group border-l py-3 pl-4 pr-2 sm:pl-8 sm:pr-4",
+              "profile-accent-rose profile-section-rule relative group border-l py-2 pl-4 pr-2 sm:py-3 sm:pl-8 sm:pr-4",
             initial: { y: 50, opacity: 0 },
             animate: isInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 },
             transition: { duration: 0.8, ease: "easeOut" },
@@ -91,7 +91,7 @@ export default function About() {
             <Edit3 className="h-4 w-4" />
           </button>}
 
-          <h2 className="profile-section-label mb-6 flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em]">
+          <h2 className="profile-section-label mb-4 flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.22em] sm:mb-6 sm:text-xs">
             <span className="profile-icon inline-flex rounded-lg border p-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -113,7 +113,7 @@ export default function About() {
           </h2>
 
           {userLoading ? (
-            <div className="text-slate-300 leading-relaxed whitespace-pre-wrap">
+            <div className="whitespace-pre-wrap text-sm leading-6 text-slate-300 sm:text-base sm:leading-relaxed">
               <div className="space-y-2">
                 <div className="h-4 rounded bg-white/[0.055] animate-pulse"></div>
                 <div className="h-4 rounded bg-white/[0.055] animate-pulse w-3/4"></div>
@@ -121,7 +121,7 @@ export default function About() {
               </div>
             </div>
           ) : (
-            <div className="text-slate-300 leading-relaxed whitespace-pre-wrap">
+            <div className="whitespace-pre-wrap text-sm leading-6 text-slate-300 sm:text-base sm:leading-relaxed">
               {aboutText || (isOwner
                 ? "Click the edit button to add information about yourself..."
                 : "No about information has been added yet.")}

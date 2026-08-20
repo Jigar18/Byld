@@ -61,7 +61,7 @@ const getSocialIconColor = (platform: string) =>
   socialIconColors[platform.toLowerCase()] ?? "#a1a1aa";
 
 export default function Connect() {
-  const { isOwner, portfolioApiUrl } = useUser();
+  const { isOwner, portfolioApiUrl, portfolioData } = useUser();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [tempSocialLinks, setTempSocialLinks] = useState<{
@@ -121,12 +121,6 @@ export default function Connect() {
       setSocialLinks([]);
     }
   }, [portfolioApiUrl]);
-
-  useEffect(() => {
-    setMounted(true);
-    fetchSocialLinks();
-    return () => setMounted(false);
-  }, [fetchSocialLinks]);
 
   const getIconForPlatform = (platform: string) => {
     const platformLower = platform.toLowerCase();
@@ -305,6 +299,21 @@ export default function Connect() {
         );
     }
   };
+
+  useEffect(() => {
+    setMounted(true);
+    const links = Object.entries(portfolioData.socialLinks).flatMap(([platform, url]) =>
+      url
+        ? [{
+            name: platform.charAt(0).toUpperCase() + platform.slice(1),
+            icon: getIconForPlatform(platform),
+            url,
+          }]
+        : [],
+    );
+    setSocialLinks(links);
+    return () => setMounted(false);
+  }, [portfolioData.socialLinks]);
 
   const handleOpenModal = () => {
     // Initialize temp social links with current values

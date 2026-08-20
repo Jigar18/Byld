@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
         const res = await fetch(url, {
             headers: { Accept: "application/json" },
             next: { revalidate: 86_400 },
+            signal: AbortSignal.timeout(5_000),
         });
         if (!res.ok) throw new Error("University provider failed");
 

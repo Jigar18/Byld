@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 
 function getSupabase() {
   const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL;
@@ -24,6 +25,11 @@ function getStoragePath(publicUrl: string, bucket: string) {
   }
 }
 
+export function isStoredFileUrl(publicUrl: string, bucket: string, ownerPrefix?: string) {
+  const filePath = getStoragePath(publicUrl, bucket);
+  return Boolean(filePath && (!ownerPrefix || filePath.startsWith(ownerPrefix)));
+}
+
 export async function removeStoredFile(publicUrl: string, bucket: string, ownerPrefix: string) {
   const filePath = getStoragePath(publicUrl, bucket);
   if (!filePath) return false;
@@ -37,12 +43,13 @@ export async function removeStoredFile(publicUrl: string, bucket: string, ownerP
 // function for uploading images like in profile picture.
 export async function uploadFile(
   fileBuffer: Buffer,
-  fileName: string,
+  _fileName: string,
   userId: string,
   contentType = "image/jpeg"
 ) {
   const supabase = getSupabase();
-  const filePath = `user-image/${userId}-${Date.now()}-${fileName}`;
+  const extension = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+  const filePath = `user-image/${userId}-${randomUUID()}.${extension}`;
   const { data, error } = await supabase.storage
     .from("profile-picture")
     .upload(filePath, fileBuffer, {
@@ -61,11 +68,11 @@ export async function uploadFile(
 // function for uploading pdf files like in certification section
 export async function uploadPdfFile(
   fileBuffer: Buffer,
-  fileName: string,
+  _fileName: string,
   userId: string
 ) {
   const supabase = getSupabase();
-  const filePath = `certifications/${userId}-${Date.now()}-${fileName}`;
+  const filePath = `certifications/${userId}-${randomUUID()}.pdf`;
 
   try {
     const { data, error } = await supabase.storage

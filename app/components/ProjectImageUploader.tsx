@@ -18,7 +18,7 @@ interface ProjectImageUploaderProps {
   disabled?: boolean;
 }
 
-type UploadSignature = { apiKey: string; cloudName: string; folder: string; timestamp: number; signature: string; error?: string };
+type UploadSignature = { apiKey: string; cloudName: string; folder: string; allowedFormats: string; timestamp: number; signature: string; error?: string };
 type UploadResult = { secure_url?: string; public_id?: string; bytes?: number; format?: string; resource_type?: string; error?: { message?: string } };
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_FORMATS = ["jpg", "jpeg", "png", "webp", "avif"];
@@ -69,6 +69,7 @@ export default function ProjectImageUploader({ images, onUploaded, onReorder, on
       formData.append("file", file);
       formData.append("api_key", signature.apiKey);
       formData.append("folder", signature.folder);
+      formData.append("allowed_formats", signature.allowedFormats);
       formData.append("timestamp", String(signature.timestamp));
       formData.append("signature", signature.signature);
       const response = await fetch(`https://api.cloudinary.com/v1_1/${signature.cloudName}/image/upload`, { method: "POST", body: formData });

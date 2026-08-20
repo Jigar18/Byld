@@ -64,14 +64,8 @@ function Eyebrow({ children, center = false }: { children: React.ReactNode; cent
 
 function FeatureDivider() {
   return (
-    <div aria-hidden="true" className="flex h-14 items-center justify-center sm:h-16">
-      <div className="flex items-center opacity-70">
-        <span className="h-px w-10 bg-gradient-to-r from-transparent to-white/[0.14]" />
-        <span className="mx-2 h-px w-5 bg-white/[0.14]" />
-        <span className="h-2 w-2 rotate-45 border border-white/[0.18] bg-[#121212]" />
-        <span className="mx-2 h-px w-5 bg-white/[0.14]" />
-        <span className="h-px w-10 bg-gradient-to-l from-transparent to-white/[0.14]" />
-      </div>
+    <div aria-hidden="true" className="mx-auto flex h-14 w-full max-w-[1120px] items-center sm:h-16">
+      <span className="h-px w-full bg-gradient-to-r from-white/[0.04] via-white/[0.3] to-white/[0.04]" />
     </div>
   );
 }
@@ -164,7 +158,7 @@ export default function LandingPage() {
           <FeatureDivider />
           <div className="grid items-center gap-10 py-20 lg:grid-cols-2 lg:gap-20 lg:py-28"><RevealOnce><div><span className="font-mono text-[10px] text-zinc-700">01 / PROJECTS</span><h3 className="mt-5 text-[clamp(2.25rem,3.4vw,3.5rem)] font-semibold leading-[0.98] tracking-[-0.05em] text-white">Projects, with the why.</h3><p className="mt-5 max-w-lg text-base leading-7 text-zinc-500 sm:text-lg sm:leading-8">Add the story, stack, repository, live link, and demo behind what you shipped.</p></div></RevealOnce><ProjectsEvidence /></div>
           <FeatureDivider />
-          <div className="grid items-center gap-10 py-20 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20 lg:py-28"><ActivityEvidence /><div className="lg:pl-8"><span className="font-mono text-[10px] text-zinc-700">02 / ACTIVITY</span><h3 className="mt-5 text-[clamp(2.25rem,3.4vw,3.5rem)] font-semibold leading-[0.98] tracking-[-0.05em] text-white">Proof that keeps moving.</h3><p className="mt-5 max-w-lg text-base leading-7 text-zinc-500 sm:text-lg sm:leading-8">Your full year of GitHub activity stays connected, so the portfolio keeps changing with your work.</p></div></div>
+          <div className="grid items-center gap-10 py-20 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20 lg:py-28"><div className="order-2 lg:order-1"><ActivityEvidence /></div><div className="order-1 lg:order-2 lg:pl-8"><span className="font-mono text-[10px] text-zinc-700">02 / ACTIVITY</span><h3 className="mt-5 text-[clamp(2.25rem,3.4vw,3.5rem)] font-semibold leading-[0.98] tracking-[-0.05em] text-white">Proof that keeps moving.</h3><p className="mt-5 max-w-lg text-base leading-7 text-zinc-500 sm:text-lg sm:leading-8">Your full year of GitHub activity stays connected, so the portfolio keeps changing with your work.</p></div></div>
           <FeatureDivider />
           <div className="grid items-center gap-10 py-20 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20 lg:py-28"><div><span className="font-mono text-[10px] text-zinc-700">03 / CAREER</span><h3 className="mt-5 text-[clamp(2.25rem,3.4vw,3.5rem)] font-semibold leading-[0.98] tracking-[-0.05em] text-white">More than code.</h3><p className="mt-5 max-w-lg text-base leading-7 text-zinc-500 sm:text-lg sm:leading-8">Bring your experience, skills, education, certifications, and ways to reach you into the same story.</p></div><CareerEvidence /></div>
           <FeatureDivider />

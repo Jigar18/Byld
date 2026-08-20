@@ -97,8 +97,37 @@ const compareExperienceDates = (
   );
 };
 
+const getIconForIndex = (index: number) => {
+  const icons = [
+    <Briefcase className="h-5 w-5 text-zinc-400" key={`briefcase-${index}`} />,
+    <Code className="h-5 w-5 text-zinc-400" key={`code-${index}`} />,
+    <Users className="h-5 w-5 text-zinc-400" key={`users-${index}`} />,
+    <BarChart2 className="h-5 w-5 text-zinc-400" key={`chart-${index}`} />,
+    <Award className="h-5 w-5 text-zinc-400" key={`award-${index}`} />,
+    <Clock className="h-5 w-5 text-zinc-400" key={`clock-${index}`} />,
+    <Zap className="h-5 w-5 text-zinc-400" key={`zap-${index}`} />,
+    <CheckCircle2 className="h-5 w-5 text-zinc-400" key={`check-${index}`} />,
+  ];
+  return icons[index % icons.length];
+};
+
+const transformExperiences = (experiences: DatabaseExperience[]): ExperienceItem[] =>
+  [...experiences].sort(compareExperienceDates).map((experience, index) => ({
+    level: index + 1,
+    company: experience.company,
+    position: experience.position,
+    year: experience.isCurrentRole
+      ? `${experience.startMonth} ${experience.startYear} - Present`
+      : `${experience.startMonth} ${experience.startYear} - ${experience.endMonth} ${experience.endYear}`,
+    description: experience.contributions.map((contribution, contributionIndex) => ({
+      icon: getIconForIndex(contributionIndex),
+      text: contribution,
+    })),
+    id: experience.id,
+  }));
+
 export default function Experience() {
-  const { isOwner, portfolioApiUrl } = useUser();
+  const { isOwner, portfolioApiUrl, portfolioData } = useUser();
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref as React.RefObject<HTMLElement>, {
     once: true,
@@ -117,7 +146,7 @@ export default function Experience() {
   const [tempEndYear, setTempEndYear] = useState("");
   const [tempIsCurrentRole, setTempIsCurrentRole] = useState(false);
   const [tempContributions, setTempContributions] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [experienceToDelete, setExperienceToDelete] =
     useState<ExperienceItem | null>(null);
@@ -130,26 +159,7 @@ export default function Experience() {
         const data = await response.json();
         if (data.success && data.experiences) {
           // Transform database data to component format
-          const transformedExperiences = (
-            data.experiences as DatabaseExperience[]
-          )
-            .sort(compareExperienceDates)
-            .map((exp: DatabaseExperience, index: number) => ({
-              level: index + 1,
-              company: exp.company,
-              position: exp.position,
-              year: exp.isCurrentRole
-                ? `${exp.startMonth} ${exp.startYear} - Present`
-                : `${exp.startMonth} ${exp.startYear} - ${exp.endMonth} ${exp.endYear}`,
-              description: exp.contributions.map(
-                (contribution: string, idx: number) => ({
-                  icon: getIconForIndex(idx),
-                  text: contribution,
-                })
-              ),
-              id: exp.id, // Store database ID for updates
-            }));
-          setExperience(transformedExperiences);
+          setExperience(transformExperiences(data.experiences as DatabaseExperience[]));
         } else {
           // If no experiences found, set empty array
           setExperience([]);
@@ -168,28 +178,12 @@ export default function Experience() {
 
   useEffect(() => {
     setMounted(true);
-    fetchExperiences();
     return () => setMounted(false);
-  }, [fetchExperiences]);
+  }, []);
 
-  const getIconForIndex = (index: number) => {
-    const icons = [
-      <Briefcase
-        className="h-5 w-5 text-zinc-400"
-        key={`briefcase-${index}`}
-      />,
-      <Code className="h-5 w-5 text-zinc-400" key={`code-${index}`} />,
-      <Users className="h-5 w-5 text-zinc-400" key={`users-${index}`} />,
-      <BarChart2 className="h-5 w-5 text-zinc-400" key={`chart-${index}`} />,
-      <Award className="h-5 w-5 text-zinc-400" key={`award-${index}`} />,
-      <Clock className="h-5 w-5 text-zinc-400" key={`clock-${index}`} />,
-      <Zap className="h-5 w-5 text-zinc-400" key={`zap-${index}`} />,
-      <CheckCircle2 className="h-5 w-5 text-zinc-400" key={`check-${index}`} />,
-    ];
-    return icons[index % icons.length];
-  };
-
-  const [experience, setExperience] = useState<ExperienceItem[]>([]);
+  const [experience, setExperience] = useState<ExperienceItem[]>(
+    transformExperiences(portfolioData.experiences),
+  );
 
   const months = [
     "January",

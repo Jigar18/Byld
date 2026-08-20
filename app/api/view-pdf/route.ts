@@ -1,74 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getCertificateFile } from "@/lib/certificateFile";
 
-function isSafePdfUrl(value: string) {
-  try {
-    const url = new URL(value);
-    const hostname = url.hostname.toLowerCase();
-    const isPrivateHost =
-      hostname === "localhost" ||
-      hostname.endsWith(".local") ||
-      /^127\./.test(hostname) ||
-      /^10\./.test(hostname) ||
-      /^192\.168\./.test(hostname) ||
-      /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname) ||
-      hostname === "169.254.169.254";
-    return url.protocol === "https:" && !isPrivateHost;
-  } catch {
-    return false;
+export async function GET(request: NextRequest) {
+  const id = request.nextUrl.searchParams.get("id")?.trim();
+  if (!id) {
+    return NextResponse.json({ error: "Certificate ID is required" }, { status: 400 });
   }
-}
 
-export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const pdfUrl = searchParams.get("url");
-
-    if (!pdfUrl) {
-      return NextResponse.json(
-        { error: "PDF URL is required" },
-        { status: 400 }
-      );
+    const file = await getCertificateFile(id);
+    if (!file) {
+      return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
     }
 
-    // Decode the URL that was encoded in the frontend
-    const decodedUrl = decodeURIComponent(pdfUrl);
-    if (!isSafePdfUrl(decodedUrl)) {
-      return NextResponse.json({ error: "Only public HTTPS PDF URLs are allowed" }, { status: 400 });
-    }
-    const response = await fetch(decodedUrl, {
+    return new NextResponse(file.body, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; PDFProxy/1.0)',
-      }
-    });
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: `Failed to fetch PDF: ${response.status} ${response.statusText}` },
-        { status: response.status }
-      );
-    }
-
-    const contentType = response.headers.get("content-type");
-    console.log("PDF content type:", contentType);
-
-    const pdfBuffer = await response.arrayBuffer();
-    console.log("PDF buffer size:", pdfBuffer.byteLength);
-
-    return new NextResponse(pdfBuffer, {
-      headers: {
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+        "Content-Security-Policy": "sandbox",
         "Content-Type": "application/pdf",
-        "Content-Disposition": "inline",
-        "Cache-Control": "public, max-age=3600",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "X-Content-Type-Options": "nosniff",
       },
     });
-  } catch (error) {
-    console.error("Error serving PDF:", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ error: "Certificate is unavailable" }, { status: 502 });
   }
 }

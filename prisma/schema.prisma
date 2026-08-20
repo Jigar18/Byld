@@ -72,6 +72,8 @@ model Skill {
   iconMap Json?
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId  String
+
+  @@index([userId])
 }
 
 model Experience {
@@ -88,6 +90,8 @@ model Experience {
   userId        String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model SocialLink {
@@ -116,6 +120,8 @@ model Certifications {
   pdfUrl      String
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
+
+  @@index([userId])
 }
 
 model Education {
@@ -131,6 +137,8 @@ model Education {
   userId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Project {

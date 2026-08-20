@@ -4,11 +4,10 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   useCallback,
   ReactNode,
 } from "react";
-import { useParams } from "next/navigation";
+import type { PortfolioInitialData } from "@/types/portfolio";
 
 interface UserDetails {
   firstName: string;
@@ -26,6 +25,7 @@ interface UserContextType {
   loading: boolean;
   isOwner: boolean;
   portfolioUsername: string;
+  portfolioData: PortfolioInitialData;
   portfolioApiUrl: (path: string) => string;
   updateUserDetails: (details: Partial<UserDetails>) => void;
   refreshUserDetails: () => Promise<void>;
@@ -43,17 +43,14 @@ export const useUser = () => {
 
 interface UserProviderProps {
   children: ReactNode;
+  initialData: PortfolioInitialData;
 }
 
-export const UserProvider = ({ children }: UserProviderProps) => {
-  const params = useParams<{ userpage?: string | string[] }>();
-  const routeUsername = Array.isArray(params?.userpage)
-    ? params.userpage[0]
-    : params?.userpage;
-  const portfolioUsername = routeUsername ? decodeURIComponent(routeUsername) : "";
-  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isOwner, setIsOwner] = useState(false);
+export const UserProvider = ({ children, initialData }: UserProviderProps) => {
+  const portfolioUsername = initialData.username;
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(initialData.details);
+  const [loading, setLoading] = useState(false);
+  const [isOwner, setIsOwner] = useState(initialData.isOwner);
 
   const portfolioApiUrl = useCallback((path: string) => {
     if (!portfolioUsername) return path;
@@ -102,15 +99,12 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     await fetchUserDetails();
   }, [fetchUserDetails]);
 
-  useEffect(() => {
-    fetchUserDetails();
-  }, [fetchUserDetails]);
-
   const value: UserContextType = {
     userDetails,
     loading,
     isOwner,
     portfolioUsername,
+    portfolioData: initialData,
     portfolioApiUrl,
     updateUserDetails,
     refreshUserDetails,

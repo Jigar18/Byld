@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Award } from "lucide-react";
 import CertificateList from "../components/CertificateList";
@@ -24,9 +24,9 @@ interface CertificationsProps {
 export default function Certifications({
   onOpenCertificate,
 }: CertificationsProps) {
-  const { isOwner, portfolioUsername, portfolioApiUrl } = useUser();
-  const [cards, setCards] = useState<Card[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isOwner, portfolioUsername, portfolioApiUrl, portfolioData } = useUser();
+  const [cards, setCards] = useState<Card[]>(portfolioData.certifications);
+  const [loading, setLoading] = useState(false);
   const [selectedCertificate, setSelectedCertificate] = useState<Card | null>(
     null
   );
@@ -36,10 +36,6 @@ export default function Certifications({
     null
   );
   const [certificatesAtTop, setCertificatesAtTop] = useState(true);
-
-  useEffect(() => {
-    fetchCertificates();
-  }, [portfolioApiUrl]);
 
   const fetchCertificates = async () => {
     try {

@@ -1,34 +1,27 @@
+import { db } from "@/lib/db";
+
 type PortfolioSetup = {
   details: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    location: string;
-    jobTitle: string;
-    college: string;
-    startYear: number;
-    endYear: number;
     imageUrl: string | null;
   } | null;
-  skills: Array<{ skills: string[] }>;
 };
 
 export function hasCompletedPortfolioSetup(user: PortfolioSetup) {
-  const details = user.details;
-  if (!details) return false;
+  // The profile image is saved by the final onboarding step. Profile fields
+  // and skills remain editable afterwards, so they cannot reliably represent
+  // whether the portfolio was already created.
+  return Boolean(user.details?.imageUrl?.trim());
+}
 
-  const requiredDetails = [
-    details.firstName,
-    details.lastName,
-    details.email,
-    details.location,
-    details.jobTitle,
-    details.college,
-    details.imageUrl,
-  ];
+export async function getCompletedPortfolioUsername(userId: string) {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: {
+      username: true,
+      details: { select: { imageUrl: true } },
+    },
+  });
 
-  return requiredDetails.every((value) => value?.trim())
-    && Number.isInteger(details.startYear)
-    && Number.isInteger(details.endYear)
-    && user.skills.some(({ skills }) => skills.some((skill) => skill.trim()));
+  if (!user) return undefined;
+  return hasCompletedPortfolioSetup(user) ? user.username : null;
 }

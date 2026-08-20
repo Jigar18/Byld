@@ -60,7 +60,10 @@ export async function GET(req: NextRequest) {
         url.searchParams.set("query", term);
         url.searchParams.set("prefixes", "logos,devicon,skill-icons");
         url.searchParams.set("limit", "32");
-        const response = await fetch(url, { next: { revalidate: 86400 } });
+        const response = await fetch(url, {
+          next: { revalidate: 86400 },
+          signal: AbortSignal.timeout(5_000),
+        });
         if (!response.ok) return [];
         const data = (await response.json()) as IconifySearchResponse;
         return data.icons ?? [];

@@ -13,7 +13,9 @@ export async function verifySessionToken(token: string | undefined): Promise<Ses
   if (!token || !secret) return null;
 
   try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret));
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret), {
+      algorithms: ["HS256"],
+    });
     if (typeof payload.userId !== "string" || typeof payload.username !== "string") return null;
     return { userId: payload.userId, username: payload.username };
   } catch {

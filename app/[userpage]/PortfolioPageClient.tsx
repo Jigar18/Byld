@@ -16,6 +16,7 @@ import GitHubHeatmap from "../components/GitHubHeatmap";
 import NotFoundState from "../components/NotFoundState";
 import PortfolioLoader from "../components/PortfolioLoader";
 import { Copyright, LogOut } from "lucide-react";
+import type { PortfolioInitialData } from "@/types/portfolio";
 
 interface Card {
   id: string;
@@ -75,7 +76,7 @@ function LogoutButton() {
   );
 }
 
-export default function Home() {
+export default function Home({ initialData }: { initialData: PortfolioInitialData }) {
   // Certificate modal state
   const [selectedCertificate, setSelectedCertificate] = useState<Card | null>(
     null
@@ -108,7 +109,7 @@ export default function Home() {
   };
 
   return (
-    <UserProvider>
+    <UserProvider initialData={initialData}>
       <PortfolioRouteGate>
       <div className="portfolio-profile relative min-h-screen overflow-hidden bg-[#0a0a0a] text-zinc-200">
         <LogoutButton />
@@ -116,7 +117,7 @@ export default function Home() {
         <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_76%_8%,rgba(251,191,36,0.018),transparent_28rem),radial-gradient(circle_at_5%_55%,rgba(244,114,182,0.012),transparent_24rem),radial-gradient(circle_at_80%_92%,rgba(255,255,255,0.012),transparent_26rem)]" />
         <div className="pointer-events-none fixed inset-0 opacity-[0.018] [background-image:linear-gradient(rgba(255,255,255,.4)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.4)_1px,transparent_1px)] [background-size:72px_72px]" />
         <main className="relative mx-auto w-full max-w-7xl px-4 pb-6 pt-16 sm:px-8 sm:pb-9 sm:pt-20 lg:px-10 lg:pb-12 lg:pt-20">
-          <div className="space-y-12 sm:space-y-16 lg:space-y-24">
+          <div className="space-y-10 sm:space-y-16 lg:space-y-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -125,7 +126,7 @@ export default function Home() {
             <InfoCard />
           </motion.div>
 
-          <div className="space-y-12 sm:space-y-16 lg:space-y-24">
+          <div className="space-y-10 sm:space-y-16 lg:space-y-24">
             <motion.div
               {...{ className: "w-full" }}
               custom={1}

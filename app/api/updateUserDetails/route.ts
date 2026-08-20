@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/session";
 
 interface UpdateData {
   about?: string;
@@ -8,27 +8,19 @@ interface UpdateData {
   lastName?: string;
   email?: string;
   location?: string;
-  imageUrl?: string;
   jobTitle ?: string;
   college ?: string;
 }
 
 export async function PUT(req: NextRequest) {
   try {
-    const token = req.cookies.get("id&Uname")?.value;
-
-    if (!token) {
+    const session = await getSession(req);
+    if (!session) {
       return NextResponse.json(
-        { success: false, error: "Authentication token is missing" },
+        { success: false, error: "Authentication required" },
         { status: 401 }
       );
     }
-
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(process.env.JWT_SECRET!)
-    );
-    const userId = payload.userId as string;
 
     const body = await req.json();
     const {
@@ -39,8 +31,16 @@ export async function PUT(req: NextRequest) {
       location,
       jobTitle,
       college,
-      imageUrl,
     } = body;
+
+    const values = { about, firstName, lastName, email, location, jobTitle, college };
+    if (
+      Object.values(values).some((value) => value !== undefined && typeof value !== "string") ||
+      typeof about === "string" && about.length > 2_000 ||
+      Object.entries(values).some(([key, value]) => key !== "about" && typeof value === "string" && value.length > 200)
+    ) {
+      return NextResponse.json({ success: false, error: "Profile fields are invalid" }, { status: 400 });
+    }
 
     // Build the update data object dynamically
     const updateData: UpdateData = {};
@@ -52,7 +52,6 @@ export async function PUT(req: NextRequest) {
     if (location !== undefined) updateData.location = location;
     if (jobTitle !== undefined) updateData.jobTitle = jobTitle;
     if (college !== undefined) updateData.college = college;
-    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
 
     // Ensure at least one field is being updated
     if (Object.keys(updateData).length === 0) {
@@ -63,10 +62,10 @@ export async function PUT(req: NextRequest) {
     }
 
     const updatedDetails = await db.details.upsert({
-      where: { userId: userId },
+      where: { userId: session.userId },
       update: updateData,
       create: {
-        userId: userId,
+        userId: session.userId,
         firstName: firstName || "",
         lastName: lastName || "",
         email: email || "",
@@ -76,7 +75,7 @@ export async function PUT(req: NextRequest) {
         startYear: new Date().getFullYear(),
         endYear: new Date().getFullYear() + 4,
         about: about || "",
-        imageUrl: imageUrl || "",
+        imageUrl: "",
       },
     });
 

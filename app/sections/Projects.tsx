@@ -81,16 +81,16 @@ const toModalProject = (project: PortfolioProject): ModalProject => ({
 });
 
 export default function Projects() {
-  const { isOwner, portfolioApiUrl } = useUser();
+  const { isOwner, portfolioData } = useUser();
   const ref = useRef<HTMLDivElement | null>(null);
   const isInView = useInView(ref as React.RefObject<HTMLElement>, {
     once: true,
     margin: "-100px",
   });
-  const [projects, setProjects] = useState<PortfolioProject[]>([]);
-  const [skills, setSkills] = useState<string[]>([]);
-  const [skillIcons, setSkillIcons] = useState<SkillIconMap>({});
-  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState<PortfolioProject[]>(portfolioData.projects);
+  const [skills, setSkills] = useState<string[]>(portfolioData.skills);
+  const [skillIcons, setSkillIcons] = useState<SkillIconMap>(portfolioData.iconMap);
+  const [loading] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [sourceOpen, setSourceOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<PortfolioProject | null>(
@@ -117,42 +117,16 @@ export default function Projects() {
     );
   }, []);
 
-  const loadProjects = useCallback(async () => {
-    try {
-      const [projectResponse, skillResponse] = await Promise.all([
-        fetch(portfolioApiUrl("/api/projects"), { credentials: "include" }),
-        fetch(portfolioApiUrl("/api/getUserSkills"), {
-          credentials: "include",
-        }),
-      ]);
-      if (projectResponse.ok) {
-        const data = await projectResponse.json();
-        const loadedProjects = (data.projects || []) as PortfolioProject[];
-        setProjects(loadedProjects);
-        if (skillResponse.ok) {
-          const skillData = await skillResponse.json();
-          const storedIcons = (skillData.iconMap || {}) as SkillIconMap;
-          const projectIcons = await findMissingSkillIcons(
-            loadedProjects.map((project) => project.techStack),
-            storedIcons,
-          );
-          setSkills(skillData.skills || []);
-          setSkillIcons({ ...storedIcons, ...projectIcons });
-        }
-      }
-      if (!projectResponse.ok && skillResponse.ok) {
-        const data = await skillResponse.json();
-        setSkills(data.skills || []);
-        setSkillIcons(data.iconMap || {});
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [portfolioApiUrl]);
-
   useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
+    let active = true;
+    void findMissingSkillIcons(
+      portfolioData.projects.map((project) => project.techStack),
+      portfolioData.iconMap,
+    ).then((icons) => {
+      if (active) setSkillIcons((current) => ({ ...current, ...icons }));
+    });
+    return () => { active = false; };
+  }, [portfolioData.iconMap, portfolioData.projects]);
 
   useEffect(() => {
     const carousel = carouselRef.current;
@@ -337,7 +311,7 @@ export default function Projects() {
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
       transition={{ duration: 0.55 }}
     >
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 sm:mb-5 sm:gap-4">
         <div>
           <p className="profile-section-label flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em]">
             <span className="profile-icon inline-flex rounded-lg border p-2">
@@ -434,7 +408,7 @@ export default function Projects() {
           )}
           <div
             ref={carouselRef}
-            className={`project-carousel flex touch-pan-x gap-5 overflow-x-auto py-2 ${isDragging ? "cursor-grabbing select-none scroll-auto" : "cursor-grab scroll-smooth"}`}
+            className={`project-carousel flex touch-pan-x gap-3 overflow-x-auto py-2 sm:gap-5 ${isDragging ? "cursor-grabbing select-none scroll-auto" : "cursor-grab scroll-smooth"}`}
             onScroll={updateCarouselControls}
             onPointerDown={startDragging}
             onPointerMove={dragProjects}
@@ -446,7 +420,7 @@ export default function Projects() {
             {projects.map((project, index) => (
               <div
                 key={project.id}
-                className="shrink-0 basis-full sm:basis-[58%] lg:basis-[calc((100%-2.5rem)/2.5)] [&>div]:h-full"
+                className="shrink-0 basis-[82%] sm:basis-[58%] lg:basis-[calc((100%-2.5rem)/2.5)] [&>div]:h-full"
               >
                 <ProjectCard
                   project={toModalProject(project)}

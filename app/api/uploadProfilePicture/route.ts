@@ -1,29 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { removeStoredFile, uploadFile } from "@/utils/uploadFiles";
 import { UploadResponse } from "@/types/api";
 import { db } from "@/lib/db";
+import { isSupportedImage } from "@/utils/fileValidation";
+import { getSession } from "@/lib/session";
+
+const MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_MULTIPART_BYTES = MAX_PROFILE_IMAGE_BYTES + 1024 * 1024;
+const PROFILE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.cookies.get("id&Uname")?.value;
-
-    if (!token) {
+    const session = await getSession(req);
+    if (!session) {
       return NextResponse.json(
-        { success: false, error: "Authentication token is missing" },
+        { success: false, error: "Authentication required" },
         { status: 401 }
       );
     }
+    const userId = session.userId;
 
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(process.env.JWT_SECRET!)
-    );
-    const userId = payload.userId as string;
-    if (!userId) {
+    const contentLength = Number(req.headers.get("content-length"));
+    if (Number.isFinite(contentLength) && contentLength > MAX_MULTIPART_BYTES) {
       return NextResponse.json(
-        { success: false, error: "Authentication token is invalid" },
-        { status: 401 }
+        { success: false, error: "Use a JPG, PNG, or WebP image up to 5 MB" },
+        { status: 413 },
       );
     }
 
@@ -37,9 +38,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!file.type.startsWith("image/")) {
+    if (!PROFILE_IMAGE_TYPES.has(file.type) || file.size > MAX_PROFILE_IMAGE_BYTES) {
       return NextResponse.json(
-        { success: false, error: "Only image files are supported" },
+        { success: false, error: "Use a JPG, PNG, or WebP image up to 5 MB" },
         { status: 400 }
       );
     }
@@ -51,6 +52,12 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    if (!isSupportedImage(buffer, file.type)) {
+      return NextResponse.json(
+        { success: false, error: "The uploaded file is not a valid image" },
+        { status: 400 },
+      );
+    }
 
     const imageUrl = await uploadFile(
       buffer,
@@ -93,10 +100,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Error uploading profile picture:", error);
-    const message = error instanceof Error ? error.message : "Profile image upload failed";
     const errorResponse: UploadResponse = {
       success: false,
-      error: message,
+      error: "Profile image upload failed",
     };
 
     return NextResponse.json(errorResponse, { status: 500 });

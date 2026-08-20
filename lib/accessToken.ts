@@ -5,7 +5,7 @@ import { getGitHubAppJwt } from "@/lib/github";
 import { getSession } from "@/lib/session";
 
 export async function getInstallationAccessTokenById(installationId: string) {
-  const jwtToken = getGitHubAppJwt();
+  const jwtToken = await getGitHubAppJwt();
 
   const tokenResponse = await axios.post(
     `https://api.github.com/app/installations/${installationId}/access_tokens`,

@@ -1,23 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { db } from "../../../lib/db";
+import { getSession } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.cookies.get("id&Uname")?.value;
-
-    if (!token) {
+    const session = await getSession(req);
+    if (!session) {
       return NextResponse.json(
-        { success: false, error: "Authentication token is missing" },
+        { success: false, error: "Authentication required" },
         { status: 401 }
       );
     }
-
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(process.env.JWT_SECRET!)
-    );
-    const userId = payload.userId as string;
 
     const body = await req.json();
     const { socialLinks } = body;
@@ -49,16 +42,36 @@ export async function POST(req: NextRequest) {
     // Only include platforms that are in our allowed list
     allowedPlatforms.forEach((platform) => {
       if (socialLinks.hasOwnProperty(platform)) {
-        updateData[platform] = socialLinks[platform] || null;
+        const value = socialLinks[platform];
+        if (value === "" || value === null) {
+          updateData[platform] = null;
+          return;
+        }
+        if (typeof value !== "string" || value.length > 2_048) return;
+        try {
+          const url = new URL(value);
+          const allowed = url.protocol === "https:" || url.protocol === "http:" ||
+            (platform === "email" && url.protocol === "mailto:");
+          if (allowed) updateData[platform] = value;
+        } catch {
+          // Invalid links are rejected below instead of being stored.
+        }
       }
     });
 
+    const suppliedValues = Object.entries(socialLinks).filter(([platform, value]) =>
+      allowedPlatforms.includes(platform) && value !== "" && value !== null,
+    );
+    if (suppliedValues.some(([platform]) => !(platform in updateData))) {
+      return NextResponse.json({ success: false, error: "Social links must use a valid web URL" }, { status: 400 });
+    }
+
     // Upsert the social links record
     const updatedLinks = await db.socialLink.upsert({
-      where: { userId: userId },
+      where: { userId: session.userId },
       update: updateData,
       create: {
-        userId: userId,
+        userId: session.userId,
         ...updateData,
       },
     });

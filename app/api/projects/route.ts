@@ -26,6 +26,15 @@ type ProjectInput = {
 };
 
 const MAX_PROJECTS = 4;
+const isWebUrl = (value: string | null) => {
+  if (!value) return true;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+};
 
 const mergeSkills = (currentSkills: string[], projectSkills: string[]) => {
   const merged = [...currentSkills];
@@ -61,6 +70,20 @@ async function parseProject(body: ProjectInput, userId: string) {
     : [];
   const githubUrl = typeof body.githubUrl === "string" && body.githubUrl.trim() ? body.githubUrl.trim() : null;
   const liveUrl = typeof body.liveUrl === "string" && body.liveUrl.trim() ? body.liveUrl.trim() : null;
+  if (
+    !title ||
+    !description ||
+    title.length > 120 ||
+    description.length > 5_000 ||
+    techStack.length > 30 ||
+    techStack.some((skill) => skill.length > 80) ||
+    (githubUrl?.length ?? 0) > 2_048 ||
+    (liveUrl?.length ?? 0) > 2_048 ||
+    !isWebUrl(githubUrl) ||
+    !isWebUrl(liveUrl)
+  ) {
+    throw new Error("Project details are invalid");
+  }
   const hasVideo = [body.videoUrl, body.videoPublicId, body.videoDuration, body.videoBytes, body.videoFormat]
     .some((value) => value !== null && value !== undefined && value !== "");
   let video = { videoUrl: null as string | null, videoPublicId: null as string | null, videoDuration: null as number | null, videoBytes: null as number | null, videoFormat: null as string | null };
@@ -85,7 +108,6 @@ async function parseProject(body: ProjectInput, userId: string) {
     return { ...await getVerifiedProjectImage(imagePublicId, userId), position };
   }));
 
-  if (!title || !description) throw new Error("A project title and description are required");
   return { project: { title, description, techStack, githubUrl, liveUrl, ...video }, images };
 }
 

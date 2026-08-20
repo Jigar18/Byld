@@ -1,19 +1,16 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { db } from "@/lib/db";
+import { loadPortfolioData } from "@/lib/portfolioData";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 import PortfolioPageClient from "./PortfolioPageClient";
 
 type PortfolioPageProps = {
   params: Promise<{ userpage: string }>;
 };
 
-const getPortfolio = cache((username: string) =>
-  db.user.findFirst({
-    where: { username: { equals: username, mode: "insensitive" } },
-    select: { username: true, details: { select: { id: true } } },
-  }),
-);
+const getPortfolio = cache(loadPortfolioData);
 
 export async function generateMetadata({
   params,
@@ -21,7 +18,7 @@ export async function generateMetadata({
   const { userpage } = await params;
   const portfolio = await getPortfolio(decodeURIComponent(userpage));
 
-  return portfolio?.details
+  return portfolio
     ? { title: `Portfolio - ${portfolio.username}` }
     : {};
 }
@@ -33,6 +30,14 @@ export default async function PortfolioPage({
   const username = decodeURIComponent(userpage);
   const portfolio = await getPortfolio(username);
 
-  if (!portfolio?.details) notFound();
-  return <PortfolioPageClient />;
+  if (!portfolio) notFound();
+  const cookieStore = await cookies();
+  const session = await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+  const { id, ...publicPortfolio } = portfolio;
+
+  return (
+    <PortfolioPageClient
+      initialData={{ ...publicPortfolio, isOwner: session?.userId === id }}
+    />
+  );
 }

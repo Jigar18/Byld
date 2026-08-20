@@ -1,41 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import jwt from "jsonwebtoken";
+import { getSession } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
   try {
-    const getCookie = (name: string) => {
-      const cookieHeader = req.headers.get("cookie");
-      if (!cookieHeader) return null;
-      
-      const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        acc[key] = value;
-        return acc;
-      }, {} as Record<string, string>);
-      
-      return cookies[name];
-    };
-
-    const token = getCookie("id&Uname");
-
-    if (!token) {
+    const session = await getSession(req);
+    if (!session) {
       return NextResponse.json({ 
         success: false, 
-        error: "Authentication token is missing" 
-      }, { status: 401 });
-    }
-
-    // Decode the JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      userId: string;
-      username: string;
-    };
-
-    if (!decoded.userId) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Invalid token" 
+        error: "Authentication required"
       }, { status: 401 });
     }
 
@@ -70,7 +43,7 @@ export async function POST(req: NextRequest) {
         endYear: isCurrentRole ? null : endYear,
         isCurrentRole,
         contributions: contributions || [],
-        userId: decoded.userId,
+        userId: session.userId,
       }
     });
 
@@ -93,38 +66,11 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const getCookie = (name: string) => {
-      const cookieHeader = req.headers.get("cookie");
-      if (!cookieHeader) return null;
-      
-      const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        acc[key] = value;
-        return acc;
-      }, {} as Record<string, string>);
-      
-      return cookies[name];
-    };
-
-    const token = getCookie("id&Uname");
-
-    if (!token) {
+    const session = await getSession(req);
+    if (!session) {
       return NextResponse.json({ 
         success: false, 
-        error: "Authentication token is missing" 
-      }, { status: 401 });
-    }
-
-    // Decode the JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      userId: string;
-      username: string;
-    };
-
-    if (!decoded.userId) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Invalid token" 
+        error: "Authentication required"
       }, { status: 401 });
     }
 
@@ -153,7 +99,7 @@ export async function PUT(req: NextRequest) {
     const experience = await db.experience.update({
       where: {
         id: id,
-        userId: decoded.userId, // Ensure user owns this experience
+        userId: session.userId,
       },
       data: {
         company,
@@ -186,38 +132,11 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const getCookie = (name: string) => {
-      const cookieHeader = req.headers.get("cookie");
-      if (!cookieHeader) return null;
-      
-      const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        acc[key] = value;
-        return acc;
-      }, {} as Record<string, string>);
-      
-      return cookies[name];
-    };
-
-    const token = getCookie("id&Uname");
-
-    if (!token) {
+    const session = await getSession(req);
+    if (!session) {
       return NextResponse.json({ 
         success: false, 
-        error: "Authentication token is missing" 
-      }, { status: 401 });
-    }
-
-    // Decode the JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      userId: string;
-      username: string;
-    };
-
-    if (!decoded.userId) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Invalid token" 
+        error: "Authentication required"
       }, { status: 401 });
     }
 
@@ -235,7 +154,7 @@ export async function DELETE(req: NextRequest) {
     await db.experience.delete({
       where: {
         id: id,
-        userId: decoded.userId, // Ensure user owns this experience
+        userId: session.userId,
       }
     });
 

@@ -61,7 +61,7 @@ export default function ProjectCard({
 
   return (
     <motion.div
-      {...{className:"profile-card profile-surface-neutral profile-card-lift relative group flex min-h-[19rem] flex-col overflow-hidden rounded-2xl border shadow-lg shadow-black/20 sm:min-h-[23.75rem]"}}
+      {...{className:"profile-card profile-surface-neutral profile-card-lift relative group flex min-h-[17.5rem] flex-col overflow-hidden rounded-2xl border shadow-lg shadow-black/20 sm:min-h-[23.75rem]"}}
       whileHover={{ y: -5 }}
       transition={{ duration: 0.3 }}
       initial={{ opacity: 0, y: 20 }}
@@ -87,7 +87,7 @@ export default function ProjectCard({
 
       <button
         type="button"
-        className="group/preview relative block h-[8.5rem] w-full cursor-pointer sm:h-[13.3rem]"
+        className="group/preview relative block h-[7.5rem] w-full cursor-pointer sm:h-[13.3rem]"
         onClick={handleClick}
         aria-label={`View ${project.title}`}
       >
@@ -109,29 +109,29 @@ export default function ProjectCard({
         </span>
       </button>
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
         <h3
-          className="portfolio-display cursor-pointer text-lg font-semibold text-slate-100 transition-colors hover:text-white"
+          className="portfolio-display cursor-pointer text-base font-semibold text-slate-100 transition-colors hover:text-white sm:text-lg"
           onClick={handleClick}
         >
           {project.title}
         </h3>
-        <p className="text-slate-300 text-sm mt-2 line-clamp-2">
+        <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-slate-300 sm:mt-2 sm:text-sm">
           {project.description}
         </p>
 
-        <div className="flex gap-2 mt-3 flex-wrap">
+        <div className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-3 sm:gap-2">
           {project.tags.slice(0, 3).map((tech) => (
             <span
               key={tech}
-              className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.025] px-2 py-1 text-xs text-zinc-300 shadow-sm"
+              className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.025] px-1.5 py-1 text-[10px] text-zinc-300 shadow-sm sm:gap-1.5 sm:px-2 sm:text-xs"
             >
               <SkillIcon skill={tech} iconMap={skillIcons} className="h-3.5 w-3.5 shrink-0" />
               {tech}
             </span>
           ))}
           {project.tags.length > 3 && (
-            <span className="rounded-md border border-white/10 bg-white/[0.025] px-2 py-1 text-xs text-zinc-300 shadow-sm">
+            <span className="rounded-md border border-white/10 bg-white/[0.025] px-1.5 py-1 text-[10px] text-zinc-300 shadow-sm sm:px-2 sm:text-xs">
               +{project.tags.length - 3} more
             </span>
           )}

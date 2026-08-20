@@ -214,9 +214,7 @@ export default function CertificateModal({
 
                       const pdfUrl = useDirectUrl
                         ? currentCertificate.pdfUrl
-                        : `/api/view-pdf?url=${encodeURIComponent(
-                            currentCertificate.pdfUrl
-                          )}`;
+                        : `/api/view-pdf?id=${encodeURIComponent(currentCertificate.id)}`;
 
                       console.log("Using PDF URL:", pdfUrl);
                       console.log("Mode:", useDirectUrl ? "Direct" : "Proxy");

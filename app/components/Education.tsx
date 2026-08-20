@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUser } from "../context/UserContext";
 import EducationModal from "./EducationModal";
 import { BookOpen, Edit3 } from "lucide-react";
@@ -20,11 +20,11 @@ interface EducationItem {
 }
 
 export default function Education() {
-  const [education, setEducation] = useState<EducationItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isOwner, portfolioApiUrl, portfolioData } = useUser();
+  const [education, setEducation] = useState<EducationItem[]>(portfolioData.education);
+  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [educationAtTop, setEducationAtTop] = useState(true);
-  const { isOwner, portfolioApiUrl } = useUser();
 
   const fetchEducation = async () => {
     try {
@@ -44,10 +44,6 @@ export default function Education() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchEducation();
-  }, [portfolioApiUrl]);
 
   const handleSaveEducation = async (updatedEducation: EducationItem[]) => {
     try {

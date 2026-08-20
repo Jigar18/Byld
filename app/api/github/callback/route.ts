@@ -149,19 +149,8 @@ export async function GET(req: NextRequest) {
         id: true,
         username: true,
         details: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true,
-            location: true,
-            jobTitle: true,
-            college: true,
-            startYear: true,
-            endYear: true,
-            imageUrl: true,
-          },
+          select: { imageUrl: true },
         },
-        skills: { select: { skills: true } },
       },
     });
 
@@ -174,10 +163,9 @@ export async function GET(req: NextRequest) {
     const returnTo = req.cookies.get("oauth_return_to")?.value;
     const requestedTarget =
       returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : null;
-    const target = requestedTarget ??
-      (hasCompletedPortfolioSetup(userDB)
-        ? `/${encodeURIComponent(userDB.username)}`
-        : "/app-install");
+    const target = hasCompletedPortfolioSetup(userDB)
+      ? `/${encodeURIComponent(userDB.username)}`
+      : requestedTarget ?? "/app-install";
     const response = NextResponse.redirect(new URL(target, req.url));
     response.cookies.set(SESSION_COOKIE, session, {
       httpOnly: true,

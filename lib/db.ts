@@ -10,7 +10,7 @@ declare global {
 export const db =
   globalThis.prisma ||
   new PrismaClient({
-    log: ["query", "error", "warn"],
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 
 if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
@@ -21,10 +21,4 @@ export function getDbClientInfo() {
     env: process.env.NODE_ENV,
     timestamp: new Date().toISOString(),
   };
-}
-
-if (process.env.NODE_ENV === "production") {
-  process.on("beforeExit", () => {
-    db.$disconnect();
-  });
 }

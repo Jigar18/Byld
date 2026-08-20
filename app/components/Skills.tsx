@@ -18,20 +18,22 @@ interface UserSkills {
 const capitalizeFirst = (skill: string) => skill ? skill.charAt(0).toUpperCase() + skill.slice(1) : skill;
 
 export default function Skills() {
-  const { isOwner, portfolioApiUrl } = useUser();
+  const { isOwner, portfolioApiUrl, portfolioData } = useUser();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [tempSkills, setTempSkills] = useState<string[]>([]);
-  const [skillIcons, setSkillIcons] = useState<SkillIconMap>({});
+  const [skillIcons, setSkillIcons] = useState<SkillIconMap>(portfolioData.iconMap);
   const [tempSkillIcons, setTempSkillIcons] = useState<SkillIconMap>({});
   const [iconPickerSkill, setIconPickerSkill] = useState<string | null>(null);
   const [iconChoices, setIconChoices] = useState<string[]>([]);
   const [isSearchingIcons, setIsSearchingIcons] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [skills, setSkills] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [skills, setSkills] = useState<string[]>(
+    portfolioData.skills.map(capitalizeFirst),
+  );
   const [saving, setSaving] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -72,8 +74,7 @@ export default function Skills() {
 
   useEffect(() => {
     setMounted(true);
-    fetchUserSkills();
-  }, [fetchUserSkills]);
+  }, []);
 
   useEffect(() => {
     const refreshSkills = () => void fetchUserSkills();

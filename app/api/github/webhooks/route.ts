@@ -25,6 +25,10 @@ function isValidSignature(rawBody: string, signature: string | null, secret: str
 }
 
 export async function POST(req: NextRequest) {
+  const contentLength = Number(req.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > 1024 * 1024) {
+    return NextResponse.json({ error: "Webhook payload is too large" }, { status: 413 });
+  }
   const rawBody = await req.text();
   const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET ?? process.env.WEBHOOK_SECRET;
   if (!isValidSignature(rawBody, req.headers.get("x-hub-signature-256"), webhookSecret)) {

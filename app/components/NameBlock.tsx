@@ -32,9 +32,9 @@ export default function NameBlock() {
   const displayLocation = userDetails?.location || "";
 
   return (
-    <div className="min-w-0 flex flex-col items-center sm:items-start">
+    <div className="flex min-w-0 flex-col items-start">
       <motion.h1
-        {...{ className: "portfolio-display break-words text-center text-3xl font-bold text-slate-100 sm:text-left sm:text-4xl" }}
+        {...{ className: "portfolio-display max-w-full truncate text-xl font-bold text-slate-100 sm:whitespace-normal sm:text-4xl" }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -42,7 +42,7 @@ export default function NameBlock() {
         {displayName}
       </motion.h1>
       {displayLocation && <motion.p
-        {...{ className: "mt-1 break-words text-center text-base text-zinc-400 sm:text-left sm:text-lg" }}
+        {...{ className: "mt-0.5 max-w-full truncate text-xs text-zinc-400 sm:mt-1 sm:whitespace-normal sm:text-lg" }}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -51,14 +51,14 @@ export default function NameBlock() {
       </motion.p>}
       <motion.p
         {...{
-          className: "text-sm text-slate-400 mt-1 flex items-center gap-1",
+          className: "mt-0.5 flex max-w-full items-center gap-1 truncate text-[11px] text-slate-400 sm:mt-1 sm:text-sm",
         }}
         initial={{ opacity: 0, y: -5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <svg
-          className="h-4 w-4"
+          className="h-3 w-3 shrink-0 sm:h-4 sm:w-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

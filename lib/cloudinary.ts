@@ -48,12 +48,14 @@ export function createProjectImageUploadSignature(userId: string) {
   const config = getCloudinaryConfig();
   const timestamp = Math.floor(Date.now() / 1000);
   const folder = `portfolio-images/${userId}`;
+  const allowedFormats = PROJECT_IMAGE_FORMATS.join(",");
   return {
     apiKey: config.apiKey,
     cloudName: config.cloudName,
     folder,
+    allowedFormats,
     timestamp,
-    signature: signCloudinaryParams({ folder, timestamp }, config.apiSecret),
+    signature: signCloudinaryParams({ allowed_formats: allowedFormats, folder, timestamp }, config.apiSecret),
   };
 }
 
@@ -102,6 +104,7 @@ export async function deleteProjectVideo(publicId: string) {
       const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/destroy`, {
         method: "POST",
         body,
+        signal: AbortSignal.timeout(10_000),
       });
       const result = response.ok ? await response.json() as { result?: string } : null;
       if (result?.result === "ok" || result?.result === "not found") return;
@@ -128,7 +131,11 @@ export async function deleteProjectImage(publicId: string) {
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, { method: "POST", body });
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+        method: "POST",
+        body,
+        signal: AbortSignal.timeout(10_000),
+      });
       const result = response.ok ? await response.json() as { result?: string } : null;
       if (result?.result === "ok" || result?.result === "not found") return;
     } catch (error) {
@@ -148,6 +155,7 @@ export async function getVerifiedProjectImage(publicId: string, userId: string) 
   const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload/${encodeURIComponent(publicId)}`, {
     headers: { Authorization: `Basic ${authorization}` },
     cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) throw new Error("Cloudinary could not verify the project image");
 
@@ -177,6 +185,7 @@ export async function getVerifiedProjectVideo(publicId: string, userId: string) 
   const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/video/upload/${encodeURIComponent(publicId)}?media_metadata=true`, {
     headers: { Authorization: `Basic ${authorization}` },
     cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) throw new Error("Cloudinary could not verify the project video");
 

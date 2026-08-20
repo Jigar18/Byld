@@ -1,77 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { resolvePortfolioUser } from "@/lib/publicPortfolio";
+import { getCertificateFile } from "@/lib/certificateFile";
 
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
+  const id = request.nextUrl.searchParams.get("id")?.trim();
+  if (!id) {
+    return NextResponse.json({ error: "Certificate ID is required" }, { status: 400 });
+  }
+
   try {
-    const { searchParams } = new URL(req.url);
-    const certificateId = searchParams.get("id");
-
-    if (!certificateId) {
-      return NextResponse.json(
-        { error: "Certificate ID is required" },
-        { status: 400 }
-      );
+    const file = await getCertificateFile(id);
+    if (!file) {
+      return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
     }
+    const filename = `${file.certificate.title.replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "_") || "certificate"}.pdf`;
 
-    const user = await resolvePortfolioUser(req);
-    if (!user) {
-      return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
-    }
-
-    // Get the certificate from database
-    const certificate = await db.certifications.findFirst({
-      where: {
-        id: certificateId,
-        userId: user.id,
-      },
-    });
-
-    if (!certificate) {
-      return NextResponse.json(
-        { error: "Certificate not found" },
-        { status: 404 }
-      );
-    }
-
-    console.log(
-      "Downloading certificate:",
-      certificate.title,
-      "URL:",
-      certificate.pdfUrl
-    );
-
-    // Fetch the PDF from Supabase
-    const response = await fetch(certificate.pdfUrl);
-
-    if (!response.ok) {
-      console.error("Failed to fetch PDF from Supabase:", response.status);
-      return NextResponse.json(
-        { error: "Failed to fetch PDF file" },
-        { status: response.status }
-      );
-    }
-
-    const pdfBuffer = await response.arrayBuffer();
-
-    // Generate a safe filename
-    const safeTitle = certificate.title
-      .replace(/[^a-zA-Z0-9\s]/g, "")
-      .replace(/\s+/g, "_");
-    const filename = `${safeTitle}_certificate.pdf`;
-
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(file.body, {
       headers: {
-        "Content-Type": "application/pdf",
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
         "Content-Disposition": `attachment; filename="${filename}"`,
-        "Cache-Control": "public, max-age=3600",
+        "Content-Type": "application/pdf",
+        "X-Content-Type-Options": "nosniff",
       },
     });
-  } catch (error) {
-    console.error("Error downloading certificate:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ error: "Certificate is unavailable" }, { status: 502 });
   }
 }

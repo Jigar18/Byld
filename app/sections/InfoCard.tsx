@@ -147,7 +147,7 @@ function InfoCard() {
       <motion.div
         {...{
           className:
-            "relative group w-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-9 before:pointer-events-none before:absolute before:inset-x-12 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/40 before:to-transparent",
+            "relative group w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-2xl shadow-black/30 backdrop-blur-xl sm:rounded-3xl sm:p-9 before:pointer-events-none before:absolute before:inset-x-12 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/40 before:to-transparent",
         }}
         whileHover={{ y: -3, boxShadow: "0 24px 80px rgba(0, 0, 0, 0.38)" }}
         initial={{ y: -50, opacity: 0 }}
@@ -164,8 +164,8 @@ function InfoCard() {
           <Edit3 className="h-4 w-4" />
         </button>}
 
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-6 text-center sm:text-left">
-          <div className="flex min-w-0 flex-col sm:flex-row items-center gap-6">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 text-left sm:flex sm:justify-between sm:gap-6">
+          <div className="contents sm:flex sm:min-w-0 sm:items-center sm:gap-6">
             <ProfileImage />
             <NameBlock />
           </div>
