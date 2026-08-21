@@ -22,12 +22,6 @@ import {
   ProjectsEvidence,
 } from "./ProductMockups";
 
-const nav = [
-  ["Product", "#product"],
-  ["How it works", "#how-it-works"],
-  ["FAQ", "#faq"],
-];
-
 const steps = [
   { icon: Github, title: "Connect GitHub", copy: "Sign in using the account where your work already lives." },
   { icon: Layers3, title: "Connect repositories", copy: "Install the GitHub App for repository access and contribution data." },
@@ -53,8 +47,16 @@ function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="Byldit home">
       <Image src="/landing/byldit-mark-mono.webp" alt="" width={compact ? 28 : 32} height={compact ? 28 : 32} className="rounded-lg" priority />
-      <span className="text-sm font-semibold tracking-[-0.02em] text-white">Byldit</span>
+      <span className={`${compact ? "text-[15.4px]" : "text-sm"} font-semibold tracking-[-0.02em] text-white`}>Byldit</span>
     </Link>
+  );
+}
+
+function XLogo() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[22px] w-[22px] fill-current">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
   );
 }
 
@@ -184,7 +186,37 @@ export default function LandingPage() {
 
       <section className="relative overflow-hidden px-5 py-28 sm:px-8 lg:py-40"><div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,.045),transparent_48%)]" /><ProjectFragment /><div className="relative z-10 mx-auto max-w-4xl text-center"><Eyebrow center>Ready when your work is</Eyebrow><h2 className="mt-6 text-4xl font-semibold leading-[1.02] tracking-[-0.055em] text-white sm:text-7xl">Stop explaining your work.<br /><span className="text-zinc-500">Show it.</span></h2><p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-zinc-400">Bring the proof, progress, and story together—and share one link that does them justice.</p><div className="mt-9 flex justify-center"><PrimaryButton className="w-full sm:w-auto" /></div></div></section>
 
-      <footer className="border-t border-white/[0.08] px-5 py-10 sm:px-8"><div className="mx-auto flex max-w-[1120px] flex-col gap-8 sm:flex-row sm:items-center sm:justify-between"><div><Brand compact /><p className="mt-3 text-xs text-zinc-600">One home for the work behind the developer.</p></div><div className="flex flex-wrap gap-x-5 gap-y-3 text-xs text-zinc-600">{nav.map(([label, href]) => <a key={label} href={href} className="transition hover:text-white">{label}</a>)}<a href="https://github.com/Jigar18/Portfolio-Creator" className="transition hover:text-white">GitHub</a><Link href="/login" className="transition hover:text-white">Log in</Link></div></div><div className="mx-auto mt-8 max-w-[1120px] border-t border-white/[0.06] pt-5 font-mono text-[9px] uppercase tracking-[0.14em] text-zinc-800">© {new Date().getFullYear()} Byldit</div></footer>
+      <footer className="border-t border-white/[0.08] px-5 py-10 sm:px-8">
+        <div className="mx-auto flex max-w-[1120px] flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <Brand compact />
+            <p className="mt-3 text-[13.2px] text-zinc-600">One home for the work behind the developer.</p>
+          </div>
+          <div className="flex items-center gap-5 text-zinc-500">
+            <a
+              href="https://github.com/Jigar18/Byld"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Byldit on GitHub"
+              className="transition hover:text-white"
+            >
+              <Github className="h-[22px] w-[22px]" />
+            </a>
+            <a
+              href="https://x.com/jigark0"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Jigar on X"
+              className="transition hover:text-white"
+            >
+              <XLogo />
+            </a>
+          </div>
+        </div>
+        <div className="mx-auto mt-8 max-w-[1120px] border-t border-white/[0.06] pt-5 font-mono text-[9.9px] uppercase tracking-[0.14em] text-zinc-800">
+          © {new Date().getFullYear()} Byldit
+        </div>
+      </footer>
     </main>
   );
 }
