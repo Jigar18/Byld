@@ -2,6 +2,7 @@
   "name": "portfolio",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.3.0",
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_OPTIONS='--inspect' next dev",
