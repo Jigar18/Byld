@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Github, LoaderCircle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useUser } from "../context/UserContext";
+import { contributionLevels } from "./contributionHeatmapStyles";
 
 type ContributionDay = {
   contributionCount: number;
@@ -25,14 +26,6 @@ type ContributionResponse = {
   calendar?: ContributionCalendar;
 };
 
-const contributionLevels = [
-  "bg-white/[0.035]",
-  "bg-zinc-800",
-  "bg-zinc-700",
-  "bg-zinc-500",
-  "bg-zinc-300",
-];
-
 const getContributionLevel = (count: number) => {
   if (count === 0) return 0;
   if (count <= 2) return 1;
@@ -42,6 +35,18 @@ const getContributionLevel = (count: number) => {
 };
 
 const formatUtcDate = (date: Date) => date.toISOString().slice(0, 10);
+
+const getMonthLabel = (
+  week: ContributionCalendar["weeks"][number],
+  weekIndex: number,
+) => {
+  const monthStart = week.contributionDays.find((day) => day.date.endsWith("-01"));
+  const labelDay = monthStart ?? (weekIndex === 0 ? week.contributionDays[0] : null);
+  if (!labelDay) return null;
+  return new Intl.DateTimeFormat("en", { month: "short", timeZone: "UTC" }).format(
+    new Date(`${labelDay.date}T00:00:00.000Z`),
+  );
+};
 
 const includeUtcToday = (calendar: ContributionCalendar) => {
   const weeks = calendar.weeks.map((week) => ({
@@ -192,29 +197,38 @@ export default function GitHubHeatmap() {
         ) : (
           <>
             <div className="mt-8 overflow-x-auto">
-              <div className="flex w-full min-w-[760px] gap-2 px-1.5 py-2">
-                <div className="grid grid-rows-7 gap-1 pr-1 text-[9px] text-zinc-600">
-                  {["", "Mon", "", "Wed", "", "Fri", ""].map((label, index) => (
-                    <span key={`${label}-${index}`} className="flex w-5 items-center justify-end">
-                      {label}
-                    </span>
-                  ))}
+              <div className="w-fit min-w-[870px] px-1.5 py-2">
+                <div className="mb-2 ml-[36px] grid grid-cols-[repeat(var(--heatmap-weeks),12px)] gap-x-[4px] font-mono text-[9px] text-zinc-600" style={{ "--heatmap-weeks": calendar.weeks.length } as React.CSSProperties}>
+                  {calendar.weeks.map((week, weekIndex) => {
+                    const month = getMonthLabel(week, weekIndex);
+                    return month ? <span key={`${month}-${weekIndex}`} className="whitespace-nowrap">{month}</span> : <span key={weekIndex} />;
+                  })}
                 </div>
-                <div
-                  className="grid min-w-0 flex-1 gap-1"
-                  style={{ gridTemplateColumns: `repeat(${calendar.weeks.length}, minmax(10px, 1fr))` }}
-                >
-                  {calendar.weeks.map((week, weekIndex) => (
-                    <div key={weekIndex} className="grid grid-rows-7 gap-1">
-                      {week.contributionDays.map((day) => (
-                        <span
-                          key={day.date}
-                          className={`relative aspect-square w-full rounded-[3px] border border-white/[0.05] transition-transform duration-150 hover:z-10 hover:scale-125 ${contributionLevels[getContributionLevel(day.contributionCount)]}`}
-                          title={`${day.contributionCount} contributions on ${day.date}`}
-                        />
-                      ))}
-                    </div>
-                  ))}
+                <div className="flex gap-2">
+                  <div className="grid grid-rows-7 gap-[4px] pr-1 text-[9px] text-zinc-600">
+                    {["", "Mon", "", "Wed", "", "Fri", ""].map((label, index) => (
+                      <span key={`${label}-${index}`} className="flex h-3 w-5 items-center justify-end">
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                  <div
+                    className="grid grid-cols-[repeat(var(--heatmap-weeks),12px)] gap-x-[4px]"
+                    style={{ "--heatmap-weeks": calendar.weeks.length } as React.CSSProperties}
+                  >
+                    {calendar.weeks.map((week, weekIndex) => (
+                      <div key={weekIndex} className="grid grid-rows-7 gap-[4px]">
+                        {week.contributionDays.map((day) => (
+                          <span
+                            key={day.date}
+                            className={`relative h-3 w-3 rounded-[3px] transition-transform duration-150 hover:z-10 hover:scale-125 ${contributionLevels[getContributionLevel(day.contributionCount)]}`}
+                            style={{ gridRowStart: day.weekday + 1 }}
+                            title={`${day.contributionCount} contributions on ${day.date}`}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -226,11 +240,11 @@ export default function GitHubHeatmap() {
               </span>
               <div className="flex items-center gap-2" aria-label="Contribution intensity from less to more">
                 <span>Less</span>
-                <span className="flex gap-1">
+                <span className="flex gap-1.5">
                   {contributionLevels.map((color, index) => (
                     <span
                       key={color}
-                      className={`h-3 w-3 rounded-[3px] border border-white/[0.06] ${color}`}
+                      className={`h-3 w-3 rounded-[3px] ${color}`}
                       title={index === 0 ? "No contributions" : `Intensity level ${index}`}
                     />
                   ))}
