@@ -39,20 +39,32 @@ export async function POST(req: NextRequest) {
 
     const updateData: Record<string, string | null> = {};
 
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     // Only include platforms that are in our allowed list
     allowedPlatforms.forEach((platform) => {
-      if (socialLinks.hasOwnProperty(platform)) {
+      if (Object.prototype.hasOwnProperty.call(socialLinks, platform)) {
         const value = socialLinks[platform];
         if (value === "" || value === null) {
           updateData[platform] = null;
           return;
         }
         if (typeof value !== "string" || value.length > 2_048) return;
+
+        const trimmedValue = value.trim();
+        if (platform === "email") {
+          const email = trimmedValue.startsWith("mailto:")
+            ? trimmedValue.slice("mailto:".length)
+            : trimmedValue;
+          if (emailPattern.test(email)) updateData.email = email;
+          return;
+        }
+
         try {
-          const url = new URL(value);
-          const allowed = url.protocol === "https:" || url.protocol === "http:" ||
-            (platform === "email" && url.protocol === "mailto:");
-          if (allowed) updateData[platform] = value;
+          const url = new URL(trimmedValue);
+          if (url.protocol === "https:" || url.protocol === "http:") {
+            updateData[platform] = trimmedValue;
+          }
         } catch {
           // Invalid links are rejected below instead of being stored.
         }
@@ -63,7 +75,13 @@ export async function POST(req: NextRequest) {
       allowedPlatforms.includes(platform) && value !== "" && value !== null,
     );
     if (suppliedValues.some(([platform]) => !(platform in updateData))) {
-      return NextResponse.json({ success: false, error: "Social links must use a valid web URL" }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Enter a valid email address and use http:// or https:// for links",
+        },
+        { status: 400 },
+      );
     }
 
     // Upsert the social links record

@@ -71,6 +71,7 @@ export default function Connect() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const showCopyToast = (message: string) => {
     setToastMessage(message);
@@ -342,17 +343,20 @@ export default function Connect() {
       }
     });
     setTempSocialLinks(tempLinks);
+    setSaveError("");
     setIsEditModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setTempSocialLinks({});
+    setSaveError("");
     setIsEditModalOpen(false);
   };
 
   const handleSaveChanges = async () => {
     try {
       setSaving(true);
+      setSaveError("");
       // Convert temp links to the format expected by the API
       const socialLinksData: { [key: string]: string } = {};
 
@@ -366,14 +370,20 @@ export default function Connect() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ socialLinks: socialLinksData }),
       });
+      const data = (await response.json()) as { error?: string };
 
-      if (response.ok) {
-        // Refetch the updated data
-        await fetchSocialLinks();
-        handleCloseModal();
+      if (!response.ok) {
+        throw new Error(data.error || "Social links could not be saved");
       }
+
+      // Refetch the updated data
+      await fetchSocialLinks();
+      handleCloseModal();
     } catch (error) {
       console.error("Error saving social links:", error);
+      setSaveError(
+        error instanceof Error ? error.message : "Social links could not be saved",
+      );
     } finally {
       setSaving(false);
     }
@@ -480,17 +490,27 @@ export default function Connect() {
                         {platform}
                       </label>
                       <input
-                        type="url"
+                        type={platform.toLowerCase() === "email" ? "email" : "url"}
                         value={url}
                         onChange={(e) =>
                           handleUrlChange(platform, e.target.value)
                         }
-                        placeholder={`Enter ${platform} URL`}
+                        placeholder={
+                          platform.toLowerCase() === "email"
+                            ? "Enter email address"
+                            : `Enter ${platform} URL`
+                        }
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-300 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
                       />
                     </div>
                   ))}
                 </div>
+
+                {saveError && (
+                  <p className="mb-4 rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-sm text-red-200">
+                    {saveError}
+                  </p>
+                )}
 
                 {/* Action buttons */}
                 <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
