@@ -34,14 +34,6 @@ type ContributionResponse = {
   calendar?: ContributionCalendar;
 };
 
-const contributionLevels = [
-  "bg-[#1d1d1d]",
-  "bg-[#40403e]",
-  "bg-[#636469]",
-  "bg-[#aeaeac]",
-  "bg-[#f4f4f2]",
-];
-
 const contributionLevelIndexes: Record<ContributionLevel, number> = {
   NONE: 0,
   FIRST_QUARTILE: 1,
@@ -62,18 +54,6 @@ const getContributionLevel = (day: ContributionDay) => {
 };
 
 const formatUtcDate = (date: Date) => date.toISOString().slice(0, 10);
-
-const getMonthLabel = (
-  week: ContributionCalendar["weeks"][number],
-  weekIndex: number,
-) => {
-  const monthStart = week.contributionDays.find((day) => day.date.endsWith("-01"));
-  const labelDay = monthStart ?? (weekIndex === 0 ? week.contributionDays[0] : null);
-  if (!labelDay) return null;
-  return new Intl.DateTimeFormat("en", { month: "short", timeZone: "UTC" }).format(
-    new Date(`${labelDay.date}T00:00:00.000Z`),
-  );
-};
 
 const includeUtcToday = (calendar: ContributionCalendar) => {
   const weeks = calendar.weeks.map((week) => ({
@@ -113,7 +93,20 @@ const includeUtcToday = (calendar: ContributionCalendar) => {
   return { ...calendar, weeks };
 };
 
-const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const monthNames = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 const getMonthLabels = (calendar: ContributionCalendar) =>
   calendar.weeks.flatMap((week, weekIndex) => {
