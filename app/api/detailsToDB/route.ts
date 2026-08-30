@@ -10,14 +10,43 @@ export async function POST(req: NextRequest) {
     const form = await req.json() as Record<string, string>;
     const startYear = Number(form.startYear);
     const endYear = Number(form.endYear);
-    if (!form.firstName?.trim() || !form.lastName?.trim() || !form.email?.trim() || !form.jobTitle?.trim() || !Number.isInteger(startYear) || !Number.isInteger(endYear)) {
+    const school = form.school?.trim();
+    const degree = form.degree?.trim();
+    const field = form.field?.trim();
+    if (!form.firstName?.trim() || !form.lastName?.trim() || !form.email?.trim() || !form.jobTitle?.trim() || !school || !degree || !field || !Number.isInteger(startYear) || !Number.isInteger(endYear)) {
       return NextResponse.json({ success: false, error: "Please complete all required details" }, { status: 400 });
     }
 
-    await db.details.upsert({
-      where: { userId: session.userId },
-      update: { firstName: form.firstName.trim(), lastName: form.lastName.trim(), email: form.email.trim(), location: form.location?.trim() ?? "", jobTitle: form.jobTitle.trim(), college: form.school?.trim() ?? "", startYear, endYear },
-      create: { userId: session.userId, firstName: form.firstName.trim(), lastName: form.lastName.trim(), email: form.email.trim(), location: form.location?.trim() ?? "", jobTitle: form.jobTitle.trim(), college: form.school?.trim() ?? "", startYear, endYear },
+    await db.$transaction(async (tx) => {
+      await tx.details.upsert({
+        where: { userId: session.userId },
+        update: { firstName: form.firstName.trim(), lastName: form.lastName.trim(), email: form.email.trim(), location: form.location?.trim() ?? "", jobTitle: form.jobTitle.trim(), college: school, startYear, endYear },
+        create: { userId: session.userId, firstName: form.firstName.trim(), lastName: form.lastName.trim(), email: form.email.trim(), location: form.location?.trim() ?? "", jobTitle: form.jobTitle.trim(), college: school, startYear, endYear },
+      });
+
+      const existingEducation = await tx.education.findFirst({
+        where: { userId: session.userId },
+        orderBy: { createdAt: "asc" },
+      });
+      const educationData = {
+        school,
+        degree,
+        field,
+        startYear,
+        endYear,
+        isCurrently: endYear > new Date().getFullYear(),
+      };
+
+      if (existingEducation) {
+        await tx.education.update({
+          where: { id: existingEducation.id },
+          data: educationData,
+        });
+      } else {
+        await tx.education.create({
+          data: { ...educationData, userId: session.userId },
+        });
+      }
     });
     return NextResponse.json({ success: true });
   } catch {

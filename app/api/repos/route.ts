@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getInstallationAccessToken } from "@/lib/accessToken";
+import {
+  getInstallationAccessToken,
+  GitHubInstallationNotFoundError,
+} from "@/lib/accessToken";
 import { listInstallationRepositories } from "@/lib/githubPortfolio";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
@@ -31,7 +34,11 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to fetch repositories";
-    const status = message.includes("Authentication") ? 401 : message.includes("installation") ? 404 : 502;
+    const status = message.includes("Authentication")
+      ? 401
+      : error instanceof GitHubInstallationNotFoundError
+        ? 404
+        : 502;
     return NextResponse.json({ error: message }, { status });
   }
 }

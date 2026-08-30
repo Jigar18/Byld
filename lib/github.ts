@@ -1,4 +1,5 @@
-import { importPKCS8, SignJWT } from "jose";
+import { createPrivateKey } from "node:crypto";
+import { SignJWT } from "jose";
 
 export async function getGitHubAppJwt() {
   const appId = process.env.GITHUB_APP_ID ?? process.env.APP_ID;
@@ -8,7 +9,9 @@ export async function getGitHubAppJwt() {
     throw new Error("GitHub App credentials are not configured");
   }
 
-  const signingKey = await importPKCS8(privateKey.replace(/\\n/g, "\n"), "RS256");
+  // GitHub downloads App keys as PKCS#1 (`BEGIN RSA PRIVATE KEY`), while
+  // some hosting setups store a converted PKCS#8 key. Node accepts both.
+  const signingKey = createPrivateKey(privateKey.replace(/\\n/g, "\n"));
   return new SignJWT({})
     .setProtectedHeader({ alg: "RS256" })
     .setIssuer(appId)

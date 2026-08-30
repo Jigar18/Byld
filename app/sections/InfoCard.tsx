@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import CurrentOrganization from "../components/CurrentOrganization";
 import NameBlock from "../components/NameBlock";
@@ -17,7 +17,7 @@ import {
   Building,
   Camera,
 } from "lucide-react";
-import { Button, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ProfileImageModal from "../components/ProfileImageModal";
@@ -425,8 +425,11 @@ function InfoCard() {
                     }
                     className={primaryActionButtonClass}
                   >
-                    <Save className="h-4 w-4" />
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? (
+                      <><ButtonSpinner />Saving...</>
+                    ) : (
+                      <><Save className="h-4 w-4" />Save Changes</>
+                    )}
                   </Button>
                 </div>
               </div>

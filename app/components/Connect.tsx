@@ -4,8 +4,8 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X, Edit3, Copy, Check, Share2 } from "lucide-react";
-import { Button, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { X, Edit3, Check, Share2 } from "lucide-react";
+import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import CredentialCardHeader, { credentialEditButtonClass } from "./CredentialCardHeader";
 import { useUser } from "../context/UserContext";
 
@@ -70,6 +70,7 @@ export default function Connect() {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const showCopyToast = (message: string) => {
     setToastMessage(message);
@@ -351,6 +352,7 @@ export default function Connect() {
 
   const handleSaveChanges = async () => {
     try {
+      setSaving(true);
       // Convert temp links to the format expected by the API
       const socialLinksData: { [key: string]: string } = {};
 
@@ -372,6 +374,8 @@ export default function Connect() {
       }
     } catch (error) {
       console.error("Error saving social links:", error);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -499,23 +503,14 @@ export default function Connect() {
                   </Button>
                   <Button
                     onClick={handleSaveChanges}
+                    disabled={saving}
                     className={primaryActionButtonClass}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
-                      className="h-4 w-4"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9"
-                      />
-                    </svg>
-                    Save Changes
+                    {saving ? (
+                      <><ButtonSpinner />Saving...</>
+                    ) : (
+                      "Save Changes"
+                    )}
                   </Button>
                 </div>
               </div>

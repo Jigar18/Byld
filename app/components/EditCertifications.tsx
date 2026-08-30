@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import {
   Dialog,
@@ -263,7 +263,7 @@ export default function EditCertifications({
             >
               {isUploading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <ButtonSpinner />
                   <span>Uploading...</span>
                 </>
               ) : (

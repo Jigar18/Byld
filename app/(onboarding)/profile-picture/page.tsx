@@ -206,7 +206,6 @@ export default function ProfilePicturePage() {
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-    } finally {
       setIsUploading(false);
     }
   };

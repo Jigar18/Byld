@@ -47,8 +47,6 @@ export default function Education() {
 
   const handleSaveEducation = async (updatedEducation: EducationItem[]) => {
     try {
-      setLoading(true);
-      
       const existingEducation = education.filter(edu => edu.id);
       const existingIds = new Set(existingEducation.map(edu => edu.id));
       const updatedIds = new Set(updatedEducation.filter(edu => edu.id).map(edu => edu.id));
@@ -102,8 +100,7 @@ export default function Education() {
       await fetchEducation();
     } catch (error) {
       console.error("Error saving education:", error);
-    } finally {
-      setLoading(false);
+      throw error;
     }
   };
 

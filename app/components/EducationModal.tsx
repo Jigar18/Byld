@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, BookOpen } from "lucide-react";
-import { Button, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { createPortal } from "react-dom";
 
 interface EducationItem {
@@ -21,7 +21,7 @@ interface EducationModalProps {
   isOpen: boolean;
   onClose: () => void;
   education: EducationItem[];
-  onSave: (education: EducationItem[]) => void;
+  onSave: (education: EducationItem[]) => Promise<void>;
 }
 
 export default function EducationModal({
@@ -31,12 +31,11 @@ export default function EducationModal({
   onSave,
 }: EducationModalProps) {
   const [editingEducation, setEditingEducation] = useState<EducationItem[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setEditingEducation([...education]);
-      setIsEditing(false);
     }
   }, [isOpen, education]);
 
@@ -50,10 +49,13 @@ export default function EducationModal({
       isCurrently: false,
     };
     setEditingEducation([...editingEducation, newEducation]);
-    setIsEditing(true);
   };
 
-  const updateEducation = (index: number, field: string, value: any) => {
+  const updateEducation = (
+    index: number,
+    field: keyof EducationItem,
+    value: string | number | boolean | undefined,
+  ) => {
     const updated = [...editingEducation];
     updated[index] = { ...updated[index], [field]: value };
     setEditingEducation(updated);
@@ -64,9 +66,17 @@ export default function EducationModal({
     setEditingEducation(updated);
   };
 
-  const handleSave = () => {
-    onSave(editingEducation);
-    onClose();
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+
+    try {
+      await onSave(editingEducation);
+      setSaving(false);
+      onClose();
+    } catch {
+      setSaving(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -309,9 +319,14 @@ export default function EducationModal({
               </Button>
               <Button
                 onClick={handleSave}
+                disabled={saving}
                 className={primaryActionButtonClass}
               >
-                Save Changes
+                {saving ? (
+                  <><ButtonSpinner />Saving...</>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
             </div>
           </div>

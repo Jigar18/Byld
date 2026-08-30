@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 
 import { Input } from "@/components/ui/input";
-import { Button, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -36,6 +36,8 @@ export default function Details() {
     school: "",
     startYear: "",
     endYear: "",
+    degree: "",
+    field: "",
   });
   const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
   const [universitySuggestions, setUniversitySuggestions] = useState<string[]>(
@@ -43,10 +45,11 @@ export default function Details() {
   );
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const router = useRouter();
 
-  const totalSteps = 5;
+  const totalSteps = 6;
 
   useEffect(() => {
     const fetchGitHubDetails = async () => {
@@ -140,6 +143,31 @@ export default function Details() {
 
   const prevStep = () => {
     setCurrentStep((prev) => prev - 1);
+  };
+
+  const handleCompleteProfile = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/detailsToDB", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      router.push("/skills");
+    } catch (error) {
+      console.error("Error saving profile details:", error);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -522,9 +550,38 @@ export default function Details() {
                 </div>
               )}
 
-              {/* Step 5: Education */}
+              {/* Step 5: School */}
               {currentStep >= 5 && (
-                <div className="transition-all duration-500 ease-in-out transform translate-y-0">
+                <div
+                  className={`transition-all duration-500 ease-in-out transform ${
+                    currentStep > 5
+                      ? "-translate-y-2 opacity-80 scale-98 bg-slate-800/50 rounded-lg p-4"
+                      : "translate-y-0"
+                  }`}
+                >
+                  {currentStep > 5 && (
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center">
+                        <CheckCircle2 className="h-5 w-5 text-zinc-400 mr-2" />
+                        <span className="text-sm font-medium text-slate-300">
+                          School and Study Years
+                        </span>
+                      </div>
+                      {currentStep === 6 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={prevStep}
+                          className="text-slate-300 hover:text-slate-100 p-0 h-auto"
+                        >
+                          <span className="flex items-center">
+                            <ArrowLeft className="h-4 w-4 mr-1" />
+                            Edit
+                          </span>
+                        </Button>
+                      )}
+                    </div>
+                  )}
                   <div className="space-y-6">
                     <div className="relative">
                       <Label
@@ -546,6 +603,7 @@ export default function Details() {
                           }`}
                           placeholder="e.g. Stanford University"
                           autoComplete="off"
+                          disabled={currentStep > 5}
                         />
                         {isSearching && (
                           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -553,7 +611,7 @@ export default function Details() {
                           </div>
                         )}
                       </div>
-                      {universitySuggestions.length > 0 && (
+                      {universitySuggestions.length > 0 && currentStep === 5 && (
                         <div className="absolute left-0 right-0 bg-slate-800 border border-slate-700 rounded-b-md shadow-lg max-h-[180px] overflow-y-auto z-10">
                           <ul className="py-1 divide-y divide-slate-700">
                             {universitySuggestions.map((university, index) => (
@@ -586,6 +644,7 @@ export default function Details() {
                           onChange={handleInputChange}
                           className={inputClassName}
                           placeholder="e.g. 2018"
+                          disabled={currentStep > 5}
                         />
                       </div>
                       <div>
@@ -602,39 +661,107 @@ export default function Details() {
                           value={formData.endYear}
                           className={inputClassName}
                           placeholder="e.g. 2022"
+                          disabled={currentStep > 5}
                         />
                       </div>
                     </div>
-                    <div
-                      className={`mt-6 flex justify-between ${
-                        universitySuggestions.length > 0 ? "pt-48" : ""
-                      }`}
-                    >
-                      <Button
-                        onClick={prevStep}
-                        variant="outline"
-                        className={secondaryActionButtonClass}
+                    {currentStep === 5 && (
+                      <div
+                        className={`mt-6 flex justify-between ${
+                          universitySuggestions.length > 0 ? "pt-48" : ""
+                        }`}
                       >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back
-                      </Button>
-                      <Button
-                        className={primaryActionButtonClass}
-                        disabled={!formData.school || !formData.startYear}
-                        onClick={async () => {
-                          const response = await fetch("/api/detailsToDB", {
-                            method: "POST",
-                            headers: {
-                              "Content-type": "application/json",
-                            },
-                            body: JSON.stringify(formData),
-                          });
-                          if (response.ok) router.push("/skills");
-                        }}
+                        <Button
+                          onClick={prevStep}
+                          variant="outline"
+                          className={secondaryActionButtonClass}
+                        >
+                          <ArrowLeft className="h-4 w-4 mr-2" />
+                          Back
+                        </Button>
+                        <Button
+                          className={primaryActionButtonClass}
+                          disabled={
+                            !formData.school.trim() ||
+                            !formData.startYear ||
+                            !formData.endYear
+                          }
+                          onClick={nextStep}
+                        >
+                          Continue
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 6: Degree */}
+              {currentStep >= 6 && (
+                <div className="transition-all duration-500 ease-in-out transform translate-y-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label
+                        htmlFor="degree"
+                        className="text-slate-300 font-medium"
                       >
-                        Complete Profile
-                      </Button>
+                        Degree
+                      </Label>
+                      <Input
+                        id="degree"
+                        name="degree"
+                        value={formData.degree}
+                        onChange={handleInputChange}
+                        className={inputClassName}
+                        placeholder="e.g. Bachelor of Technology"
+                        autoComplete="off"
+                      />
                     </div>
+                    <div>
+                      <Label
+                        htmlFor="field"
+                        className="text-slate-300 font-medium"
+                      >
+                        Field of Study
+                      </Label>
+                      <Input
+                        id="field"
+                        name="field"
+                        value={formData.field}
+                        onChange={handleInputChange}
+                        className={inputClassName}
+                        placeholder="e.g. Computer Science"
+                        autoComplete="off"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6 flex justify-between">
+                    <Button
+                      onClick={prevStep}
+                      variant="outline"
+                      className={secondaryActionButtonClass}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back
+                    </Button>
+                    <Button
+                      className={primaryActionButtonClass}
+                      disabled={
+                        !formData.degree.trim() ||
+                        !formData.field.trim() ||
+                        isSubmitting
+                      }
+                      onClick={handleCompleteProfile}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <ButtonSpinner />
+                          Saving...
+                        </>
+                      ) : (
+                        "Complete Profile"
+                      )}
+                    </Button>
                   </div>
                 </div>
               )}

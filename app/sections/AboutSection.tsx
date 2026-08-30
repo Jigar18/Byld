@@ -4,7 +4,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Edit3, Save } from "lucide-react";
-import { Button, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { useUser } from "../context/UserContext";
 
 export default function About() {
@@ -201,8 +201,11 @@ export default function About() {
                     disabled={saving}
                     className={primaryActionButtonClass}
                   >
-                    <Save className="h-4 w-4" />
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? (
+                      <><ButtonSpinner />Saving...</>
+                    ) : (
+                      <><Save className="h-4 w-4" />Save Changes</>
+                    )}
                   </Button>
                 </div>
               </div>

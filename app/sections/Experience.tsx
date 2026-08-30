@@ -19,7 +19,7 @@ import {
   Building,
   Trash2,
 } from "lucide-react";
-import { Button, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -745,12 +745,14 @@ export default function Experience() {
                       (!tempIsCurrentRole && (!tempEndMonth || !tempEndYear))
                     }
                   >
-                    <Save className="h-4 w-4" />
-                    {saving
-                      ? "Saving..."
-                      : editingIndex !== null
-                      ? "Save Changes"
-                      : "Add Experience"}
+                    {saving ? (
+                      <><ButtonSpinner />Saving...</>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        {editingIndex !== null ? "Save Changes" : "Add Experience"}
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

@@ -7,7 +7,7 @@ import ProjectVideoDropzone, { ProjectVideo, removeUnsavedProjectVideo } from ".
 import DeleteProjectVideoModal from "./DeleteProjectVideoModal";
 import ProjectImageUploader, { ProjectImage, removeUnsavedProjectImage } from "./ProjectImageUploader";
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
-import { primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 
 export interface PortfolioProject {
   id: string;
@@ -238,7 +238,7 @@ export default function AddProjectModal({ isOpen, onClose, onSave, userSkills, s
           <div><p className="mb-2 text-sm font-medium text-zinc-200">Add images <span className="font-normal text-zinc-500">(optional)</span></p><ProjectImageUploader images={draft.images} onUploaded={addImage} onReorder={(images) => setDraft((current) => ({ ...current, images }))} onRemove={removeImage} disabled={saving} /></div>
         </div>
         {error && <p className="mt-4 rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-sm text-red-200">{error}</p>}
-        <div className="mt-7 flex justify-end gap-3 border-t border-white/10 pt-5"><button type="button" onClick={close} className={secondaryActionButtonClass}>Cancel</button><button disabled={saving} className={primaryActionButtonClass}>{editing ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{saving ? "Saving…" : editing ? "Save changes" : "Add project"}</button></div>
+        <div className="mt-7 flex justify-end gap-3 border-t border-white/10 pt-5"><button type="button" onClick={close} className={secondaryActionButtonClass}>Cancel</button><button disabled={saving} className={primaryActionButtonClass}>{saving ? <><ButtonSpinner />Saving...</> : <>{editing ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{editing ? "Save changes" : "Add project"}</>}</button></div>
       </form>
       <DeleteProjectVideoModal isOpen={confirmingVideoRemoval} isDeleting={removingVideo} onClose={() => setConfirmingVideoRemoval(false)} onConfirm={confirmVideoRemoval} />
     </div>, document.body

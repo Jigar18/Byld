@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Button, primaryActionButtonClass } from "@/components/ui/button";
+import { Button, ButtonSpinner, primaryActionButtonClass } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Github, X, Plus, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,6 +31,7 @@ export default function SkillsPage() {
   const [selectedSkillIcons, setSelectedSkillIcons] = useState<SkillIconMap>({});
   const [isSearching, setIsSearching] = useState(false);
   const [isDiscovering, setIsDiscovering] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [discoveredRepositoryCount, setDiscoveredRepositoryCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasEditedSkillsRef = useRef(false);
@@ -130,6 +131,31 @@ export default function SkillsPage() {
       void findSkillIcon(formattedSkill);
       setSkillInput("");
       setSuggestions([]);
+    }
+  };
+
+  const handleContinue = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/skillsToDB", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify({ skills: selectedSkills, iconMap: selectedSkillIcons }),
+      });
+
+      if (!response.ok) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      router.push("/profile-picture");
+    } catch (error) {
+      console.error("Error saving skills:", error);
+      setIsSubmitting(false);
     }
   };
 
@@ -311,20 +337,17 @@ export default function SkillsPage() {
               <div className="mt-12 flex justify-end">
                 <Button
                   className={primaryActionButtonClass}
-                  disabled={selectedSkills.length === 0}
-                  onClick={async () => {
-                      const response = await fetch("/api/skillsToDB", {
-                        method: "POST",
-                        headers: {
-                          "Content-type": "application/json",
-                        },
-                        body: JSON.stringify({ skills: selectedSkills, iconMap: selectedSkillIcons }),
-                      });
-                      if (response.ok) router.push("/profile-picture");
-                    }
-                  }
+                  disabled={selectedSkills.length === 0 || isSubmitting}
+                  onClick={handleContinue}
                 >
-                  Continue
+                  {isSubmitting ? (
+                    <>
+                      <ButtonSpinner />
+                      Saving...
+                    </>
+                  ) : (
+                    "Continue"
+                  )}
                 </Button>
               </div>
             </div>

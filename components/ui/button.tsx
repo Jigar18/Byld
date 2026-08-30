@@ -10,6 +10,18 @@ export const primaryActionButtonClass =
 export const secondaryActionButtonClass =
   "inline-flex h-auto items-center justify-center gap-2 rounded-xl border-0 bg-transparent px-4 py-2.5 text-sm font-medium text-zinc-300 shadow-none transition hover:bg-white/[0.07] hover:text-white focus-visible:ring-2 focus-visible:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50"
 
+export function ButtonSpinner({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent",
+        className,
+      )}
+    />
+  )
+}
+
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {

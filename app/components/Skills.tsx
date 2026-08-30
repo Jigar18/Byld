@@ -8,7 +8,7 @@ import { Icon } from "@iconify/react";
 import CredentialCardHeader, { credentialEditButtonClass } from "./CredentialCardHeader";
 import { useUser } from "../context/UserContext";
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
-import { primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 
 interface UserSkills {
   skills: string[];
@@ -526,7 +526,7 @@ export default function Skills() {
                   >
                     {saving ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <ButtonSpinner />
                         Saving...
                       </>
                     ) : (

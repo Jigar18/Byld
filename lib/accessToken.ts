@@ -4,6 +4,13 @@ import { NextRequest } from "next/server";
 import { getGitHubAppJwt } from "@/lib/github";
 import { getSession } from "@/lib/session";
 
+export class GitHubInstallationNotFoundError extends Error {
+  constructor(message = "GitHub App installation not found") {
+    super(message);
+    this.name = "GitHubInstallationNotFoundError";
+  }
+}
+
 export async function getInstallationAccessTokenById(installationId: string) {
   const jwtToken = await getGitHubAppJwt();
 
@@ -119,16 +126,16 @@ export async function getInstallationAccessToken(req: NextRequest) {
     throw new Error("Authentication token is missing");
   }
 
+  const userInfo = await db.user.findUnique({
+    where: { id: session.userId },
+    select: { installationId: true },
+  });
+
+  if (!userInfo?.installationId) {
+    throw new GitHubInstallationNotFoundError();
+  }
+
   try {
-    const userInfo = await db.user.findUnique({
-      where: { id: session.userId },
-      select: { installationId: true },
-    });
-
-    if (!userInfo || !userInfo.installationId) {
-      throw new Error("User installation ID not found");
-    }
-
     return await getInstallationAccessTokenById(userInfo.installationId);
   } catch (error) {
     console.error("Error getting installation access token:", error);
@@ -137,11 +144,13 @@ export async function getInstallationAccessToken(req: NextRequest) {
         status: error.response.status,
         data: error.response.data,
       });
-      throw new Error(
-        `GitHub API error: ${error.response.status} - ${error.response.statusText}`
-      );
+      if (error.response.status === 404) {
+        throw new GitHubInstallationNotFoundError(
+          "GitHub App installation is no longer available",
+        );
+      }
     }
-    throw new Error("Failed to get GitHub installation access token");
+    throw new Error("Unable to create GitHub App installation access token");
   }
 }
 
