@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Github, LoaderCircle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useUser } from "../context/UserContext";
+import { contributionLevels } from "./contributionHeatmapStyles";
 
 type ContributionDay = {
   contributionCount: number;
@@ -61,6 +62,18 @@ const getContributionLevel = (day: ContributionDay) => {
 };
 
 const formatUtcDate = (date: Date) => date.toISOString().slice(0, 10);
+
+const getMonthLabel = (
+  week: ContributionCalendar["weeks"][number],
+  weekIndex: number,
+) => {
+  const monthStart = week.contributionDays.find((day) => day.date.endsWith("-01"));
+  const labelDay = monthStart ?? (weekIndex === 0 ? week.contributionDays[0] : null);
+  if (!labelDay) return null;
+  return new Intl.DateTimeFormat("en", { month: "short", timeZone: "UTC" }).format(
+    new Date(`${labelDay.date}T00:00:00.000Z`),
+  );
+};
 
 const includeUtcToday = (calendar: ContributionCalendar) => {
   const weeks = calendar.weeks.map((week) => ({
@@ -282,7 +295,7 @@ export default function GitHubHeatmap() {
               </span>
               <div className="flex items-center gap-2" aria-label="Contribution intensity from less to more">
                 <span>Less</span>
-                <span className="flex gap-1">
+                <span className="flex gap-1.5">
                   {contributionLevels.map((color, index) => (
                     <span
                       key={color}

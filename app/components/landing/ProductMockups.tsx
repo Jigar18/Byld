@@ -20,8 +20,12 @@ import {
 } from "lucide-react";
 import ProjectModalMockup from "./ProjectModalMockup";
 import SkillIcon from "../SkillIcon";
+import { contributionLevels } from "../contributionHeatmapStyles";
 
-const levels = ["bg-white/[0.035]", "bg-zinc-800", "bg-zinc-700", "bg-zinc-500", "bg-zinc-100"];
+const levels = contributionLevels;
+
+const compactMonthLabels = ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"];
+const proofMonthLabels = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"];
 
 const contributionWeeks = Array.from({ length: 52 }, (_, week) =>
   Array.from({ length: 7 }, (_, day) => {
@@ -103,13 +107,22 @@ function ProjectCard({ project, compact = false }: { project: (typeof projects)[
 
 function ContributionGrid({ compact = false }: { compact?: boolean }) {
   const weeks = compact ? contributionWeeks : proofContributionWeeks;
+  const months = compact ? compactMonthLabels : proofMonthLabels;
+  const columnClass = compact
+    ? "grid-cols-[repeat(52,14px)] gap-x-[4px]"
+    : "grid-cols-[repeat(46,9px)] gap-x-[3px]";
 
   return (
-    <div className={compact ? "mx-auto w-fit min-w-[932px]" : "w-full min-w-[468px]"}>
-      <div className={compact ? "grid grid-cols-[repeat(52,14px)] gap-[4px]" : "grid w-full grid-cols-[repeat(46,9px)] justify-between gap-y-[4px]"}>
+    <div className="mx-auto w-fit">
+      <div className={`mb-2 grid font-mono text-[8px] text-zinc-600 ${columnClass}`}>
+        {months.map((month, index) => (
+          <span key={month} className="whitespace-nowrap" style={{ gridColumn: `${index * 4 + 1} / span 4` }}>{month}</span>
+        ))}
+      </div>
+      <div className={`grid ${columnClass}`}>
         {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} className="grid grid-rows-7 gap-[4px]">
-            {week.map((level, dayIndex) => <span key={dayIndex} className={`${compact ? "h-3.5 w-3.5" : "h-[9px] w-[9px]"} rounded-[2px] border ${level === 0 ? "border-white/[0.07] bg-[#171918]" : `border-white/[0.035] ${levels[level]}`}`} />)}
+          <div key={weekIndex} className={`grid grid-rows-7 ${compact ? "gap-[4px]" : "gap-[3px]"}`}>
+            {week.map((level, dayIndex) => <span key={dayIndex} className={`${compact ? "h-3.5 w-3.5 rounded-[3px]" : "h-[9px] w-[9px] rounded-[2px]"} ${levels[level]}`} />)}
           </div>
         ))}
       </div>
@@ -127,7 +140,7 @@ function ActivityCard({ compact = false }: { compact?: boolean }) {
       <div className="mt-3 overflow-x-auto"><ContributionGrid compact={compact} /></div>
       <div className={`flex items-center justify-between border-t border-white/[0.07] text-zinc-600 ${compact ? "mt-3 pt-2 text-[7px]" : "mt-5 pt-4 text-[9px]"}`}>
         <span>186 contributions in 2026</span>
-        <span className="hidden items-center gap-1 sm:flex">Less {levels.map((color, index) => <i key={index} className={`h-2 w-2 rounded-[2px] ${color}`} />)} More</span>
+        <span className="hidden items-center gap-1.5 sm:flex">Less {levels.map((color, index) => <i key={index} className={`h-2.5 w-2.5 rounded-[2px] ${color}`} />)} More</span>
       </div>
     </div>
   );
@@ -203,7 +216,7 @@ export function CareerEvidence() {
 
 export function OwnershipControls() {
   const items = [
-    { icon: Pencil, title: "Edit where it lives", copy: "Owner controls stay close to your content.", control: <span className="rounded-md border border-white/10 px-2 py-1 font-mono text-[8px] text-zinc-400">EDIT</span> },
+    { icon: Pencil, title: "Keep it current", copy: "Owner controls stay close to your content.", control: <span className="rounded-md border border-white/10 px-2 py-1 font-mono text-[8px] text-zinc-400">EDIT</span> },
     { icon: ShieldCheck, title: "Show what matters", copy: "Keep your contribution heatmap visible or private.", control: <span className="flex h-6 w-11 items-center rounded-full bg-zinc-200 p-1"><span className="ml-auto h-4 w-4 rounded-full bg-zinc-950" /></span> },
     { icon: Eye, title: "See the reach", copy: "Track unique visits without exposing people.", control: <span className="font-mono text-lg text-zinc-100">248</span> },
   ];
