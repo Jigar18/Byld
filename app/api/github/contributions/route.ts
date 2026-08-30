@@ -22,6 +22,7 @@ const CONTRIBUTIONS_QUERY = `
             contributionDays {
               color
               contributionCount
+              contributionLevel
               date
               weekday
             }
@@ -40,6 +41,12 @@ const CONTRIBUTIONS_QUERY = `
 type ContributionDay = {
   color: string;
   contributionCount: number;
+  contributionLevel:
+    | "NONE"
+    | "FIRST_QUARTILE"
+    | "SECOND_QUARTILE"
+    | "THIRD_QUARTILE"
+    | "FOURTH_QUARTILE";
   date: string;
   weekday: number;
 };

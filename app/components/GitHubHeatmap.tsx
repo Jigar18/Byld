@@ -7,9 +7,17 @@ import { useUser } from "../context/UserContext";
 
 type ContributionDay = {
   contributionCount: number;
+  contributionLevel?: ContributionLevel;
   date: string;
   weekday: number;
 };
+
+type ContributionLevel =
+  | "NONE"
+  | "FIRST_QUARTILE"
+  | "SECOND_QUARTILE"
+  | "THIRD_QUARTILE"
+  | "FOURTH_QUARTILE";
 
 type ContributionCalendar = {
   totalContributions: number;
@@ -26,14 +34,25 @@ type ContributionResponse = {
 };
 
 const contributionLevels = [
-  "bg-white/[0.035]",
-  "bg-zinc-800",
-  "bg-zinc-700",
-  "bg-zinc-500",
-  "bg-zinc-300",
+  "bg-[#1d1d1d]",
+  "bg-[#40403e]",
+  "bg-[#636469]",
+  "bg-[#aeaeac]",
+  "bg-[#f4f4f2]",
 ];
 
-const getContributionLevel = (count: number) => {
+const contributionLevelIndexes: Record<ContributionLevel, number> = {
+  NONE: 0,
+  FIRST_QUARTILE: 1,
+  SECOND_QUARTILE: 2,
+  THIRD_QUARTILE: 3,
+  FOURTH_QUARTILE: 4,
+};
+
+const getContributionLevel = (day: ContributionDay) => {
+  if (day.contributionLevel) return contributionLevelIndexes[day.contributionLevel];
+
+  const count = day.contributionCount;
   if (count === 0) return 0;
   if (count <= 2) return 1;
   if (count <= 5) return 2;
@@ -66,6 +85,7 @@ const includeUtcToday = (calendar: ContributionCalendar) => {
     cursor.setUTCDate(cursor.getUTCDate() + 1);
     const day: ContributionDay = {
       contributionCount: 0,
+      contributionLevel: "NONE",
       date: formatUtcDate(cursor),
       weekday: cursor.getUTCDay(),
     };
@@ -79,6 +99,22 @@ const includeUtcToday = (calendar: ContributionCalendar) => {
 
   return { ...calendar, weeks };
 };
+
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+const getMonthLabels = (calendar: ContributionCalendar) =>
+  calendar.weeks.flatMap((week, weekIndex) => {
+    const firstOfMonth = week.contributionDays.find(
+      (day) => new Date(`${day.date}T00:00:00.000Z`).getUTCDate() === 1,
+    );
+    const labelDay = firstOfMonth ?? (weekIndex === 0 ? week.contributionDays[0] : undefined);
+    if (!labelDay) return [];
+
+    return [{
+      label: monthNames[new Date(`${labelDay.date}T00:00:00.000Z`).getUTCMonth()],
+      weekIndex,
+    }];
+  });
 
 export default function GitHubHeatmap() {
   const { isOwner, portfolioApiUrl } = useUser();
@@ -191,30 +227,50 @@ export default function GitHubHeatmap() {
           </div>
         ) : (
           <>
-            <div className="mt-8 overflow-x-auto">
-              <div className="flex w-full min-w-[760px] gap-2 px-1.5 py-2">
-                <div className="grid grid-rows-7 gap-1 pr-1 text-[9px] text-zinc-600">
-                  {["", "Mon", "", "Wed", "", "Fri", ""].map((label, index) => (
-                    <span key={`${label}-${index}`} className="flex w-5 items-center justify-end">
-                      {label}
-                    </span>
-                  ))}
+            <div className="mt-6 overflow-x-auto">
+              <div className="w-full min-w-[760px] px-1.5 py-2">
+                <div className="mb-2 flex gap-2 pl-1">
+                  <div className="w-5 shrink-0 pr-1" aria-hidden="true" />
+                  <div
+                    className="grid min-w-0 flex-1 gap-x-1 text-[9px] text-zinc-600"
+                    style={{ gridTemplateColumns: `repeat(${calendar.weeks.length}, minmax(10px, 1fr))` }}
+                  >
+                    {getMonthLabels(calendar).map(({ label, weekIndex }) => (
+                      <span
+                        key={`${label}-${weekIndex}`}
+                        className="whitespace-nowrap"
+                        style={{ gridColumnStart: weekIndex + 1 }}
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div
-                  className="grid min-w-0 flex-1 gap-1"
-                  style={{ gridTemplateColumns: `repeat(${calendar.weeks.length}, minmax(10px, 1fr))` }}
-                >
-                  {calendar.weeks.map((week, weekIndex) => (
-                    <div key={weekIndex} className="grid grid-rows-7 gap-1">
-                      {week.contributionDays.map((day) => (
-                        <span
-                          key={day.date}
-                          className={`relative aspect-square w-full rounded-[3px] border border-white/[0.05] transition-transform duration-150 hover:z-10 hover:scale-125 ${contributionLevels[getContributionLevel(day.contributionCount)]}`}
-                          title={`${day.contributionCount} contributions on ${day.date}`}
-                        />
-                      ))}
-                    </div>
-                  ))}
+                <div className="flex gap-2 pl-1">
+                  <div className="grid w-5 shrink-0 grid-rows-7 gap-1 pr-1 text-[9px] text-zinc-600">
+                    {["", "Mon", "", "Wed", "", "Fri", ""].map((label, index) => (
+                      <span key={`${label}-${index}`} className="flex items-center justify-end">
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                  <div
+                    className="grid min-w-0 flex-1 gap-1"
+                    style={{ gridTemplateColumns: `repeat(${calendar.weeks.length}, minmax(10px, 1fr))` }}
+                  >
+                    {calendar.weeks.map((week, weekIndex) => (
+                      <div key={weekIndex} className="grid grid-rows-7 gap-1">
+                        {week.contributionDays.map((day) => (
+                          <span
+                            key={day.date}
+                            className={`relative aspect-square w-full rounded-[2px] border border-white/[0.05] transition-transform duration-150 hover:z-10 hover:scale-125 ${contributionLevels[getContributionLevel(day)]}`}
+                            style={{ gridRowStart: day.weekday + 1 }}
+                            title={`${day.contributionCount} contributions on ${day.date}`}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -230,7 +286,7 @@ export default function GitHubHeatmap() {
                   {contributionLevels.map((color, index) => (
                     <span
                       key={color}
-                      className={`h-3 w-3 rounded-[3px] border border-white/[0.06] ${color}`}
+                      className={`h-3 w-3 rounded-[2px] border border-white/[0.06] ${color}`}
                       title={index === 0 ? "No contributions" : `Intensity level ${index}`}
                     />
                   ))}
