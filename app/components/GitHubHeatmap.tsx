@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Github, LoaderCircle } from "lucide-react";
+import type { CSSProperties } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useUser } from "../context/UserContext";
 import { contributionLevels } from "./contributionHeatmapStyles";
@@ -234,12 +235,14 @@ export default function GitHubHeatmap() {
         ) : (
           <>
             <div className="mt-6 overflow-x-auto">
-              <div className="w-full min-w-[760px] px-1.5 py-2">
+              <div
+                className="w-[920px] px-1.5 py-2 sm:w-full sm:min-w-[760px]"
+                style={{ "--heatmap-weeks": calendar.weeks.length } as CSSProperties}
+              >
                 <div className="mb-2 flex gap-2 pl-1">
                   <div className="w-5 shrink-0 pr-1" aria-hidden="true" />
                   <div
-                    className="grid min-w-0 flex-1 gap-x-1 text-[9px] text-zinc-600"
-                    style={{ gridTemplateColumns: `repeat(${calendar.weeks.length}, minmax(10px, 1fr))` }}
+                    className="grid min-w-0 flex-1 grid-cols-[repeat(var(--heatmap-weeks),12px)] gap-x-[4.5px] text-[9px] text-zinc-600 sm:grid-cols-[repeat(var(--heatmap-weeks),minmax(10px,1fr))]"
                   >
                     {getMonthLabels(calendar).map(({ label, weekIndex }) => (
                       <span
@@ -253,7 +256,7 @@ export default function GitHubHeatmap() {
                   </div>
                 </div>
                 <div className="flex gap-2 pl-1">
-                  <div className="grid w-5 shrink-0 grid-rows-7 gap-1 pr-1 text-[9px] text-zinc-600">
+                  <div className="grid w-5 shrink-0 grid-rows-[repeat(7,12px)] gap-[4.5px] pr-1 text-[9px] text-zinc-600 sm:grid-rows-7">
                     {["", "Mon", "", "Wed", "", "Fri", ""].map((label, index) => (
                       <span key={`${label}-${index}`} className="flex items-center justify-end">
                         {label}
@@ -261,15 +264,14 @@ export default function GitHubHeatmap() {
                     ))}
                   </div>
                   <div
-                    className="grid min-w-0 flex-1 gap-1"
-                    style={{ gridTemplateColumns: `repeat(${calendar.weeks.length}, minmax(10px, 1fr))` }}
+                    className="grid min-w-0 flex-1 grid-cols-[repeat(var(--heatmap-weeks),12px)] gap-[4.5px] sm:grid-cols-[repeat(var(--heatmap-weeks),minmax(10px,1fr))]"
                   >
                     {calendar.weeks.map((week, weekIndex) => (
-                      <div key={weekIndex} className="grid grid-rows-7 gap-1">
+                      <div key={weekIndex} className="grid grid-rows-[repeat(7,12px)] gap-[4.5px] sm:grid-rows-7">
                         {week.contributionDays.map((day) => (
                           <span
                             key={day.date}
-                            className={`relative aspect-square w-full rounded-[2px] border border-white/[0.05] transition-transform duration-150 hover:z-10 hover:scale-125 ${contributionLevels[getContributionLevel(day)]}`}
+                            className={`relative h-3 w-3 rounded-[2.5px] border border-white/[0.05] transition-transform duration-150 hover:z-10 hover:scale-125 sm:aspect-square sm:h-auto sm:w-full ${contributionLevels[getContributionLevel(day)]}`}
                             style={{ gridRowStart: day.weekday + 1 }}
                             title={`${day.contributionCount} contributions on ${day.date}`}
                           />
@@ -292,7 +294,7 @@ export default function GitHubHeatmap() {
                   {contributionLevels.map((color, index) => (
                     <span
                       key={color}
-                      className={`h-3 w-3 rounded-[2px] border border-white/[0.06] ${color}`}
+                      className={`h-3 w-3 rounded-[2.5px] border border-white/[0.06] ${color}`}
                       title={index === 0 ? "No contributions" : `Intensity level ${index}`}
                     />
                   ))}

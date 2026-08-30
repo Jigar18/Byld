@@ -1,7 +1,7 @@
 export const contributionLevels = [
-  "bg-[#1d1d1d]",
-  "bg-[#40403e]",
-  "bg-[#636469]",
-  "bg-[#aeaeac]",
-  "bg-[#f4f4f2]",
+  "bg-[#181818]",
+  "bg-[#4d4d4a]",
+  "bg-[#77787e]",
+  "bg-[#d1d1ce]",
+  "bg-white",
 ] as const;
