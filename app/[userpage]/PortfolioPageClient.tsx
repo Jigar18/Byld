@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import About from "../sections/AboutSection";
 import Credentials from "../sections/Credentials";
 import Experience from "../sections/Experience";
@@ -27,12 +27,22 @@ interface Card {
 
 function PortfolioRouteGate({ children }: { children: React.ReactNode }) {
   const { loading, userDetails, portfolioUsername } = useUser();
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   if (loading) {
     return <PortfolioLoader username={portfolioUsername} />;
   }
   if (!userDetails) return <NotFoundState kind="portfolio" />;
-  return children;
+  return (
+    <>
+      {!hydrated && <PortfolioLoader username={portfolioUsername} />}
+      {children}
+    </>
+  );
 }
 
 function LogoutButton() {
