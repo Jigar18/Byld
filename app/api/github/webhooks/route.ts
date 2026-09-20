@@ -58,34 +58,23 @@ export async function POST(req: NextRequest) {
   const installationId = String(installation.id);
   const senderGithubId = payload.sender?.id ? String(payload.sender.id) : null;
 
+  const data = {
+    accountId,
+    accountLogin,
+    accountType: account.type ?? "User",
+    targetId: installation.target_id ? String(installation.target_id) : null,
+    targetType: installation.target_type ?? null,
+    permissions: installation.permissions ?? {},
+    events: installation.events ?? [],
+    suspendedAt: installation.suspended_at ? new Date(installation.suspended_at) : null,
+    deletedAt: isDeleted ? new Date() : null,
+    senderGithubId,
+  };
   await db.$transaction(async (tx) => {
     await tx.gitHubInstallation.upsert({
       where: { id: installationId },
-      update: {
-        accountId,
-        accountLogin,
-        accountType: account.type ?? "User",
-        targetId: installation.target_id ? String(installation.target_id) : null,
-        targetType: installation.target_type ?? null,
-        permissions: installation.permissions ?? {},
-        events: installation.events ?? [],
-        suspendedAt: installation.suspended_at ? new Date(installation.suspended_at) : null,
-        deletedAt: isDeleted ? new Date() : null,
-        senderGithubId,
-      },
-      create: {
-        id: installationId,
-        accountId,
-        accountLogin,
-        accountType: account.type ?? "User",
-        targetId: installation.target_id ? String(installation.target_id) : null,
-        targetType: installation.target_type ?? null,
-        permissions: installation.permissions ?? {},
-        events: installation.events ?? [],
-        suspendedAt: installation.suspended_at ? new Date(installation.suspended_at) : null,
-        deletedAt: isDeleted ? new Date() : null,
-        senderGithubId,
-      },
+      update: data,
+      create: { id: installationId, ...data },
     });
 
     if (senderGithubId) {

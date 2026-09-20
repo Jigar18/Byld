@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteProjectImage, isOwnedProjectImage } from "@/lib/cloudinary";
+import { deleteProjectAsset, isOwnedProjectImage } from "@/lib/cloudinary";
 import { db } from "@/lib/db";
 import { getRequestUserId } from "@/lib/session";
 
@@ -14,7 +14,7 @@ export async function DELETE(request: NextRequest) {
     const savedImage = await db.projectImage.findFirst({ where: { imagePublicId: publicId, project: { userId } }, select: { id: true } });
     if (savedImage) return NextResponse.json({ success: false, error: "A saved project is using this image" }, { status: 409 });
 
-    await deleteProjectImage(publicId);
+    await deleteProjectAsset(publicId, "image");
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Unable to remove the image" }, { status: 500 });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteProjectVideo, isOwnedProjectVideo } from "@/lib/cloudinary";
+import { deleteProjectAsset, isOwnedProjectVideo } from "@/lib/cloudinary";
 import { db } from "@/lib/db";
 import { getRequestUserId } from "@/lib/session";
 
@@ -16,7 +16,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: "A saved project is using this video" }, { status: 409 });
     }
 
-    await deleteProjectVideo(publicId);
+    await deleteProjectAsset(publicId, "video");
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(

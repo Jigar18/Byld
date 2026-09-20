@@ -1,5 +1,6 @@
 "use client";
 
+import type { PortfolioExperience } from "@/types/portfolio";
 import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
@@ -38,18 +39,6 @@ interface ExperienceItem {
   id?: string; // Add database ID for updates
 }
 
-interface DatabaseExperience {
-  id: string;
-  company: string;
-  position: string;
-  startMonth: string;
-  startYear: string;
-  endMonth?: string;
-  endYear?: string;
-  isCurrentRole: boolean;
-  contributions: string[];
-}
-
 const monthOrder = new Map(
   [
     "January",
@@ -76,8 +65,8 @@ const dateValue = (year?: string, month?: string) => {
 };
 
 const compareExperienceDates = (
-  first: DatabaseExperience,
-  second: DatabaseExperience
+  first: PortfolioExperience,
+  second: PortfolioExperience
 ) => {
   if (first.isCurrentRole !== second.isCurrentRole) {
     return first.isCurrentRole ? -1 : 1;
@@ -97,21 +86,9 @@ const compareExperienceDates = (
   );
 };
 
-const getIconForIndex = (index: number) => {
-  const icons = [
-    <Briefcase className="h-5 w-5 text-zinc-400" key={`briefcase-${index}`} />,
-    <Code className="h-5 w-5 text-zinc-400" key={`code-${index}`} />,
-    <Users className="h-5 w-5 text-zinc-400" key={`users-${index}`} />,
-    <BarChart2 className="h-5 w-5 text-zinc-400" key={`chart-${index}`} />,
-    <Award className="h-5 w-5 text-zinc-400" key={`award-${index}`} />,
-    <Clock className="h-5 w-5 text-zinc-400" key={`clock-${index}`} />,
-    <Zap className="h-5 w-5 text-zinc-400" key={`zap-${index}`} />,
-    <CheckCircle2 className="h-5 w-5 text-zinc-400" key={`check-${index}`} />,
-  ];
-  return icons[index % icons.length];
-};
+const contributionIcons = [Briefcase, Code, Users, BarChart2, Award, Clock, Zap, CheckCircle2];
 
-const transformExperiences = (experiences: DatabaseExperience[]): ExperienceItem[] =>
+const transformExperiences = (experiences: PortfolioExperience[]): ExperienceItem[] =>
   [...experiences].sort(compareExperienceDates).map((experience, index) => ({
     level: index + 1,
     company: experience.company,
@@ -119,10 +96,10 @@ const transformExperiences = (experiences: DatabaseExperience[]): ExperienceItem
     year: experience.isCurrentRole
       ? `${experience.startMonth} ${experience.startYear} - Present`
       : `${experience.startMonth} ${experience.startYear} - ${experience.endMonth} ${experience.endYear}`,
-    description: experience.contributions.map((contribution, contributionIndex) => ({
-      icon: getIconForIndex(contributionIndex),
-      text: contribution,
-    })),
+    description: experience.contributions.map((text, contributionIndex) => {
+      const Icon = contributionIcons[contributionIndex % contributionIcons.length];
+      return { icon: <Icon className="h-5 w-5 text-zinc-400" />, text };
+    }),
     id: experience.id,
   }));
 
@@ -159,7 +136,7 @@ export default function Experience() {
         const data = await response.json();
         if (data.success && data.experiences) {
           // Transform database data to component format
-          setExperience(transformExperiences(data.experiences as DatabaseExperience[]));
+          setExperience(transformExperiences(data.experiences as PortfolioExperience[]));
         } else {
           // If no experiences found, set empty array
           setExperience([]);
@@ -182,23 +159,10 @@ export default function Experience() {
   }, []);
 
   const [experience, setExperience] = useState<ExperienceItem[]>(
-    transformExperiences(portfolioData.experiences),
+    () => transformExperiences(portfolioData.experiences),
   );
 
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  const months = [...monthOrder.keys()];
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 20 }, (_, i) => currentYear - i);

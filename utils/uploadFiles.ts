@@ -40,17 +40,15 @@ export async function removeStoredFile(publicUrl: string, bucket: string, ownerP
   return true;
 }
 
-// function for uploading images like in profile picture.
 export async function uploadFile(
   fileBuffer: Buffer,
-  _fileName: string,
   userId: string,
   contentType = "image/jpeg"
 ) {
   const supabase = getSupabase();
   const extension = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
   const filePath = `user-image/${userId}-${randomUUID()}.${extension}`;
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from("profile-picture")
     .upload(filePath, fileBuffer, {
       contentType,
@@ -64,36 +62,16 @@ export async function uploadFile(
     .publicUrl;
 }
 
-
-// function for uploading pdf files like in certification section
-export async function uploadPdfFile(
-  fileBuffer: Buffer,
-  _fileName: string,
-  userId: string
-) {
+export async function uploadPdfFile(fileBuffer: Buffer, userId: string) {
   const supabase = getSupabase();
   const filePath = `certifications/${userId}-${randomUUID()}.pdf`;
+  const { error } = await supabase.storage
+    .from("certificates")
+    .upload(filePath, fileBuffer, {
+      contentType: "application/pdf",
+      upsert: false,
+    });
+  if (error) throw new Error(`Upload failed: ${error.message}`);
 
-  try {
-    const { data, error } = await supabase.storage
-      .from("certificates")
-      .upload(filePath, fileBuffer, {
-        contentType: "application/pdf",
-        upsert: false,
-      });
-
-    if (error) {
-      console.error("Supabase upload error:", error);
-      throw new Error(`Upload failed: ${error.message}`);
-    }
-  
-    const publicUrl = supabase.storage
-      .from("certificates")
-      .getPublicUrl(filePath).data.publicUrl;
-
-    return publicUrl;
-  } catch (uploadError) {
-    console.error("Error in uploadPdfFile:", uploadError);
-    throw uploadError;
-  }
+  return supabase.storage.from("certificates").getPublicUrl(filePath).data.publicUrl;
 }

@@ -59,12 +59,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const imageUrl = await uploadFile(
-      buffer,
-      file.name || "profile-picture.jpg",
-      userId,
-      file.type
-    );
+    const imageUrl = await uploadFile(buffer, userId, file.type);
 
     const user = await db.user.findUnique({
       where: { id: userId },

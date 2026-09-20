@@ -1,5 +1,6 @@
 "use client";
 
+import type { PortfolioProjectData } from "@/types/portfolio";
 import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Github, ExternalLink, ChevronLeft, ChevronRight, Images } from "lucide-react";
@@ -9,28 +10,11 @@ import SkillIcon, { SkillIconMap } from "./SkillIcon";
 import ProjectImageUploader, { ProjectImage } from "./ProjectImageUploader";
 import ProjectImageCarousel from "./ProjectImageCarousel";
 
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  longDescription?: string;
-  techStack: string[];
-  videoUrl?: string | null;
-  videoPublicId?: string | null;
-  videoDuration?: number | null;
-  videoBytes?: number | null;
-  videoFormat?: string | null;
-  githubUrl?: string;
-  liveUrl?: string;
-  image?: string;
-  images: ProjectImage[];
-}
-
 interface ProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  project: Project | null;
-  projects: Project[];
+  project: PortfolioProjectData | null;
+  projects: PortfolioProjectData[];
   isOwner?: boolean;
   onVideoUploaded?: (projectId: string, video: ProjectVideo) => Promise<void>;
   onImagesChanged?: (projectId: string, images: ProjectImage[]) => Promise<void>;
@@ -206,8 +190,7 @@ export default function ProjectModal({
                     About this project
                   </h4>
                   <p className="text-slate-300 leading-relaxed">
-                    {currentProject.longDescription ||
-                      currentProject.description}
+                    {currentProject.description}
                   </p>
                 </div>
 

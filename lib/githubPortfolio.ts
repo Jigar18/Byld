@@ -21,9 +21,9 @@ export type GitHubRepository = {
 
 type RepositoryPage = { repositories?: GitHubRepository[] };
 
-async function githubFetch<T>(url: string, token: string, accept = GITHUB_HEADERS.Accept) {
+async function githubFetch<T>(url: string, token: string) {
   const response = await fetch(url, {
-    headers: { ...GITHUB_HEADERS, Accept: accept, Authorization: `Bearer ${token}` },
+    headers: { ...GITHUB_HEADERS, Authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) throw new Error(`GitHub request failed with ${response.status}`);

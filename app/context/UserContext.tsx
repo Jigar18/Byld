@@ -7,27 +7,16 @@ import {
   useCallback,
   ReactNode,
 } from "react";
-import type { PortfolioInitialData } from "@/types/portfolio";
-
-interface UserDetails {
-  firstName: string;
-  lastName: string;
-  email: string;
-  location: string;
-  jobTitle: string;
-  college: string;
-  imageUrl: string;
-  about?: string;
-}
+import type { PortfolioDetails, PortfolioInitialData } from "@/types/portfolio";
 
 interface UserContextType {
-  userDetails: UserDetails | null;
+  userDetails: PortfolioDetails | null;
   loading: boolean;
   isOwner: boolean;
   portfolioUsername: string;
   portfolioData: PortfolioInitialData;
   portfolioApiUrl: (path: string) => string;
-  updateUserDetails: (details: Partial<UserDetails>) => void;
+  updateUserDetails: (details: Partial<PortfolioDetails>) => void;
   refreshUserDetails: () => Promise<void>;
 }
 
@@ -48,7 +37,7 @@ interface UserProviderProps {
 
 export const UserProvider = ({ children, initialData }: UserProviderProps) => {
   const portfolioUsername = initialData.username;
-  const [userDetails, setUserDetails] = useState<UserDetails | null>(initialData.details);
+  const [userDetails, setUserDetails] = useState<PortfolioDetails | null>(initialData.details);
   const [loading, setLoading] = useState(false);
   const [isOwner, setIsOwner] = useState(initialData.isOwner);
 
@@ -58,7 +47,7 @@ export const UserProvider = ({ children, initialData }: UserProviderProps) => {
     return `${path}${separator}username=${encodeURIComponent(portfolioUsername)}`;
   }, [portfolioUsername]);
 
-  const fetchUserDetails = useCallback(async () => {
+  const refreshUserDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(portfolioApiUrl("/api/getUserDetails"), {
@@ -91,13 +80,9 @@ export const UserProvider = ({ children, initialData }: UserProviderProps) => {
     }
   }, [portfolioApiUrl]);
 
-  const updateUserDetails = useCallback((details: Partial<UserDetails>) => {
+  const updateUserDetails = useCallback((details: Partial<PortfolioDetails>) => {
     setUserDetails((prev) => (prev ? { ...prev, ...details } : null));
   }, []);
-
-  const refreshUserDetails = useCallback(async () => {
-    await fetchUserDetails();
-  }, [fetchUserDetails]);
 
   const value: UserContextType = {
     userDetails,

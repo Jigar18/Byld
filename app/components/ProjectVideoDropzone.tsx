@@ -113,7 +113,8 @@ function readDuration(file: File) {
     video.preload = "metadata";
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(previewUrl);
-      Number.isFinite(video.duration) ? resolve(video.duration) : reject(new Error("Unable to read the video duration"));
+      if (Number.isFinite(video.duration)) resolve(video.duration);
+      else reject(new Error("Unable to read the video duration"));
     };
     video.onerror = () => {
       URL.revokeObjectURL(previewUrl);

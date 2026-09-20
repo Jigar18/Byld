@@ -1,14 +1,10 @@
 "use client";
 
+import type { PortfolioProjectData } from "@/types/portfolio";
 import { useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, ImagePlus, LoaderCircle, Trash2, X } from "lucide-react";
 
-export interface ProjectImage {
-  id?: string;
-  imageUrl: string;
-  imagePublicId: string;
-  position: number;
-}
+export type ProjectImage = PortfolioProjectData["images"][number];
 
 interface ProjectImageUploaderProps {
   images: ProjectImage[];

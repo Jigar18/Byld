@@ -1,5 +1,6 @@
 "use client";
 
+import type { PortfolioEducation } from "@/types/portfolio";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useUser } from "../context/UserContext";
@@ -8,21 +9,9 @@ import { BookOpen, Edit3 } from "lucide-react";
 import CredentialCardHeader, { credentialEditButtonClass } from "./CredentialCardHeader";
 import { primaryActionButtonClass } from "@/components/ui/button";
 
-interface EducationItem {
-  id?: string;
-  school: string;
-  degree: string;
-  field: string;
-  startYear: number;
-  endYear?: number;
-  isCurrently: boolean;
-  description?: string;
-}
-
 export default function Education() {
   const { isOwner, portfolioApiUrl, portfolioData } = useUser();
-  const [education, setEducation] = useState<EducationItem[]>(portfolioData.education);
-  const [loading, setLoading] = useState(false);
+  const [education, setEducation] = useState<PortfolioEducation[]>(portfolioData.education);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [educationAtTop, setEducationAtTop] = useState(true);
 
@@ -40,12 +29,10 @@ export default function Education() {
     } catch (error) {
       console.error("Error fetching education:", error);
       setEducation([]);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleSaveEducation = async (updatedEducation: EducationItem[]) => {
+  const handleSaveEducation = async (updatedEducation: PortfolioEducation[]) => {
     try {
       const existingEducation = education.filter(edu => edu.id);
       const existingIds = new Set(existingEducation.map(edu => edu.id));
@@ -60,40 +47,22 @@ export default function Education() {
         }
       }
 
-      // Process each education entry
       for (const edu of updatedEducation) {
-        if (edu.school && edu.degree && edu.field) {
-          if (edu.id && existingIds.has(edu.id)) {
-            // Update existing education
-            await fetch("/api/education", {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                id: edu.id,
-                school: edu.school,
-                degree: edu.degree,
-                field: edu.field,
-                startYear: edu.startYear,
-                endYear: edu.endYear,
-                isCurrently: edu.isCurrently
-              })
-            });
-          } else {
-            // Create new education
-            await fetch("/api/education", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                school: edu.school,
-                degree: edu.degree,
-                field: edu.field,
-                startYear: edu.startYear,
-                endYear: edu.endYear,
-                isCurrently: edu.isCurrently
-              })
-            });
-          }
-        }
+        if (!edu.school || !edu.degree || !edu.field) continue;
+        const isExisting = Boolean(edu.id && existingIds.has(edu.id));
+        await fetch("/api/education", {
+          method: isExisting ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...(isExisting ? { id: edu.id } : {}),
+            school: edu.school,
+            degree: edu.degree,
+            field: edu.field,
+            startYear: edu.startYear,
+            endYear: edu.endYear,
+            isCurrently: edu.isCurrently,
+          }),
+        });
       }
 
       // Refresh the education list
@@ -110,25 +79,6 @@ export default function Education() {
     }
     return endYear ? `${startYear} - ${endYear}` : `${startYear}`;
   };
-
-  if (loading) {
-    return (
-      <motion.div
-        {...{
-          className:
-            "profile-card profile-surface-neutral profile-card-lift h-[250px] rounded-xl border p-5 shadow-md",
-        }}
-        whileHover={{ y: -5 }}
-        transition={{ duration: 0.3 }}
-      >
-        <CredentialCardHeader title="Education" icon={<BookOpen className="h-5 w-5" />} />
-        <div className="space-y-4 pt-4">
-          <div className="h-16 bg-slate-700 rounded animate-pulse"></div>
-          <div className="h-16 bg-slate-700 rounded animate-pulse"></div>
-        </div>
-      </motion.div>
-    );
-  }
 
   return (
     <>

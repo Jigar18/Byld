@@ -113,10 +113,6 @@ export default function ProfilePicturePage() {
     return false;
   }, []);
 
-  const handleCropComplete = (crop: Crop) => {
-    setCompletedCrop(crop);
-  };
-
   const handleDone = () => {
     const cropToUse = completedCrop || crop;
 
@@ -291,7 +287,7 @@ export default function ProfilePicturePage() {
                         <ReactCrop
                           crop={crop}
                           onChange={(c) => setCrop(c)}
-                          onComplete={handleCropComplete}
+                          onComplete={setCompletedCrop}
                           circularCrop
                           aspect={1}
                         >

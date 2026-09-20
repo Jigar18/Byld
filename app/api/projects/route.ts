@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import {
-  deleteProjectImage,
-  deleteProjectVideo,
+  deleteProjectAsset,
   getVerifiedProjectImage,
   getVerifiedProjectVideo,
 } from "@/lib/cloudinary";
@@ -114,7 +113,7 @@ async function parseProject(body: ProjectInput, userId: string) {
 async function removeReplacedVideo(publicId: string | null | undefined) {
   if (!publicId) return;
   try {
-    await deleteProjectVideo(publicId);
+    await deleteProjectAsset(publicId, "video");
   } catch (error) {
     console.error("Unable to clean up replaced project video:", error);
   }
@@ -123,7 +122,7 @@ async function removeReplacedVideo(publicId: string | null | undefined) {
 async function removeProjectImages(publicIds: string[]) {
   await Promise.all(publicIds.map(async (publicId) => {
     try {
-      await deleteProjectImage(publicId);
+      await deleteProjectAsset(publicId, "image");
     } catch (error) {
       console.error("Unable to clean up project image:", error);
     }

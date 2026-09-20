@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { removeStoredFile, uploadPdfFile } from "@/utils/uploadFiles";
-import { PdfUploadRResponse } from "@/types/api";
+import { PdfUploadResponse } from "@/types/api";
 import { db } from "@/lib/db";
 import { isPdf } from "@/utils/fileValidation";
 import { getSession } from "@/lib/session";
@@ -75,11 +75,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const pdfUrl = await uploadPdfFile(
-      buffer,
-      file.name || "certificate.pdf",
-      userId
-    );
+    const pdfUrl = await uploadPdfFile(buffer, userId);
 
     let certificate;
     try {
@@ -93,7 +89,7 @@ export async function POST(req: NextRequest) {
       throw error;
     }
 
-    const response: PdfUploadRResponse & { certificate: typeof certificate } = {
+    const response: PdfUploadResponse & { certificate: typeof certificate } = {
       success: true,
       pdfUrl,
       certificate,
@@ -101,7 +97,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Error uploading certificate:", error);
-    const errorResponse: PdfUploadRResponse = {
+    const errorResponse: PdfUploadResponse = {
       success: false,
       error: "Unable to upload certificate",
     };

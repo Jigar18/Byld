@@ -35,11 +35,6 @@ function correctedBitrate(currentBitrate: number, outputBytes: number) {
   return Math.round(Math.min(MAX_VIDEO_BITRATE, Math.max(MIN_VIDEO_BITRATE, currentBitrate * correction)));
 }
 
-function outputName(sourceName: string, extension: OutputProfile["extension"]) {
-  const baseName = sourceName.replace(/\.[^.]+$/, "") || "project-demo";
-  return `${baseName}-optimized.${extension}`;
-}
-
 export async function compressProjectVideo(file: File, duration: number, onProgress: (progress: number) => void) {
   const {
     ALL_FORMATS,
@@ -57,6 +52,7 @@ export async function compressProjectVideo(file: File, duration: number, onProgr
   }
 
   const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
+  const baseName = file.name.replace(/\.[^.]+$/, "") || "project-demo";
   try {
     const [videoTrack, audioTrack] = await Promise.all([
       input.getPrimaryVideoTrack(),
@@ -113,7 +109,7 @@ export async function compressProjectVideo(file: File, duration: number, onProgr
           return null;
         }
         if (!target.buffer) return null;
-        return new File([target.buffer], outputName(file.name, profile.extension), { type: profile.mimeType });
+        return new File([target.buffer], `${baseName}-optimized.${profile.extension}`, { type: profile.mimeType });
       };
 
       for (const acceleration of ["prefer-hardware", "prefer-software"] as const) {
@@ -126,12 +122,9 @@ export async function compressProjectVideo(file: File, duration: number, onProgr
 
         const retryBitrate = correctedBitrate(initialBitrate, firstPass.size);
         const secondPass = retryBitrate !== initialBitrate ? await encode(retryBitrate, 75, 24, acceleration) : null;
-        const candidates = [firstPass, secondPass]
-          .filter((candidate): candidate is File => Boolean(candidate) && candidate!.size <= MAX_VIDEO_BYTES)
-          .sort((left, right) => right.size - left.size);
-        if (candidates[0]) {
+        if (secondPass && secondPass.size <= MAX_VIDEO_BYTES) {
           onProgress(100);
-          return candidates[0];
+          return secondPass;
         }
       }
     }

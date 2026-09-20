@@ -11,6 +11,8 @@ export default function LoginPage() {
         <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">Portfolio creator</p>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">Build from your real work.</h1>
         <p className="mt-3 leading-7 text-zinc-400">Connect GitHub securely, choose what to show, and publish a portfolio with intent.</p>
+        {/* OAuth sets cookies and redirects off-site, so this needs a full navigation. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/api/github/auth" className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 font-medium text-zinc-950 transition hover:-translate-y-0.5 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-950">
           <Github className="h-5 w-5" /> Continue with GitHub <ArrowRight className="h-4 w-4" />
         </a>

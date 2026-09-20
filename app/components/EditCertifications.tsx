@@ -1,5 +1,6 @@
 "use client";
 
+import type { PortfolioCertificate } from "@/types/portfolio";
 import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import {
@@ -23,17 +24,11 @@ interface FormValues {
   fileInput: FileList;
 }
 
-interface Card {
-  title: string;
-  pdfUrl: string;
-  description: string;
-}
-
 export default function EditCertifications({
   onAddCard,
   compact = false,
 }: {
-  onAddCard: (card: Card) => void;
+  onAddCard: (card: PortfolioCertificate) => void;
   compact?: boolean;
 }) {
   const {
@@ -46,6 +41,7 @@ export default function EditCertifications({
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const selectedFile = watch("fileInput");
+  const fileName = selectedFile?.[0]?.name ?? "";
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -78,14 +74,12 @@ export default function EditCertifications({
       const newCard = responseData.certificate;
       if (!newCard) throw new Error("Certificate was uploaded but could not be saved");
 
-      // Add the new card using the callback
       onAddCard(newCard);
 
       reset();
       setOpen(false);
     } catch (error) {
       console.error("Error during form submission:", error);
-      // You might want to show a toast notification here
       alert(
         `Error: ${
           error instanceof Error ? error.message : "Unknown error occurred"
@@ -94,17 +88,6 @@ export default function EditCertifications({
     } finally {
       setIsUploading(false);
     }
-  };
-  //Error: Error: Upload failed: new row violates row-level security policy
-  const getFileName = () => {
-    if (selectedFile && selectedFile[0]) {
-      const name = selectedFile[0].name;
-      if (name.length > 25) {
-        return name.substring(0, 22) + "...";
-      }
-      return name;
-    }
-    return null;
   };
 
   return (
@@ -217,7 +200,7 @@ export default function EditCertifications({
                   {selectedFile && selectedFile[0] ? (
                     <div className="flex items-center gap-2">
                       <Check className="h-5 w-5 text-zinc-400" />
-                      <span className="text-slate-200">{getFileName()}</span>
+                      <span className="text-slate-200">{fileName.length > 25 ? `${fileName.slice(0, 22)}...` : fileName}</span>
                       <Button
                         type="button"
                         variant="ghost"

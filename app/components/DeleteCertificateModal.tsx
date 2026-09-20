@@ -1,20 +1,14 @@
 "use client";
 
+import type { PortfolioCertificate } from "@/types/portfolio";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertTriangle } from "lucide-react";
-
-interface Certificate {
-  id: string;
-  title: string;
-  description: string;
-  pdfUrl: string;
-}
 
 interface DeleteCertificateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  certificate: Certificate | null;
+  certificate: PortfolioCertificate | null;
 }
 
 export default function DeleteCertificateModal({
@@ -49,7 +43,7 @@ export default function DeleteCertificateModal({
                   <AlertTriangle className="h-5 w-5 text-zinc-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-100">
-                  Delete Certificate
+                  Delete PortfolioCertificate
                 </h3>
               </div>
               <button
@@ -84,7 +78,7 @@ export default function DeleteCertificateModal({
                   onClick={onConfirm}
                   className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition-colors hover:bg-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/70"
               >
-                Delete Certificate
+                Delete PortfolioCertificate
               </button>
             </div>
           </motion.div>

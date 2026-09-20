@@ -1,19 +1,13 @@
 "use client";
 
+import type { PortfolioCertificate } from "@/types/portfolio";
 import { motion } from "framer-motion";
 import { Download, Eye, X } from "lucide-react";
 
-interface Card {
-  id: string;
-  title: string;
-  pdfUrl: string;
-  description: string;
-}
-
 interface CertificateListProps {
-  cards: Card[];
-  onOpenCertificate: (certificate: Card) => void;
-  onDeleteCard: (certificate: Card) => void;
+  cards: PortfolioCertificate[];
+  onOpenCertificate: (certificate: PortfolioCertificate) => void;
+  onDeleteCard: (certificate: PortfolioCertificate) => void;
   canEdit?: boolean;
   portfolioUsername: string;
 }
@@ -37,7 +31,7 @@ export default function CertificateList({
           }}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: cards.indexOf(card) * 0.2 }}
+          transition={{ duration: 0.3, delay: index * 0.2 }}
         >
           {index > 0 && (
             <span className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />

@@ -1,5 +1,6 @@
 "use client";
 
+import type { PortfolioCertificate } from "@/types/portfolio";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Award } from "lucide-react";
@@ -10,55 +11,26 @@ import DeleteCertificateModal from "../components/DeleteCertificateModal";
 import CredentialCardHeader from "../components/CredentialCardHeader";
 import { useUser } from "../context/UserContext";
 
-interface Card {
-  id: string;
-  title: string;
-  pdfUrl: string;
-  description: string;
-}
-
 interface CertificationsProps {
-  onOpenCertificate?: (certificate: Card, certificates: Card[]) => void;
+  onOpenCertificate?: (certificate: PortfolioCertificate, certificates: PortfolioCertificate[]) => void;
 }
 
 export default function Certifications({
   onOpenCertificate,
 }: CertificationsProps) {
-  const { isOwner, portfolioUsername, portfolioApiUrl, portfolioData } = useUser();
-  const [cards, setCards] = useState<Card[]>(portfolioData.certifications);
-  const [loading, setLoading] = useState(false);
-  const [selectedCertificate, setSelectedCertificate] = useState<Card | null>(
+  const { isOwner, portfolioUsername, portfolioData } = useUser();
+  const [cards, setCards] = useState<PortfolioCertificate[]>(portfolioData.certifications);
+  const [selectedCertificate, setSelectedCertificate] = useState<PortfolioCertificate | null>(
     null
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [certificateToDelete, setCertificateToDelete] = useState<Card | null>(
+  const [certificateToDelete, setCertificateToDelete] = useState<PortfolioCertificate | null>(
     null
   );
   const [certificatesAtTop, setCertificatesAtTop] = useState(true);
 
-  const fetchCertificates = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(portfolioApiUrl("/api/getCertificates"));
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setCards(data.certificates || []);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching certificates:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddCard = (newCard: Omit<Card, "id">) => {
-    fetchCertificates();
-  };
-
-  const handleDeleteCard = (cardToDelete: Card) => {
+  const handleDeleteCard = (cardToDelete: PortfolioCertificate) => {
     setCertificateToDelete(cardToDelete);
     setDeleteModalOpen(true);
   };
@@ -88,38 +60,14 @@ export default function Certifications({
     }
   };
 
-  const handleOpenCertificate = (certificate: Card) => {
-    if (typeof onOpenCertificate === "function") {
+  const handleOpenCertificate = (certificate: PortfolioCertificate) => {
+    if (onOpenCertificate) {
       onOpenCertificate(certificate, cards);
     } else {
       setSelectedCertificate(certificate);
       setIsModalOpen(true);
     }
   };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
-  if (loading) {
-    return (
-      <motion.div
-        {...{
-          className:
-            "profile-card profile-surface-neutral profile-card-lift h-[336px] rounded-xl border p-5 shadow-md",
-        }}
-        whileHover={{ y: -5 }}
-        transition={{ duration: 0.3 }}
-      >
-        <CredentialCardHeader title="Certifications" icon={<Award className="h-5 w-5" />} />
-        <div className="animate-pulse space-y-3 pt-4">
-          {[1, 2].map((i) => (
-            <div key={i} className="h-[108px] bg-slate-700/30 rounded-lg"></div>
-          ))}
-        </div>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div
@@ -133,7 +81,9 @@ export default function Certifications({
       <CredentialCardHeader
         title="Certifications"
         icon={<Award className="h-5 w-5" />}
-        action={isOwner ? <EditCertifications onAddCard={handleAddCard} compact /> : undefined}
+        action={isOwner ? <EditCertifications onAddCard={(certificate) => setCards((current) =>
+          [certificate, ...current].sort((a, b) => b.id.localeCompare(a.id)),
+        )} compact /> : undefined}
       />
 
       <div className="relative min-h-0 flex-1 pt-3">
@@ -176,7 +126,7 @@ export default function Certifications({
       {!onOpenCertificate && (
         <CertificateModal
           isOpen={isModalOpen}
-          onClose={handleCloseModal}
+          onClose={() => setIsModalOpen(false)}
           certificate={selectedCertificate}
           certificates={cards}
         />

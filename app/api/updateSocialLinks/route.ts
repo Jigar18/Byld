@@ -107,6 +107,4 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function PUT(req: NextRequest) {
-  return POST(req); // Use the same logic for PUT requests
-}
+export { POST as PUT };

@@ -1,5 +1,6 @@
 "use client";
 
+import type { PortfolioProjectData } from "@/types/portfolio";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ExternalLink, Github, Plus, Save, Search, X } from "lucide-react";
@@ -9,22 +10,7 @@ import ProjectImageUploader, { ProjectImage, removeUnsavedProjectImage } from ".
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
 import { ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 
-export interface PortfolioProject {
-  id: string;
-  title: string;
-  description: string;
-  techStack: string[];
-  githubUrl: string | null;
-  liveUrl: string | null;
-  videoUrl: string | null;
-  videoPublicId: string | null;
-  videoDuration: number | null;
-  videoBytes: number | null;
-  videoFormat: string | null;
-  images: ProjectImage[];
-}
-
-type ProjectDraft = Omit<PortfolioProject, "id">;
+type ProjectDraft = Omit<PortfolioProjectData, "id">;
 
 interface ProjectEditorProps {
   isOpen: boolean;
@@ -32,7 +18,7 @@ interface ProjectEditorProps {
   onSave: (project: ProjectDraft) => Promise<void>;
   userSkills: string[];
   skillIcons?: SkillIconMap;
-  project?: PortfolioProject | null;
+  project?: PortfolioProjectData | null;
 }
 
 const emptyDraft: ProjectDraft = { title: "", description: "", techStack: [], githubUrl: null, liveUrl: null, videoUrl: null, videoPublicId: null, videoDuration: null, videoBytes: null, videoFormat: null, images: [] };

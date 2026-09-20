@@ -11,9 +11,8 @@ import {
 } from "lucide-react";
 import ProjectCard from "../components/ProjectCard";
 import DeleteProjectModal from "../components/DeleteProjectModal";
-import AddProjectModal, {
-  PortfolioProject,
-} from "../components/AddProjectModal";
+import AddProjectModal from "../components/AddProjectModal";
+import type { PortfolioProjectData } from "@/types/portfolio";
 import ProjectModal from "../components/ProjectModal";
 import ProjectSourceModal from "../components/ProjectSourceModal";
 import {
@@ -31,15 +30,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-
-type ModalProject = Omit<PortfolioProject, "githubUrl" | "liveUrl"> & {
-  githubUrl: string;
-  liveUrl: string;
-  image: string;
-  tags: string[];
-  github: string;
-  longDescription?: string;
-};
 
 const MAX_PROJECTS = 4;
 
@@ -69,17 +59,6 @@ const findMissingSkillIcons = async (
   return Object.fromEntries(icons.filter((icon) => icon !== null));
 };
 
-const toModalProject = (project: PortfolioProject): ModalProject => ({
-  ...project,
-  images: project.images || [],
-  githubUrl: project.githubUrl || "",
-  liveUrl: project.liveUrl || "",
-  image: "",
-  tags: project.techStack,
-  github: project.githubUrl || "",
-  longDescription: project.description,
-});
-
 export default function Projects() {
   const { isOwner, portfolioData } = useUser();
   const ref = useRef<HTMLDivElement | null>(null);
@@ -87,18 +66,17 @@ export default function Projects() {
     once: true,
     margin: "-100px",
   });
-  const [projects, setProjects] = useState<PortfolioProject[]>(portfolioData.projects);
+  const [projects, setProjects] = useState<PortfolioProjectData[]>(portfolioData.projects);
   const [skills, setSkills] = useState<string[]>(portfolioData.skills);
   const [skillIcons, setSkillIcons] = useState<SkillIconMap>(portfolioData.iconMap);
-  const [loading] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [sourceOpen, setSourceOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState<PortfolioProject | null>(
+  const [editingProject, setEditingProject] = useState<PortfolioProjectData | null>(
     null,
   );
   const [projectToDelete, setProjectToDelete] =
-    useState<PortfolioProject | null>(null);
-  const [selectedProject, setSelectedProject] = useState<ModalProject | null>(
+    useState<PortfolioProjectData | null>(null);
+  const [selectedProject, setSelectedProject] = useState<PortfolioProjectData | null>(
     null,
   );
   const carouselRef = useRef<HTMLDivElement | null>(null);
@@ -135,9 +113,9 @@ export default function Projects() {
     const observer = new ResizeObserver(updateCarouselControls);
     observer.observe(carousel);
     return () => observer.disconnect();
-  }, [loading, projects.length, updateCarouselControls]);
+  }, [projects.length, updateCarouselControls]);
 
-  const saveProject = async (draft: Omit<PortfolioProject, "id">) => {
+  const saveProject = async (draft: Omit<PortfolioProjectData, "id">) => {
     if (!editingProject && projects.length >= MAX_PROJECTS) {
       throw new Error(`Only ${MAX_PROJECTS} projects are allowed`);
     }
@@ -150,7 +128,7 @@ export default function Projects() {
       ),
     });
     if (!response.ok) throw new Error("Unable to save project");
-    const data = await response.json() as { project: PortfolioProject; skills?: string[] };
+    const data = await response.json() as { project: PortfolioProjectData; skills?: string[] };
     setProjects((current) =>
       editingProject
         ? current.map((project) =>
@@ -187,7 +165,7 @@ export default function Projects() {
     setProjects((current) =>
       current.map((item) => (item.id === projectId ? data.project : item)),
     );
-    setSelectedProject(toModalProject(data.project));
+    setSelectedProject(data.project);
   };
 
   const deleteProject = async () => {
@@ -203,7 +181,7 @@ export default function Projects() {
     setProjectToDelete(null);
   };
 
-  const openEditor = (project: PortfolioProject | null = null) => {
+  const openEditor = (project: PortfolioProjectData | null = null) => {
     if (!project && projects.length >= MAX_PROJECTS) return;
     setEditingProject(project);
     if (project) setEditorOpen(true);
@@ -228,7 +206,7 @@ export default function Projects() {
 
     const data = await response.json();
     setProjects((current) => current.map((item) => item.id === projectId ? data.project : item));
-    setSelectedProject(toModalProject(data.project));
+    setSelectedProject(data.project);
   };
 
   const importProject = async (repositoryId: number) => {
@@ -238,7 +216,7 @@ export default function Projects() {
       credentials: "include",
       body: JSON.stringify({ repositoryId }),
     });
-    const data = (await response.json()) as { project?: PortfolioProject; error?: string };
+    const data = (await response.json()) as { project?: PortfolioProjectData; error?: string };
     if (!response.ok || !data.project) throw new Error(data.error || "Unable to import project");
     setProjects((current) => [data.project!, ...current]);
     const importedIcons = await findMissingSkillIcons(
@@ -247,7 +225,7 @@ export default function Projects() {
     );
     setSkillIcons((current) => ({ ...current, ...importedIcons }));
     setSourceOpen(false);
-    setSelectedProject(toModalProject(data.project));
+    setSelectedProject(data.project);
   };
 
   const scrollProjects = (direction: -1 | 1) => {
@@ -300,7 +278,6 @@ export default function Projects() {
     suppressClickRef.current = false;
   };
 
-  const modalProjects = projects.map(toModalProject);
   const projectLimitReached = projects.length >= MAX_PROJECTS;
 
   return (
@@ -351,16 +328,7 @@ export default function Projects() {
           </div>
         )}
       </div>
-      {loading ? (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {[1, 2, 3].map((item) => (
-            <div
-              key={item}
-              className="h-72 animate-pulse rounded-2xl border border-white/10 bg-white/[0.035]"
-            />
-          ))}
-        </div>
-      ) : projects.length === 0 ? (
+      {projects.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -417,16 +385,15 @@ export default function Projects() {
             onClickCapture={preventDraggedClick}
             onDragStart={(event) => event.preventDefault()}
           >
-            {projects.map((project, index) => (
+            {projects.map((project) => (
               <div
                 key={project.id}
                 className="shrink-0 basis-[82%] sm:basis-[58%] lg:basis-[calc((100%-2.5rem)/2.5)] [&>div]:h-full"
               >
                 <ProjectCard
-                  project={toModalProject(project)}
-                  index={index}
+                  project={project}
                   skillIcons={skillIcons}
-                  onOpenProject={() => setSelectedProject(toModalProject(project))}
+                  onOpenProject={() => setSelectedProject(project)}
                   onEditProject={isOwner ? () => openEditor(project) : undefined}
                   onDeleteProject={
                     isOwner ? () => setProjectToDelete(project) : undefined
@@ -452,7 +419,7 @@ export default function Projects() {
           isOpen={Boolean(projectToDelete)}
           onClose={() => setProjectToDelete(null)}
           onConfirm={deleteProject}
-          project={projectToDelete ? toModalProject(projectToDelete) : null}
+          project={projectToDelete}
         />
       )}
       {isOwner && (
@@ -484,7 +451,7 @@ export default function Projects() {
         isOpen={Boolean(selectedProject)}
         onClose={() => setSelectedProject(null)}
         project={selectedProject}
-        projects={modalProjects}
+        projects={projects}
         skillIcons={skillIcons}
         isOwner={isOwner}
         onVideoUploaded={isOwner ? saveProjectVideo : undefined}

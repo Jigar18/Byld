@@ -18,10 +18,20 @@ export async function POST(req: NextRequest) {
     }
 
     await db.$transaction(async (tx) => {
+      const details = {
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        email: form.email.trim(),
+        location: form.location?.trim() ?? "",
+        jobTitle: form.jobTitle.trim(),
+        college: school,
+        startYear,
+        endYear,
+      };
       await tx.details.upsert({
         where: { userId: session.userId },
-        update: { firstName: form.firstName.trim(), lastName: form.lastName.trim(), email: form.email.trim(), location: form.location?.trim() ?? "", jobTitle: form.jobTitle.trim(), college: school, startYear, endYear },
-        create: { userId: session.userId, firstName: form.firstName.trim(), lastName: form.lastName.trim(), email: form.email.trim(), location: form.location?.trim() ?? "", jobTitle: form.jobTitle.trim(), college: school, startYear, endYear },
+        update: details,
+        create: { ...details, userId: session.userId },
       });
 
       const existingEducation = await tx.education.findFirst({

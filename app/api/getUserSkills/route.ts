@@ -12,14 +12,13 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Fetch user skills
-    const userSkills = await db.skill.findMany({
+    const userSkills = await db.skill.findFirst({
       where: { userId: user.id },
+      select: { skills: true, iconMap: true },
     });
 
-    // Extract skills array from the first record (if exists)
-    const skills = userSkills.length > 0 ? userSkills[0].skills : [];
-    const storedIconMap = userSkills.length > 0 ? userSkills[0].iconMap : null;
+    const skills = userSkills?.skills ?? [];
+    const storedIconMap = userSkills?.iconMap;
     const iconMap =
       storedIconMap &&
       typeof storedIconMap === "object" &&
@@ -29,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      skills: skills,
+      skills,
       iconMap,
     });
   } catch (error) {

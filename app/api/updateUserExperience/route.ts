@@ -2,133 +2,43 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 
-export async function POST(req: NextRequest) {
+async function saveExperience(req: NextRequest) {
+  const isUpdate = req.method === "PUT";
   try {
     const session = await getSession(req);
     if (!session) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Authentication required"
-      }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Authentication required" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { 
-      company, 
-      position, 
-      startMonth, 
-      startYear, 
-      endMonth, 
-      endYear, 
-      isCurrentRole, 
-      contributions 
-    } = body;
-
-    // Validate required fields
-    if (!company || !position || !startMonth || !startYear) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Missing required fields" 
-      }, { status: 400 });
+    const { id, company, position, startMonth, startYear, endMonth, endYear, isCurrentRole, contributions } = await req.json();
+    if ((isUpdate && !id) || !company || !position || !startMonth || !startYear) {
+      return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
     }
 
-    // Create new experience entry
-    const experience = await db.experience.create({
-      data: {
-        company,
-        position,
-        startMonth,
-        startYear,
-        endMonth: isCurrentRole ? null : endMonth,
-        endYear: isCurrentRole ? null : endYear,
-        isCurrentRole,
-        contributions: contributions || [],
-        userId: session.userId,
-      }
-    });
-
-    return NextResponse.json({
-      success: true,
-      experience: experience
-    });
-
+    const data = {
+      company,
+      position,
+      startMonth,
+      startYear,
+      endMonth: isCurrentRole ? null : endMonth,
+      endYear: isCurrentRole ? null : endYear,
+      isCurrentRole,
+      contributions: contributions || [],
+    };
+    const experience = isUpdate
+      ? await db.experience.update({ where: { id, userId: session.userId }, data })
+      : await db.experience.create({ data: { ...data, userId: session.userId } });
+    return NextResponse.json({ success: true, experience });
   } catch (error) {
-    console.error("Error creating experience:", error);
+    console.error(`Error ${isUpdate ? "updating" : "creating"} experience:`, error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: "Failed to create experience" 
-      },
-      { status: 500 }
+      { success: false, error: `Failed to ${isUpdate ? "update" : "create"} experience` },
+      { status: 500 },
     );
   }
 }
 
-export async function PUT(req: NextRequest) {
-  try {
-    const session = await getSession(req);
-    if (!session) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Authentication required"
-      }, { status: 401 });
-    }
-
-    const body = await req.json();
-    const { 
-      id,
-      company, 
-      position, 
-      startMonth, 
-      startYear, 
-      endMonth, 
-      endYear, 
-      isCurrentRole, 
-      contributions 
-    } = body;
-
-    // Validate required fields
-    if (!id || !company || !position || !startMonth || !startYear) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Missing required fields" 
-      }, { status: 400 });
-    }
-
-    // Update existing experience entry
-    const experience = await db.experience.update({
-      where: {
-        id: id,
-        userId: session.userId,
-      },
-      data: {
-        company,
-        position,
-        startMonth,
-        startYear,
-        endMonth: isCurrentRole ? null : endMonth,
-        endYear: isCurrentRole ? null : endYear,
-        isCurrentRole,
-        contributions: contributions || [],
-      }
-    });
-
-    return NextResponse.json({
-      success: true,
-      experience: experience
-    });
-
-  } catch (error) {
-    console.error("Error updating experience:", error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: "Failed to update experience" 
-      },
-      { status: 500 }
-    );
-  }
-}
+export { saveExperience as POST, saveExperience as PUT };
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -153,7 +63,7 @@ export async function DELETE(req: NextRequest) {
     // Delete experience entry
     await db.experience.delete({
       where: {
-        id: id,
+        id,
         userId: session.userId,
       }
     });

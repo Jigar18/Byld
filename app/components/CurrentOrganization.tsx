@@ -6,10 +6,6 @@ import { useUser } from "../context/UserContext";
 export default function CurrentOrganization() {
   const { userDetails, loading } = useUser();
 
-  const formatCollegeName = (name: string) => {
-    return name.toUpperCase();
-  };
-
   if (loading) {
     return (
       <motion.div
@@ -58,7 +54,7 @@ export default function CurrentOrganization() {
       </div>
       <h2 className="max-w-[5.5rem] truncate text-center text-[11px] font-medium text-zinc-300 sm:max-w-none sm:whitespace-normal sm:text-base">
         {userDetails?.college
-          ? formatCollegeName(userDetails.college)
+          ? userDetails.college.toUpperCase()
           : "UNIVERSITY"}
       </h2>
     </motion.div>

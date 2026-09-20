@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(
           {
             error: "Email permission required",
-            authUrl: authUrl,
+            authUrl,
             needsAuth: true,
           },
           { status: 401 }
@@ -56,22 +56,12 @@ export async function GET(req: NextRequest) {
       (emailObj: GithubEmail) => emailObj.primary
     )?.email;
 
-    if (!primaryEmail) {
-      const verifiedEmail = userEmailsResponse.data.find(
-        (emailObj: GithubEmail) => emailObj.verified
-      )?.email;
-
-      if (verifiedEmail) {
-        return NextResponse.json({ email: verifiedEmail });
-      }
-
-      return NextResponse.json(
-        { error: "No primary email found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ email: primaryEmail });
+    const email = primaryEmail || userEmailsResponse.data.find(
+      (emailObj: GithubEmail) => emailObj.verified,
+    )?.email;
+    return email
+      ? NextResponse.json({ email })
+      : NextResponse.json({ error: "No primary email found" }, { status: 404 });
   } catch (err: unknown) {
     console.error("  error:", err);
 
@@ -94,16 +84,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         { error: "Authentication token is missing" },
         { status: 401 }
-      );
-    }
-
-    if (
-      err instanceof Error &&
-      err.message.includes("User installation ID not found")
-    ) {
-      return NextResponse.json(
-        { error: "GitHub app installation not found" },
-        { status: 404 }
       );
     }
 

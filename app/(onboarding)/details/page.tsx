@@ -87,37 +87,12 @@ export default function Details() {
     }));
   };
 
-  const debouncedSearch = React.useMemo(
-    () => async (query: string) => {
-      if (query.length < 2) {
-        setCitySuggestions([]);
-        return;
-      }
-      const results = await searchCities(query);
-      setCitySuggestions(results);
-      setIsSearching(false);
-    },
-    []
-  );
-
-  const debouncedSearchUniversity = React.useMemo(
-    () => async (query: string) => {
-      if (query.length < 2) {
-        setUniversitySuggestions([]);
-        return;
-      }
-      const results = await getUniversities(query);
-      setUniversitySuggestions(results);
-      setIsSearching(false);
-    },
-    []
-  );
-
-  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLocationChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     handleInputChange(e);
     setIsSearching(true);
-    debouncedSearch(value);
+    setCitySuggestions(value.length < 2 ? [] : await searchCities(value));
+    setIsSearching(false);
   };
 
   const handleCitySelect = (city: string) => {
@@ -125,11 +100,12 @@ export default function Details() {
     setCitySuggestions([]);
   };
 
-  const handleUniversityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUniversityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     handleInputChange(e);
     setIsSearching(true);
-    debouncedSearchUniversity(value);
+    setUniversitySuggestions(value.length < 2 ? [] : await getUniversities(value));
+    setIsSearching(false);
   };
 
   const handleUniversitySelect = (university: string) => {

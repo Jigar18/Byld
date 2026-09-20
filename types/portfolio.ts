@@ -52,7 +52,7 @@ export type PortfolioProjectData = {
   videoBytes: number | null;
   videoFormat: string | null;
   images: Array<{
-    id: string;
+    id?: string;
     imageUrl: string;
     imagePublicId: string;
     position: number;

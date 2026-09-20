@@ -7,14 +7,6 @@ type GitHubProfile = {
   location?: string | null;
 };
 
-function splitName(name: string | null | undefined) {
-  const parts = name?.trim().split(/\s+/).filter(Boolean) ?? [];
-  return {
-    firstName: parts[0] ?? "",
-    lastName: parts.length > 1 ? parts.slice(1).join(" ") : "",
-  };
-}
-
 export async function GET(request: NextRequest) {
   const session = await getSession(request);
   if (!session) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -32,7 +24,12 @@ export async function GET(request: NextRequest) {
     });
     if (!response.ok) return NextResponse.json({ error: "GitHub profile is unavailable" }, { status: 502 });
     const profile = (await response.json()) as GitHubProfile;
-    return NextResponse.json({ ...splitName(profile.name), location: profile.location?.trim() ?? "" });
+    const parts = profile.name?.trim().split(/\s+/).filter(Boolean) ?? [];
+    return NextResponse.json({
+      firstName: parts[0] ?? "",
+      lastName: parts.slice(1).join(" "),
+      location: profile.location?.trim() ?? "",
+    });
   } catch {
     return NextResponse.json({ error: "GitHub profile is unavailable" }, { status: 502 });
   }

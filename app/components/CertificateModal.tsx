@@ -1,22 +1,16 @@
 "use client";
 
+import type { PortfolioCertificate } from "@/types/portfolio";
 import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface Card {
-  id: string;
-  title: string;
-  pdfUrl: string;
-  description: string;
-}
-
 interface CertificateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  certificate: Card | null;
-  certificates: Card[];
+  certificate: PortfolioCertificate | null;
+  certificates: PortfolioCertificate[];
 }
 
 export default function CertificateModal({
@@ -100,6 +94,9 @@ export default function CertificateModal({
   }
 
   const currentCertificate = certificates[currentIndex];
+  const pdfUrl = useDirectUrl
+    ? currentCertificate.pdfUrl
+    : `/api/view-pdf?id=${encodeURIComponent(currentCertificate.id)}`;
 
   return (
     <AnimatePresence>
@@ -206,60 +203,35 @@ export default function CertificateModal({
                   </div>
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    {(() => {
-                      console.log(
-                        "Certificate PDF URL:",
-                        currentCertificate.pdfUrl
-                      );
+                    {/* Primary PDF viewer - iframe */}
+                    <iframe
+                      src={pdfUrl}
+                      className="w-full h-full border-0"
+                      title={currentCertificate.title}
+                      style={{ border: "none" }}
+                      onLoad={() => setIsLoadingPdf(false)}
+                      onError={(e) => {
+                        console.error(
+                          `PDF iframe error (${
+                            useDirectUrl ? "Direct" : "Proxy"
+                          } mode):`,
+                          e
+                        );
+                        setTimeout(() => {
+                          if (isLoadingPdf) {
+                            setPdfLoadError(true);
+                            setIsLoadingPdf(false);
+                          }
+                        }, 5000);
+                      }}
+                    />
 
-                      const pdfUrl = useDirectUrl
-                        ? currentCertificate.pdfUrl
-                        : `/api/view-pdf?id=${encodeURIComponent(currentCertificate.id)}`;
-
-                      console.log("Using PDF URL:", pdfUrl);
-                      console.log("Mode:", useDirectUrl ? "Direct" : "Proxy");
-
-                      return (
-                        <>
-                          {/* Primary PDF viewer - iframe */}
-                          <iframe
-                            src={pdfUrl}
-                            className="w-full h-full border-0"
-                            title={currentCertificate.title}
-                            style={{ border: "none" }}
-                            onLoad={() => {
-                              console.log(
-                                `PDF iframe loaded successfully (${
-                                  useDirectUrl ? "Direct" : "Proxy"
-                                } mode)`
-                              );
-                              setIsLoadingPdf(false);
-                            }}
-                            onError={(e) => {
-                              console.error(
-                                `PDF iframe error (${
-                                  useDirectUrl ? "Direct" : "Proxy"
-                                } mode):`,
-                                e
-                              );
-                              setTimeout(() => {
-                                if (isLoadingPdf) {
-                                  setPdfLoadError(true);
-                                  setIsLoadingPdf(false);
-                                }
-                              }, 5000);
-                            }}
-                          />
-
-                          <embed
-                            src={pdfUrl}
-                            type="application/pdf"
-                            className="w-full h-full absolute inset-0 opacity-0 pointer-events-none"
-                            style={{ zIndex: -1 }}
-                          />
-                        </>
-                      );
-                    })()}
+                    <embed
+                      src={pdfUrl}
+                      type="application/pdf"
+                      className="w-full h-full absolute inset-0 opacity-0 pointer-events-none"
+                      style={{ zIndex: -1 }}
+                    />
                   </div>
                 )}
               </div>
@@ -324,12 +296,6 @@ export default function CertificateModal({
                         href={`/api/download-certificate?id=${currentCertificate.id}`}
                         className="flex items-center justify-center gap-2 bg-zinc-600 hover:bg-zinc-700 text-white py-2 px-4 rounded-md transition-colors"
                         download
-                        onClick={(e) => {
-                          console.log(
-                            "Download clicked for certificate ID:",
-                            currentCertificate.id
-                          );
-                        }}
                       >
                         <Download className="h-4 w-4" />
                         <span>Download Certificate</span>
@@ -340,12 +306,6 @@ export default function CertificateModal({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center justify-center gap-2 bg-zinc-600 hover:bg-zinc-700 text-white py-2 px-4 rounded-md transition-colors"
-                        onClick={(e) => {
-                          console.log(
-                            "Direct view clicked for PDF:",
-                            currentCertificate.pdfUrl
-                          );
-                        }}
                       >
                         <svg
                           className="h-4 w-4"

@@ -2,16 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 
-interface UpdateData {
-  about?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  location?: string;
-  jobTitle ?: string;
-  college ?: string;
-}
-
 export async function PUT(req: NextRequest) {
   try {
     const session = await getSession(req);
@@ -42,18 +32,9 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Profile fields are invalid" }, { status: 400 });
     }
 
-    // Build the update data object dynamically
-    const updateData: UpdateData = {};
-
-    if (about !== undefined) updateData.about = about;
-    if (firstName !== undefined) updateData.firstName = firstName;
-    if (lastName !== undefined) updateData.lastName = lastName;
-    if (email !== undefined) updateData.email = email;
-    if (location !== undefined) updateData.location = location;
-    if (jobTitle !== undefined) updateData.jobTitle = jobTitle;
-    if (college !== undefined) updateData.college = college;
-
-    // Ensure at least one field is being updated
+    const updateData = Object.fromEntries(
+      Object.entries(values).filter(([, value]) => value !== undefined),
+    );
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
         { success: false, error: "No valid fields provided for update" },

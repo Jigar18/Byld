@@ -36,31 +36,17 @@ export async function GET(req: NextRequest) {
       });
 
       if (userDetails?.college) {
-        if (!user.isOwner) {
-          return NextResponse.json({
-            success: true,
-            education: [{
-              school: userDetails.college,
-              degree: "Bachelor of Technology",
-              field: "Computer Science",
-              startYear: userDetails.startYear,
-              endYear: userDetails.endYear,
-              isCurrently: userDetails.endYear > new Date().getFullYear(),
-            }],
-          });
-        }
-
-        const defaultEducation = await db.education.create({
-          data: {
-            school: userDetails.college,
-            degree: "Bachelor of Technology",
-            field: "Computer Science",
-            startYear: userDetails.startYear,
-            endYear: userDetails.endYear,
-            isCurrently: userDetails.endYear > new Date().getFullYear(),
-            userId: user.id,
-          },
-        });
+        const data = {
+          school: userDetails.college,
+          degree: "Bachelor of Technology",
+          field: "Computer Science",
+          startYear: userDetails.startYear,
+          endYear: userDetails.endYear,
+          isCurrently: userDetails.endYear > new Date().getFullYear(),
+        };
+        const defaultEducation = user.isOwner
+          ? await db.education.create({ data: { ...data, userId: user.id } })
+          : data;
 
         return NextResponse.json({
           success: true,

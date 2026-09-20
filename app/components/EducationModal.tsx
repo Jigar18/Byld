@@ -1,27 +1,17 @@
 "use client";
 
+import type { PortfolioEducation } from "@/types/portfolio";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, BookOpen } from "lucide-react";
 import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { createPortal } from "react-dom";
 
-interface EducationItem {
-  id?: string;
-  school: string;
-  degree: string;
-  field: string;
-  startYear: number;
-  endYear?: number;
-  isCurrently: boolean;
-  description?: string;
-}
-
 interface EducationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  education: EducationItem[];
-  onSave: (education: EducationItem[]) => Promise<void>;
+  education: PortfolioEducation[];
+  onSave: (education: PortfolioEducation[]) => Promise<void>;
 }
 
 export default function EducationModal({
@@ -30,7 +20,7 @@ export default function EducationModal({
   education,
   onSave,
 }: EducationModalProps) {
-  const [editingEducation, setEditingEducation] = useState<EducationItem[]>([]);
+  const [editingEducation, setEditingEducation] = useState<PortfolioEducation[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -41,7 +31,7 @@ export default function EducationModal({
 
   const addNewEducation = () => {
     if (editingEducation.length >= 2) return;
-    const newEducation: EducationItem = {
+    const newEducation: PortfolioEducation = {
       school: "",
       degree: "",
       field: "",
@@ -53,7 +43,7 @@ export default function EducationModal({
 
   const updateEducation = (
     index: number,
-    field: keyof EducationItem,
+    field: keyof PortfolioEducation,
     value: string | number | boolean | undefined,
   ) => {
     const updated = [...editingEducation];

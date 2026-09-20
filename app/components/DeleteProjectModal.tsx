@@ -3,28 +3,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertTriangle } from "lucide-react";
 
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  tags: string[];
-  github: string;
-  githubUrl: string;
-  liveUrl: string;
-  videoUrl?: string | null;
-  videoPublicId?: string | null;
-  videoDuration?: number | null;
-  videoBytes?: number | null;
-  videoFormat?: string | null;
-  longDescription?: string;
-}
+
 
 interface DeleteProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  project: Project | null;
+  project: { title: string } | null;
 }
 
 export default function DeleteProjectModal({

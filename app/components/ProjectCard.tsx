@@ -1,34 +1,16 @@
 "use client";
+import type { PortfolioProjectData } from "@/types/portfolio";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { ExternalLink, Github, Eye, Pencil, X } from "lucide-react";
 import { useRandomImage } from "@/utils/randomImageSelect";
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
 
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  tags: string[];
-  techStack: string[];
-  github: string;
-  githubUrl: string;
-  liveUrl: string;
-  videoUrl: string | null;
-  videoPublicId: string | null;
-  videoDuration: number | null;
-  videoBytes: number | null;
-  videoFormat: string | null;
-  longDescription?: string;
-}
-
 interface ProjectProps {
-  project: Project;
-  index: number;
-  onOpenProject?: (project: Project) => void;
-  onEditProject?: (project: Project) => void;
-  onDeleteProject?: (project: Project) => void;
+  project: PortfolioProjectData;
+  onOpenProject?: (project: PortfolioProjectData) => void;
+  onEditProject?: (project: PortfolioProjectData) => void;
+  onDeleteProject?: (project: PortfolioProjectData) => void;
   skillIcons?: SkillIconMap;
 }
 
@@ -121,7 +103,7 @@ export default function ProjectCard({
         </p>
 
         <div className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-3 sm:gap-2">
-          {project.tags.slice(0, 3).map((tech) => (
+          {project.techStack.slice(0, 3).map((tech) => (
             <span
               key={tech}
               className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.025] px-1.5 py-1 text-[10px] text-zinc-300 shadow-sm sm:gap-1.5 sm:px-2 sm:text-xs"
@@ -130,9 +112,9 @@ export default function ProjectCard({
               {tech}
             </span>
           ))}
-          {project.tags.length > 3 && (
+          {project.techStack.length > 3 && (
             <span className="rounded-md border border-white/10 bg-white/[0.025] px-1.5 py-1 text-[10px] text-zinc-300 shadow-sm sm:px-2 sm:text-xs">
-              +{project.tags.length - 3} more
+              +{project.techStack.length - 3} more
             </span>
           )}
         </div>

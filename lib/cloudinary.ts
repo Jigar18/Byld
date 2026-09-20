@@ -87,7 +87,7 @@ export function isCloudinaryVideoUrl(url: string) {
   }
 }
 
-export async function deleteProjectVideo(publicId: string) {
+export async function deleteProjectAsset(publicId: string, resourceType: "image" | "video") {
   const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
   const timestamp = Math.floor(Date.now() / 1000);
   const params = { invalidate: true, public_id: publicId, timestamp };
@@ -101,7 +101,7 @@ export async function deleteProjectVideo(publicId: string) {
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/destroy`, {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/destroy`, {
         method: "POST",
         body,
         signal: AbortSignal.timeout(10_000),
@@ -114,37 +114,7 @@ export async function deleteProjectVideo(publicId: string) {
     if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
   }
 
-  throw new Error("Unable to remove the Cloudinary video");
-}
-
-export async function deleteProjectImage(publicId: string) {
-  const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
-  const timestamp = Math.floor(Date.now() / 1000);
-  const params = { invalidate: true, public_id: publicId, timestamp };
-  const body = new URLSearchParams({
-    api_key: apiKey,
-    invalidate: "true",
-    public_id: publicId,
-    signature: signCloudinaryParams(params, apiSecret),
-    timestamp: String(timestamp),
-  });
-
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
-        method: "POST",
-        body,
-        signal: AbortSignal.timeout(10_000),
-      });
-      const result = response.ok ? await response.json() as { result?: string } : null;
-      if (result?.result === "ok" || result?.result === "not found") return;
-    } catch (error) {
-      if (attempt === 2) throw error;
-    }
-    if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
-  }
-
-  throw new Error("Unable to remove the Cloudinary image");
+  throw new Error(`Unable to remove the Cloudinary ${resourceType}`);
 }
 
 export async function getVerifiedProjectImage(publicId: string, userId: string) {

@@ -20,31 +20,21 @@ export async function persistGitHubInstallation(
   }
 
   const installationId = String(installation.id);
+  const data = {
+    accountId: String(account.id),
+    accountLogin: account.login,
+    accountType: account.type ?? "User",
+    targetId: installation.target_id ? String(installation.target_id) : null,
+    targetType: installation.target_type ?? null,
+    permissions: installation.permissions ?? {},
+    events: installation.events ?? [],
+    suspendedAt: installation.suspended_at ? new Date(installation.suspended_at) : null,
+  };
   await db.$transaction(async (tx) => {
     await tx.gitHubInstallation.upsert({
       where: { id: installationId },
-      update: {
-        accountId: String(account.id),
-        accountLogin: account.login!,
-        accountType: account.type ?? "User",
-        targetId: installation.target_id ? String(installation.target_id) : null,
-        targetType: installation.target_type ?? null,
-        permissions: installation.permissions ?? {},
-        events: installation.events ?? [],
-        suspendedAt: installation.suspended_at ? new Date(installation.suspended_at) : null,
-        deletedAt: null,
-      },
-      create: {
-        id: installationId,
-        accountId: String(account.id),
-        accountLogin: account.login!,
-        accountType: account.type ?? "User",
-        targetId: installation.target_id ? String(installation.target_id) : null,
-        targetType: installation.target_type ?? null,
-        permissions: installation.permissions ?? {},
-        events: installation.events ?? [],
-        suspendedAt: installation.suspended_at ? new Date(installation.suspended_at) : null,
-      },
+      update: { ...data, deletedAt: null },
+      create: { id: installationId, ...data },
     });
 
     await tx.user.update({ where: { id: userId }, data: { installationId } });
