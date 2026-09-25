@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Github, LoaderCircle } from "lucide-react";
 import type { CSSProperties } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "../context/UserContext";
 import { contributionLevels } from "./contributionHeatmapStyles";
 
@@ -135,33 +135,31 @@ export default function GitHubHeatmap() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const loadContributions = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(portfolioApiUrl("/api/github/contributions"), {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        setAvailable(false);
-        return;
-      }
-      const data = (await response.json()) as ContributionResponse;
-      setVisible(Boolean(data.visible));
-      setAvailable(data.available !== false);
-      setContributionYear(data.contributionYear ?? null);
-      setCurrentYearContributions(data.currentYearContributions ?? null);
-      setCalendar(data.calendar ? includeUtcToday(data.calendar) : null);
-    } catch (error) {
-      console.error("Unable to load GitHub activity", error);
-      setAvailable(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [portfolioApiUrl]);
-
   useEffect(() => {
+    const loadContributions = async () => {
+      try {
+        const response = await fetch(portfolioApiUrl("/api/github/contributions"), {
+          credentials: "include",
+        });
+        if (!response.ok) {
+          setAvailable(false);
+          return;
+        }
+        const data = (await response.json()) as ContributionResponse;
+        setVisible(Boolean(data.visible));
+        setAvailable(data.available !== false);
+        setContributionYear(data.contributionYear ?? null);
+        setCurrentYearContributions(data.currentYearContributions ?? null);
+        setCalendar(data.calendar ? includeUtcToday(data.calendar) : null);
+      } catch (error) {
+        console.error("Unable to load GitHub activity", error);
+        setAvailable(false);
+      } finally {
+        setLoading(false);
+      }
+    };
     void loadContributions();
-  }, [loadContributions]);
+  }, [portfolioApiUrl]);
 
   const updateVisibility = async () => {
     if (!isOwner || saving) return;

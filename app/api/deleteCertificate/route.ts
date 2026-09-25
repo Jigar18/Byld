@@ -1,28 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/session";
 import { removeStoredFile } from "@/utils/uploadFiles";
 
 export async function DELETE(req: NextRequest) {
   try {
-    const token = req.cookies.get("id&Uname")?.value;
-
-    if (!token) {
+    const session = await getSession(req);
+    if (!session) {
       return NextResponse.json(
         { success: false, error: "Authentication token is missing" },
         { status: 401 }
       );
     }
 
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(process.env.JWT_SECRET!)
-    );
-    const userId = payload.userId as string;
-
-    const { searchParams } = new URL(req.url);
-    const certificateId = searchParams.get("id");
-
+    const certificateId = req.nextUrl.searchParams.get("id");
     if (!certificateId) {
       return NextResponse.json(
         { success: false, error: "Certificate ID is required" },
@@ -31,12 +22,8 @@ export async function DELETE(req: NextRequest) {
     }
 
     const certificate = await db.certifications.findFirst({
-      where: {
-        id: certificateId,
-        userId: userId,
-      },
+      where: { id: certificateId, userId: session.userId },
     });
-
     if (!certificate) {
       return NextResponse.json(
         { success: false, error: "Certificate not found" },
@@ -44,17 +31,8 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    await removeStoredFile(
-      certificate.pdfUrl,
-      "certificates",
-      `certifications/${userId}-`
-    );
-
-    await db.certifications.delete({
-      where: {
-        id: certificateId,
-      },
-    });
+    await removeStoredFile(certificate.pdfUrl, "certificates", `certifications/${session.userId}-`);
+    await db.certifications.delete({ where: { id: certificateId } });
 
     return NextResponse.json({
       success: true,

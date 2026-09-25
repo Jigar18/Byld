@@ -1,14 +1,25 @@
 "use client";
 
 import type { PortfolioProjectData } from "@/types/portfolio";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Github, ExternalLink, ChevronLeft, ChevronRight, Images } from "lucide-react";
+import { X, Github, ExternalLink, ChevronLeft, ChevronRight, Images, FileText, Code2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProjectVideoDropzone, { ProjectVideo } from "./ProjectVideoDropzone";
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
 import ProjectImageUploader, { ProjectImage } from "./ProjectImageUploader";
 import ProjectImageCarousel from "./ProjectImageCarousel";
+
+function SectionHeading({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <h4 className="text-lg font-medium text-slate-100 mb-3 flex items-center gap-2">
+      <span className="inline-flex p-1.5 rounded-md bg-zinc-900/20 text-zinc-400 shadow-md shadow-zinc-500/20 border border-zinc-800/30">
+        {icon}
+      </span>
+      {children}
+    </h4>
+  );
+}
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -31,19 +42,10 @@ export default function ProjectModal({
   onImagesChanged,
   skillIcons = {},
 }: ProjectModalProps) {
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-
-  const handleNext = useCallback(() => {
-    if (currentIndex < projects.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  }, [currentIndex, projects.length]);
-
-  const handlePrevious = useCallback(() => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  }, [currentIndex]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const lastIndex = projects.length - 1;
+  const handleNext = () => setCurrentIndex((index) => Math.min(lastIndex, index + 1));
+  const handlePrevious = () => setCurrentIndex((index) => Math.max(0, index - 1));
 
   useEffect(() => {
     if (project) {
@@ -55,36 +57,26 @@ export default function ProjectModal({
   }, [project, projects]);
 
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-
-      if (e.key === "Escape") {
-        onClose();
-      } else if (e.key === "ArrowRight") {
-        handleNext();
-      } else if (e.key === "ArrowLeft") {
-        handlePrevious();
-      }
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowRight") setCurrentIndex((index) => Math.min(lastIndex, index + 1));
+      else if (e.key === "ArrowLeft") setCurrentIndex((index) => Math.max(0, index - 1));
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, currentIndex, projects.length, onClose, handleNext, handlePrevious]);
+  }, [isOpen, lastIndex, onClose]);
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
+    if (!isOpen) return;
+    document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "auto";
     };
   }, [isOpen]);
 
-  if (!projects || !projects.length || currentIndex >= projects.length) {
-    return null;
-  }
+  if (currentIndex > lastIndex) return null;
 
   const currentProject = projects[currentIndex];
 
@@ -138,7 +130,7 @@ export default function ProjectModal({
                       </Button>
                       <Button
                         onClick={handleNext}
-                        disabled={currentIndex === projects.length - 1}
+                        disabled={currentIndex === lastIndex}
                         variant="outline"
                         size="icon"
                         className="h-7 w-7 rounded-full bg-slate-800/80 hover:bg-slate-700 border-slate-600 text-slate-300 disabled:opacity-50"
@@ -166,29 +158,7 @@ export default function ProjectModal({
               <div className="flex flex-col p-4 sm:p-8">
                 {/* 1. Description */}
                 <div className="mb-8">
-                  <h4 className="text-lg font-medium text-slate-100 mb-3 flex items-center gap-2">
-                    <span className="inline-flex p-1.5 rounded-md bg-zinc-900/20 text-zinc-400 shadow-md shadow-zinc-500/20 border border-zinc-800/30">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-file-text"
-                      >
-                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="16" x2="8" y1="13" y2="13" />
-                        <line x1="16" x2="8" y1="17" y2="17" />
-                        <line x1="10" x2="8" y1="9" y2="9" />
-                      </svg>
-                    </span>
-                    About this project
-                  </h4>
+                  <SectionHeading icon={<FileText className="h-4 w-4" />}>About this project</SectionHeading>
                   <p className="text-slate-300 leading-relaxed">
                     {currentProject.description}
                   </p>
@@ -196,31 +166,10 @@ export default function ProjectModal({
 
                 {/* 2. Tech stack */}
                 <div className="mb-8">
-                  <h4 className="text-lg font-medium text-slate-100 mb-3 flex items-center gap-2">
-                    <span className="inline-flex p-1.5 rounded-md bg-zinc-900/20 text-zinc-400 shadow-md shadow-zinc-500/20 border border-zinc-800/30">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-code-2"
-                      >
-                        <path d="m18 16 4-4-4-4" />
-                        <path d="m6 8-4 4 4 4" />
-                        <path d="m14.5 4-5 16" />
-                      </svg>
-                    </span>
-                    Tech Stack Used
-                  </h4>
+                  <SectionHeading icon={<Code2 className="h-4 w-4" />}>Tech Stack Used</SectionHeading>
 
                   {/* Project's actual tech stack */}
-                  {currentProject.techStack &&
-                    currentProject.techStack.length > 0 && (
+                  {currentProject.techStack.length > 0 && (
                       <div className="mb-4">
                         <div className="flex flex-wrap gap-2">
                           {currentProject.techStack.map((tech, index) => (
@@ -246,25 +195,7 @@ export default function ProjectModal({
 
                 {/* Visitors only see this section when a demo exists. */}
                 {(currentProject.videoUrl || isOwner) && <div className="mb-8">
-                  <h4 className="text-lg font-medium text-slate-100 mb-3 flex items-center gap-2">
-                    <span className="inline-flex p-1.5 rounded-md bg-zinc-900/20 text-zinc-400 shadow-md shadow-zinc-500/20 border border-zinc-800/30">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-play"
-                      >
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                      </svg>
-                    </span>
-                    Project Demo
-                  </h4>
+                  <SectionHeading icon={<Play className="h-4 w-4" />}>Project Demo</SectionHeading>
                   {currentProject.videoUrl ? (
                     <div className="w-full overflow-hidden rounded-xl border border-white/10 bg-black shadow-lg">
                       <video src={currentProject.videoUrl} controls preload="metadata" playsInline className="aspect-video w-full bg-black object-contain" />
@@ -274,12 +205,9 @@ export default function ProjectModal({
                   ) : null}
                 </div>}
 
-                {(currentProject.images?.length || isOwner) && <div className="mb-8">
-                  <h4 className="mb-3 flex items-center gap-2 text-lg font-medium text-slate-100">
-                    <span className="inline-flex rounded-md border border-zinc-800/30 bg-zinc-900/20 p-1.5 text-zinc-400 shadow-md shadow-zinc-500/20"><Images className="h-4 w-4" /></span>
-                    Project Images
-                  </h4>
-                  {currentProject.images?.length ? (
+                {(currentProject.images.length > 0 || isOwner) && <div className="mb-8">
+                  <SectionHeading icon={<Images className="h-4 w-4" />}>Project Images</SectionHeading>
+                  {currentProject.images.length ? (
                     <ProjectImageCarousel images={currentProject.images} />
                   ) : onImagesChanged ? (
                     <ProjectImageUploader
@@ -336,7 +264,7 @@ export default function ProjectModal({
 
                 <Button
                   onClick={handleNext}
-                  disabled={currentIndex === projects.length - 1}
+                  disabled={currentIndex === lastIndex}
                   variant="outline"
                   className="flex items-center gap-1 bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-200 disabled:opacity-50"
                 >

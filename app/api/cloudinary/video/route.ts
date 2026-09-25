@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteProjectAsset, isOwnedProjectVideo } from "@/lib/cloudinary";
+import { deleteProjectAsset, isOwnedProjectAsset } from "@/lib/cloudinary";
 import { db } from "@/lib/db";
-import { getRequestUserId } from "@/lib/session";
+import { getSession } from "@/lib/session";
 
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = await getRequestUserId(request);
+    const userId = (await getSession(request))?.userId;
     const publicId = (await request.json() as { publicId?: unknown }).publicId;
-    if (!userId || typeof publicId !== "string" || !isOwnedProjectVideo(publicId, userId)) {
+    if (!userId || typeof publicId !== "string" || !isOwnedProjectAsset(publicId, userId, "video")) {
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 

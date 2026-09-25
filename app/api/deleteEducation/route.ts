@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/session";
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const educationId = searchParams.get("id");
-
+    const educationId = req.nextUrl.searchParams.get("id");
     if (!educationId) {
       return NextResponse.json(
         { success: false, error: "Education ID is required" },
@@ -14,40 +12,23 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const token = req.cookies.get("id&Uname")?.value;
-
-    if (!token) {
+    const session = await getSession(req);
+    if (!session) {
       return NextResponse.json(
         { success: false, error: "Authentication token is missing" },
         { status: 401 }
       );
     }
 
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(process.env.JWT_SECRET!)
-    );
-    const userId = payload.userId as string;
-
-    const education = await db.education.findFirst({
-      where: {
-        id: educationId,
-        userId: userId,
-      },
+    const { count } = await db.education.deleteMany({
+      where: { id: educationId, userId: session.userId },
     });
-
-    if (!education) {
+    if (!count) {
       return NextResponse.json(
         { success: false, error: "Education not found or unauthorized" },
         { status: 404 }
       );
     }
-
-    await db.education.delete({
-      where: {
-        id: educationId,
-      },
-    });
 
     return NextResponse.json({
       success: true,

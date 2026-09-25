@@ -10,16 +10,14 @@ import {
   FolderPlus,
 } from "lucide-react";
 import ProjectCard from "../components/ProjectCard";
-import DeleteProjectModal from "../components/DeleteProjectModal";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import AddProjectModal from "../components/AddProjectModal";
 import type { PortfolioProjectData } from "@/types/portfolio";
 import ProjectModal from "../components/ProjectModal";
 import ProjectSourceModal from "../components/ProjectSourceModal";
-import {
-  ProjectVideo,
-  removeUnsavedProjectVideo,
-} from "../components/ProjectVideoDropzone";
-import { ProjectImage, removeUnsavedProjectImage } from "../components/ProjectImageUploader";
+import type { ProjectVideo } from "../components/ProjectVideoDropzone";
+import type { ProjectImage } from "../components/ProjectImageUploader";
+import { removeUnsavedProjectMedia } from "../components/projectMedia";
 import { useUser } from "../context/UserContext";
 import { getSkillIcon, SkillIconMap } from "../components/SkillIcon";
 import { primaryActionButtonClass } from "@/components/ui/button";
@@ -155,7 +153,7 @@ export default function Projects() {
       body: JSON.stringify({ ...project, ...video, id: projectId }),
     });
     if (!response.ok) {
-      await removeUnsavedProjectVideo(video.videoPublicId);
+      await removeUnsavedProjectMedia("video", video.videoPublicId);
       throw new Error(
         "The demo was uploaded but could not be saved to the project",
       );
@@ -191,7 +189,7 @@ export default function Projects() {
   const saveProjectImages = async (projectId: string, images: ProjectImage[]) => {
     const project = projects.find((item) => item.id === projectId);
     if (!project) throw new Error("Project not found");
-    const addedImages = images.filter((image) => !(project.images || []).some((current) => current.imagePublicId === image.imagePublicId));
+    const addedImages = images.filter((image) => !project.images.some((current) => current.imagePublicId === image.imagePublicId));
 
     const response = await fetch("/api/projects", {
       method: "PUT",
@@ -200,7 +198,7 @@ export default function Projects() {
       body: JSON.stringify({ ...project, images, id: projectId }),
     });
     if (!response.ok) {
-      await Promise.all(addedImages.map((image) => removeUnsavedProjectImage(image.imagePublicId)));
+      await Promise.all(addedImages.map((image) => removeUnsavedProjectMedia("image", image.imagePublicId)));
       throw new Error("The images were uploaded but could not be saved to the project");
     }
 
@@ -415,11 +413,13 @@ export default function Projects() {
         </div>
       )}
       {isOwner && (
-        <DeleteProjectModal
+        <ConfirmDeleteModal
           isOpen={Boolean(projectToDelete)}
+          title="Delete Project"
+          subject={projectToDelete?.title}
+          note="This action cannot be undone."
           onClose={() => setProjectToDelete(null)}
           onConfirm={deleteProject}
-          project={projectToDelete}
         />
       )}
       {isOwner && (

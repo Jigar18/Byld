@@ -1,10 +1,10 @@
 import { createHash } from "crypto";
 
-export const PROJECT_VIDEO_MAX_BYTES = 30 * 1024 * 1024;
-export const PROJECT_VIDEO_MAX_DURATION = 120;
-export const PROJECT_VIDEO_FORMATS = ["mp4", "webm"] as const;
-export const PROJECT_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
-export const PROJECT_IMAGE_FORMATS = ["jpg", "jpeg", "png", "webp", "avif"] as const;
+const PROJECT_VIDEO_MAX_BYTES = 30 * 1024 * 1024;
+const PROJECT_VIDEO_MAX_DURATION = 120;
+const PROJECT_VIDEO_FORMATS = ["mp4", "webm"] as const;
+const PROJECT_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+const PROJECT_IMAGE_FORMATS = ["jpg", "jpeg", "png", "webp", "avif"] as const;
 
 function getCloudinaryConfig() {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
@@ -59,35 +59,31 @@ export function createProjectImageUploadSignature(userId: string) {
   };
 }
 
-export function isOwnedProjectImage(publicId: string, userId: string) {
-  return publicId.startsWith(`portfolio-images/${userId}/`);
+type ProjectAssetType = "image" | "video";
+
+type CloudinaryAsset = {
+  bytes?: number;
+  duration?: number;
+  format?: string;
+  public_id?: string;
+  secure_url?: string;
+};
+
+export function isOwnedProjectAsset(publicId: string, userId: string, type: ProjectAssetType) {
+  return publicId.startsWith(`portfolio-${type}s/${userId}/`);
 }
 
-export function isCloudinaryImageUrl(url: string) {
+function isCloudinaryAssetUrl(url: string, type: ProjectAssetType) {
   const { cloudName } = getCloudinaryConfig();
   try {
     const parsed = new URL(url);
-    return parsed.protocol === "https:" && parsed.hostname === "res.cloudinary.com" && parsed.pathname.startsWith(`/${cloudName}/image/upload/`);
+    return parsed.protocol === "https:" && parsed.hostname === "res.cloudinary.com" && parsed.pathname.startsWith(`/${cloudName}/${type}/upload/`);
   } catch {
     return false;
   }
 }
 
-export function isOwnedProjectVideo(publicId: string, userId: string) {
-  return publicId.startsWith(`portfolio-videos/${userId}/`);
-}
-
-export function isCloudinaryVideoUrl(url: string) {
-  const { cloudName } = getCloudinaryConfig();
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "https:" && parsed.hostname === "res.cloudinary.com" && parsed.pathname.startsWith(`/${cloudName}/video/upload/`);
-  } catch {
-    return false;
-  }
-}
-
-export async function deleteProjectAsset(publicId: string, resourceType: "image" | "video") {
+export async function deleteProjectAsset(publicId: string, resourceType: ProjectAssetType) {
   const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
   const timestamp = Math.floor(Date.now() / 1000);
   const params = { invalidate: true, public_id: publicId, timestamp };
@@ -117,77 +113,70 @@ export async function deleteProjectAsset(publicId: string, resourceType: "image"
   throw new Error(`Unable to remove the Cloudinary ${resourceType}`);
 }
 
-export async function getVerifiedProjectImage(publicId: string, userId: string) {
+async function getVerifiedAsset(
+  type: ProjectAssetType,
+  publicId: string,
+  userId: string,
+  rules: {
+    maxBytes: number;
+    formats: readonly string[];
+    invalidMessage: string;
+    query?: string;
+    isValid?: (asset: CloudinaryAsset) => boolean;
+  },
+) {
   const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
-  if (!isOwnedProjectImage(publicId, userId)) throw new Error("Project image not found");
+  if (!isOwnedProjectAsset(publicId, userId, type)) throw new Error(`Project ${type} not found`);
 
   const authorization = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload/${encodeURIComponent(publicId)}`, {
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/${type}/upload/${encodeURIComponent(publicId)}${rules.query ?? ""}`, {
     headers: { Authorization: `Basic ${authorization}` },
     cache: "no-store",
     signal: AbortSignal.timeout(10_000),
   });
-  if (!response.ok) throw new Error("Cloudinary could not verify the project image");
+  if (!response.ok) throw new Error(`Cloudinary could not verify the project ${type}`);
 
-  const asset = (await response.json()) as { bytes?: number; format?: string; public_id?: string; secure_url?: string };
+  const asset = (await response.json()) as CloudinaryAsset;
   const format = asset.format?.toLowerCase();
   if (
     asset.public_id !== publicId ||
     !asset.secure_url ||
-    !isCloudinaryImageUrl(asset.secure_url) ||
+    !isCloudinaryAssetUrl(asset.secure_url, type) ||
     !Number.isInteger(asset.bytes) ||
     !asset.bytes ||
-    asset.bytes > PROJECT_IMAGE_MAX_BYTES ||
+    asset.bytes > rules.maxBytes ||
     !format ||
-    !PROJECT_IMAGE_FORMATS.includes(format as (typeof PROJECT_IMAGE_FORMATS)[number])
+    !rules.formats.includes(format) ||
+    (rules.isValid && !rules.isValid(asset))
   ) {
-    throw new Error("Project images must be JPG, PNG, WebP, or AVIF files up to 10 MB");
+    throw new Error(rules.invalidMessage);
   }
 
-  return { imageUrl: asset.secure_url, imagePublicId: publicId };
+  return { url: asset.secure_url, bytes: asset.bytes, format, duration: asset.duration };
+}
+
+export async function getVerifiedProjectImage(publicId: string, userId: string) {
+  const asset = await getVerifiedAsset("image", publicId, userId, {
+    maxBytes: PROJECT_IMAGE_MAX_BYTES,
+    formats: PROJECT_IMAGE_FORMATS,
+    invalidMessage: "Project images must be JPG, PNG, WebP, or AVIF files up to 10 MB",
+  });
+  return { imageUrl: asset.url, imagePublicId: publicId };
 }
 
 export async function getVerifiedProjectVideo(publicId: string, userId: string) {
-  const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
-  if (!isOwnedProjectVideo(publicId, userId)) throw new Error("Project video not found");
-
-  const authorization = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/video/upload/${encodeURIComponent(publicId)}?media_metadata=true`, {
-    headers: { Authorization: `Basic ${authorization}` },
-    cache: "no-store",
-    signal: AbortSignal.timeout(10_000),
+  const asset = await getVerifiedAsset("video", publicId, userId, {
+    maxBytes: PROJECT_VIDEO_MAX_BYTES,
+    formats: PROJECT_VIDEO_FORMATS,
+    invalidMessage: "The project demo must be an MP4 or WebM video up to 2 minutes and 30 MB",
+    query: "?media_metadata=true",
+    isValid: ({ duration }) => Number.isFinite(duration) && Boolean(duration) && duration! <= PROJECT_VIDEO_MAX_DURATION,
   });
-  if (!response.ok) throw new Error("Cloudinary could not verify the project video");
-
-  const asset = (await response.json()) as {
-    bytes?: number;
-    duration?: number;
-    format?: string;
-    public_id?: string;
-    secure_url?: string;
-  };
-  const format = asset.format?.toLowerCase();
-  if (
-    asset.public_id !== publicId ||
-    !asset.secure_url ||
-    !isCloudinaryVideoUrl(asset.secure_url) ||
-    !Number.isInteger(asset.bytes) ||
-    !asset.bytes ||
-    asset.bytes > PROJECT_VIDEO_MAX_BYTES ||
-    !Number.isFinite(asset.duration) ||
-    !asset.duration ||
-    asset.duration > PROJECT_VIDEO_MAX_DURATION ||
-    !format ||
-    !PROJECT_VIDEO_FORMATS.includes(format as (typeof PROJECT_VIDEO_FORMATS)[number])
-  ) {
-    throw new Error("The project demo must be an MP4 or WebM video up to 2 minutes and 30 MB");
-  }
-
   return {
-    videoUrl: asset.secure_url,
+    videoUrl: asset.url,
     videoPublicId: publicId,
-    videoDuration: asset.duration,
+    videoDuration: asset.duration!,
     videoBytes: asset.bytes,
-    videoFormat: format,
+    videoFormat: asset.format,
   };
 }

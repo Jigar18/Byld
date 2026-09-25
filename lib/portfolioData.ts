@@ -1,21 +1,26 @@
 import "server-only";
 
 import { db } from "@/lib/db";
-import type { PortfolioInitialData } from "@/types/portfolio";
+import { SOCIAL_PLATFORMS, type PortfolioInitialData, type SocialPlatform } from "@/types/portfolio";
 
-const socialFields = {
-  email: true,
-  twitter: true,
-  linkedin: true,
-  instagram: true,
-  github: true,
-  medium: true,
-  blog: true,
-  leetcode: true,
-  youtube: true,
-  portfolio: true,
-  hackerrank: true,
-} as const;
+const socialFields = Object.fromEntries(SOCIAL_PLATFORMS.map((platform) => [platform, true])) as Record<SocialPlatform, true>;
+
+type EducationRecord = { isCurrently: boolean; startYear: number; endYear: number | null };
+
+export const compareEducation = (a: EducationRecord, b: EducationRecord) => {
+  if (a.isCurrently !== b.isCurrently) return a.isCurrently ? -1 : 1;
+  return (b.endYear || b.startYear) - (a.endYear || a.startYear) || b.startYear - a.startYear;
+};
+
+// Portfolios created before the education table existed only have a college on their details.
+export const defaultEducation = (details: { college: string; startYear: number; endYear: number }) => ({
+  school: details.college,
+  degree: "Bachelor of Technology",
+  field: "Computer Science",
+  startYear: details.startYear,
+  endYear: details.endYear,
+  isCurrently: details.endYear > new Date().getFullYear(),
+});
 
 export async function loadPortfolioData(username: string) {
   const user = await db.user.findFirst({
@@ -87,20 +92,9 @@ export async function loadPortfolioData(username: string) {
   if (!user?.details) return null;
 
   const education = user.education.length
-    ? [...user.education].sort((a, b) => {
-        if (a.isCurrently !== b.isCurrently) return a.isCurrently ? -1 : 1;
-        return (b.endYear ?? b.startYear) - (a.endYear ?? a.startYear) || b.startYear - a.startYear;
-      })
+    ? [...user.education].sort(compareEducation)
     : user.details.college
-      ? [{
-          school: user.details.college,
-          degree: "Bachelor of Technology",
-          field: "Computer Science",
-          startYear: user.details.startYear,
-          endYear: user.details.endYear,
-          isCurrently: user.details.endYear > new Date().getFullYear(),
-          description: null,
-        }]
+      ? [{ ...defaultEducation(user.details), description: null }]
       : [];
   const skillRecord = user.skills[0];
   const iconMap =

@@ -2,10 +2,19 @@
 
 import type { PortfolioEducation } from "@/types/portfolio";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { X, Plus, BookOpen } from "lucide-react";
 import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { createPortal } from "react-dom";
+
+const inputClassName =
+  "w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-zinc-500";
+
+const textFields = [
+  { field: "school", label: "School/University *", placeholder: "Enter school or university name" },
+  { field: "degree", label: "Degree *", placeholder: "e.g., Bachelor of Technology" },
+  { field: "field", label: "Field of Study *", placeholder: "e.g., Computer Science" },
+] as const;
 
 interface EducationModalProps {
   isOpen: boolean;
@@ -25,20 +34,16 @@ export default function EducationModal({
 
   useEffect(() => {
     if (isOpen) {
-      setEditingEducation([...education]);
+      setEditingEducation(education);
     }
   }, [isOpen, education]);
 
   const addNewEducation = () => {
     if (editingEducation.length >= 2) return;
-    const newEducation: PortfolioEducation = {
-      school: "",
-      degree: "",
-      field: "",
-      startYear: new Date().getFullYear(),
-      isCurrently: false,
-    };
-    setEditingEducation([...editingEducation, newEducation]);
+    setEditingEducation([
+      ...editingEducation,
+      { school: "", degree: "", field: "", startYear: new Date().getFullYear(), isCurrently: false },
+    ]);
   };
 
   const updateEducation = (
@@ -46,14 +51,7 @@ export default function EducationModal({
     field: keyof PortfolioEducation,
     value: string | number | boolean | undefined,
   ) => {
-    const updated = [...editingEducation];
-    updated[index] = { ...updated[index], [field]: value };
-    setEditingEducation(updated);
-  };
-
-  const removeEducation = (index: number) => {
-    const updated = editingEducation.filter((_, i) => i !== index);
-    setEditingEducation(updated);
+    setEditingEducation((current) => current.map((edu, i) => (i === index ? { ...edu, [field]: value } : edu)));
   };
 
   const handleSave = async () => {
@@ -62,9 +60,10 @@ export default function EducationModal({
 
     try {
       await onSave(editingEducation);
-      setSaving(false);
       onClose();
-    } catch {
+    } catch (error) {
+      console.error("Error saving education:", error);
+    } finally {
       setSaving(false);
     }
   };
@@ -72,7 +71,6 @@ export default function EducationModal({
   if (!isOpen) return null;
 
   return createPortal(
-    <AnimatePresence>
       <motion.div
         {...{
           className:
@@ -156,7 +154,7 @@ export default function EducationModal({
                         Education {index + 1}
                       </h3>
                       <Button
-                        onClick={() => removeEducation(index)}
+                        onClick={() => setEditingEducation((current) => current.filter((_, i) => i !== index))}
                         variant="ghost"
                         size="sm"
                         className="text-zinc-400 hover:text-zinc-300 hover:bg-zinc-900/20"
@@ -166,50 +164,20 @@ export default function EducationModal({
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                          School/University *
-                        </label>
-                        <input
-                          type="text"
-                          value={edu.school}
-                          onChange={(e) =>
-                            updateEducation(index, "school", e.target.value)
-                          }
-                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-                          placeholder="Enter school or university name"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                          Degree *
-                        </label>
-                        <input
-                          type="text"
-                          value={edu.degree}
-                          onChange={(e) =>
-                            updateEducation(index, "degree", e.target.value)
-                          }
-                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-                          placeholder="e.g., Bachelor of Technology"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                          Field of Study *
-                        </label>
-                        <input
-                          type="text"
-                          value={edu.field}
-                          onChange={(e) =>
-                            updateEducation(index, "field", e.target.value)
-                          }
-                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-                          placeholder="e.g., Computer Science"
-                        />
-                      </div>
+                      {textFields.map(({ field, label, placeholder }) => (
+                        <div key={field}>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">
+                            {label}
+                          </label>
+                          <input
+                            type="text"
+                            value={edu[field]}
+                            onChange={(e) => updateEducation(index, field, e.target.value)}
+                            className={inputClassName}
+                            placeholder={placeholder}
+                          />
+                        </div>
+                      ))}
 
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -218,14 +186,8 @@ export default function EducationModal({
                         <input
                           type="number"
                           value={edu.startYear}
-                          onChange={(e) =>
-                            updateEducation(
-                              index,
-                              "startYear",
-                              parseInt(e.target.value)
-                            )
-                          }
-                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                          onChange={(e) => updateEducation(index, "startYear", parseInt(e.target.value))}
+                          className={inputClassName}
                           min="1950"
                           max="2030"
                         />
@@ -237,13 +199,7 @@ export default function EducationModal({
                             <input
                               type="checkbox"
                               checked={edu.isCurrently}
-                              onChange={(e) =>
-                                updateEducation(
-                                  index,
-                                  "isCurrently",
-                                  e.target.checked
-                                )
-                              }
+                              onChange={(e) => updateEducation(index, "isCurrently", e.target.checked)}
                               className="w-4 h-4 text-zinc-600 bg-slate-700 border-slate-600 rounded focus:ring-zinc-500"
                             />
                             <span className="text-sm text-slate-300">
@@ -260,15 +216,9 @@ export default function EducationModal({
                               type="number"
                               value={edu.endYear || ""}
                               onChange={(e) =>
-                                updateEducation(
-                                  index,
-                                  "endYear",
-                                  e.target.value
-                                    ? parseInt(e.target.value)
-                                    : undefined
-                                )
+                                updateEducation(index, "endYear", e.target.value ? parseInt(e.target.value) : undefined)
                               }
-                              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                              className={inputClassName}
                               min="1950"
                               max="2030"
                             />
@@ -321,8 +271,7 @@ export default function EducationModal({
             </div>
           </div>
         </motion.div>
-      </motion.div>
-    </AnimatePresence>,
+      </motion.div>,
     document.body
   );
 }

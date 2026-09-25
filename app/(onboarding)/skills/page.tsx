@@ -9,18 +9,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import SkillIcon, { SkillIconMap } from "@/app/components/SkillIcon";
 
-const globalStyles = `
-  input:-webkit-autofill,
-  input:-webkit-autofill:hover, 
-  input:-webkit-autofill:focus,
-  input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px #27272a inset !important;
-    -webkit-text-fill-color: #e4e4e7 !important;
-    transition: background-color 5000s ease-in-out 0s;
-    caret-color: #e4e4e7;
-  }
-`;
-
 const inputClassName =
   "w-full px-4 py-3 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200";
 
@@ -60,32 +48,32 @@ export default function SkillsPage() {
   }, []);
 
   useEffect(() => {
-    const fetchSkills = async () => {
-      if (skillInput.length >= 2) {
-        setIsSearching(true);
-        const timer = setTimeout(async () => {
-          try {
-            const result = await fetch(`/api/skills?skill=${skillInput}`);
-            const data = await result.json();
-            setSuggestions(data);
-          } catch (error) {
-            console.error("Error fetching skills:", error);
-            setSuggestions([]);
-          } finally {
-            setIsSearching(false);
-          }
-        }, 300);
+    if (skillInput.length < 2) {
+      setSuggestions([]);
+      setIsSearching(false);
+      return;
+    }
 
-        return () => clearTimeout(timer);
-      } else {
+    setIsSearching(true);
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const result = await fetch(`/api/skills?skill=${encodeURIComponent(skillInput)}`, { signal: controller.signal });
+        setSuggestions(await result.json());
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error("Error fetching skills:", error);
         setSuggestions([]);
+      } finally {
+        if (!controller.signal.aborted) setIsSearching(false);
       }
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
     };
-
-    fetchSkills();
-  }, [skillInput, selectedSkills]);
-
-  const formatSkill = (skill: string) => skill ? skill.charAt(0).toUpperCase() + skill.slice(1) : skill;
+  }, [skillInput]);
 
   const findSkillIcon = async (skill: string) => {
     try {
@@ -99,18 +87,15 @@ export default function SkillsPage() {
     }
   };
 
-  const handleSkillSelect = (skill: string) => {
+  const addSkill = (skill: string, refocusInput = false) => {
     hasEditedSkillsRef.current = true;
-    const formattedSkill = formatSkill(skill);
-    if (!selectedSkills.includes(formattedSkill)) {
-      setSelectedSkills([...selectedSkills, formattedSkill]);
-      void findSkillIcon(formattedSkill);
-      setSkillInput("");
-      setSuggestions([]);
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }
+    const formattedSkill = skill.charAt(0).toUpperCase() + skill.slice(1);
+    if (!formattedSkill || selectedSkills.includes(formattedSkill)) return;
+    setSelectedSkills([...selectedSkills, formattedSkill]);
+    void findSkillIcon(formattedSkill);
+    setSkillInput("");
+    setSuggestions([]);
+    if (refocusInput) inputRef.current?.focus();
   };
 
   const handleRemoveSkill = (skill: string) => {
@@ -121,17 +106,6 @@ export default function SkillsPage() {
       delete updated[skill];
       return updated;
     });
-  };
-
-  const handleAddCustomSkill = () => {
-    hasEditedSkillsRef.current = true;
-    const formattedSkill = formatSkill(skillInput.trim());
-    if (formattedSkill && !selectedSkills.includes(formattedSkill)) {
-      setSelectedSkills([...selectedSkills, formattedSkill]);
-      void findSkillIcon(formattedSkill);
-      setSkillInput("");
-      setSuggestions([]);
-    }
   };
 
   const handleContinue = async () => {
@@ -161,10 +135,6 @@ export default function SkillsPage() {
 
   return (
     <>
-      <style jsx global>
-        {globalStyles}
-      </style>
-
       <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-12 px-4 sm:px-6 flex items-center justify-center">
         <div className="w-full max-w-2xl mx-auto bg-slate-900 rounded-xl shadow-xl overflow-hidden border border-slate-800">
           <div className="p-8">
@@ -242,7 +212,7 @@ export default function SkillsPage() {
                             {...{
                               className:
                                 "px-4 py-3 hover:bg-slate-700 cursor-pointer text-slate-200 text-sm transition-colors flex items-center",
-                              onClick: () => handleSkillSelect(skill),
+                              onClick: () => addSkill(skill, true),
                             }}
                           >
                             <span className="flex flex-1 items-center gap-2">
@@ -268,7 +238,7 @@ export default function SkillsPage() {
                     {...{ className: "mt-3" }}
                   >
                     <Button
-                      onClick={handleAddCustomSkill}
+                      onClick={() => addSkill(skillInput.trim())}
                       className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 w-full justify-start rounded-md transition-colors"
                     >
                       <Plus className="h-4 w-4 mr-2 text-zinc-400" />

@@ -23,15 +23,19 @@ import { Label } from "@/components/ui/label";
 import ProfileImageModal from "../components/ProfileImageModal";
 import { useUser } from "../context/UserContext";
 
-function InfoCard() {
-  const { userDetails, isOwner, updateUserDetails, refreshUserDetails } = useUser();
+const inputClassName =
+  "w-full px-4 py-3 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200";
+
+type EditableDetail = "firstName" | "lastName" | "email" | "location" | "jobTitle" | "college";
+
+export default function InfoCard() {
+  const { userDetails, isOwner, updateUserDetails } = useUser();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  // Temporary form state
-  const [tempDetails, setTempDetails] = useState({
+  const [tempDetails, setTempDetails] = useState<Record<EditableDetail, string>>({
     firstName: "",
     lastName: "",
     email: "",
@@ -42,7 +46,6 @@ function InfoCard() {
 
   const [tempImagePreview, setTempImagePreview] = useState<string>("");
 
-  // Validate form fields
   const validateForm = (): boolean => {
     const errors: string[] = [];
 
@@ -58,78 +61,58 @@ function InfoCard() {
     return errors.length === 0;
   };
 
-  const handleImageEditModal = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    setIsModalOpen(true);
-  };
-
   const handleOpenModal = () => {
-    if (userDetails) {
-      setTempDetails({
-        firstName: userDetails.firstName,
-        lastName: userDetails.lastName,
-        email: userDetails.email,
-        location: userDetails.location,
-        jobTitle: userDetails.jobTitle,
-        college: userDetails.college,
-      });
-      setTempImagePreview(userDetails.imageUrl);
-    }
+    setTempDetails({
+      firstName: userDetails.firstName,
+      lastName: userDetails.lastName,
+      email: userDetails.email,
+      location: userDetails.location,
+      jobTitle: userDetails.jobTitle,
+      college: userDetails.college,
+    });
+    setTempImagePreview(userDetails.imageUrl);
     setIsEditModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setTempDetails({
-      firstName: "",
-      lastName: "",
-      email: "",
-      location: "",
-      jobTitle: "",
-      college: "",
-    });
-    setTempImagePreview("");
-    setIsEditModalOpen(false);
-  };
+  const handleCloseModal = () => setIsEditModalOpen(false);
 
-  const handleBackdropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) handleCloseModal();
-  };
-
-  const handleImageChange = async (newImageUrl: string) => {
+  const handleImageChange = (newImageUrl: string) => {
     setTempImagePreview(newImageUrl);
     updateUserDetails({ imageUrl: newImageUrl });
-    await refreshUserDetails();
-    setIsModalOpen(false);
   };
+
+  // Only the validated fields (name and email) clear the error list while typing.
+  const fieldProps = (field: EditableDetail, clearsErrors = false) => ({
+    id: field,
+    value: tempDetails[field],
+    className: inputClassName,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      setTempDetails((prev) => ({ ...prev, [field]: e.target.value }));
+      if (clearsErrors && validationErrors.length > 0) setValidationErrors([]);
+    },
+  });
 
   const handleSaveChanges = async () => {
     // Validate form before saving
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       setSaving(true);
-
-      // Update user details
       const response = await fetch("/api/updateUserDetails", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
-          ...tempDetails,
-        }),
+        body: JSON.stringify(tempDetails),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // Update the global state with the new details
         updateUserDetails({
           ...tempDetails,
-          imageUrl: tempImagePreview || userDetails?.imageUrl || "",
+          imageUrl: tempImagePreview || userDetails.imageUrl,
         });
 
         handleCloseModal();
@@ -174,13 +157,14 @@ function InfoCard() {
       </motion.div>
 
       {/* Edit Modal */}
-      {typeof window !== "undefined" &&
-        isOwner &&
+      {isOwner &&
         isEditModalOpen &&
         createPortal(
           <div
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onPointerDown={handleBackdropPointerDown}
+            onPointerDown={(e) => {
+              if (e.target === e.currentTarget) handleCloseModal();
+            }}
           >
             <div
               className="relative max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl animate-in zoom-in-95 duration-200 sm:max-h-[90vh]"
@@ -224,27 +208,19 @@ function InfoCard() {
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-600">
                         <img
-                          src={
-                            tempImagePreview ||
-                            userDetails?.imageUrl ||
-                            "/placeholder.png"
-                          }
+                          src={tempImagePreview || userDetails.imageUrl || "/placeholder.png"}
                           alt="Profile Preview"
                           className="object-cover w-full h-full"
                         />
                       </div>
                       <div>
-                        {/* <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                          className="hidden"
-                          id="profile-image-input"
-                        /> */}
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={handleImageEditModal}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsModalOpen(true);
+                          }}
                           className="bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100"
                         >
                           <Camera className="h-4 w-4 mr-2" />
@@ -265,18 +241,7 @@ function InfoCard() {
                         First Name
                       </Label>
                       <Input
-                        id="firstName"
-                        value={tempDetails.firstName}
-                        onChange={(e) => {
-                          setTempDetails((prev) => ({
-                            ...prev,
-                            firstName: e.target.value,
-                          }));
-                          if (validationErrors.length > 0) {
-                            setValidationErrors([]);
-                          }
-                        }}
-                        className="w-full px-4 py-3 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200"
+                        {...fieldProps("firstName", true)}
                         placeholder="Enter your first name"
                       />
                     </div>
@@ -291,19 +256,7 @@ function InfoCard() {
                         </span>
                       </Label>
                       <Input
-                        id="lastName"
-                        value={tempDetails.lastName}
-                        onChange={(e) => {
-                          setTempDetails((prev) => ({
-                            ...prev,
-                            lastName: e.target.value,
-                          }));
-                          // Clear validation errors when user types
-                          if (validationErrors.length > 0) {
-                            setValidationErrors([]);
-                          }
-                        }}
-                        className="w-full px-4 py-3 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200"
+                        {...fieldProps("lastName", true)}
                         placeholder="Enter your last name"
                       />
                     </div>
@@ -319,20 +272,8 @@ function InfoCard() {
                       Email Address
                     </Label>
                     <Input
-                      id="email"
+                      {...fieldProps("email", true)}
                       type="email"
-                      value={tempDetails.email}
-                      onChange={(e) => {
-                        setTempDetails((prev) => ({
-                          ...prev,
-                          email: e.target.value,
-                        }));
-                        // Clear validation errors when user types
-                        if (validationErrors.length > 0) {
-                          setValidationErrors([]);
-                        }
-                      }}
-                      className="w-full px-4 py-3 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200"
                       placeholder="your.email@example.com"
                     />
                   </div>
@@ -347,15 +288,7 @@ function InfoCard() {
                       Job Title
                     </Label>
                     <Input
-                      id="jobTitle"
-                      value={tempDetails.jobTitle}
-                      onChange={(e) =>
-                        setTempDetails((prev) => ({
-                          ...prev,
-                          jobTitle: e.target.value,
-                        }))
-                      }
-                      className="w-full px-4 py-3 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200"
+                      {...fieldProps("jobTitle")}
                       placeholder="e.g., Software Engineer"
                     />
                   </div>
@@ -370,15 +303,7 @@ function InfoCard() {
                       Location
                     </Label>
                     <Input
-                      id="location"
-                      value={tempDetails.location}
-                      onChange={(e) =>
-                        setTempDetails((prev) => ({
-                          ...prev,
-                          location: e.target.value,
-                        }))
-                      }
-                      className="w-full px-4 py-3 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200"
+                      {...fieldProps("location")}
                       placeholder="City, Country"
                     />
                   </div>
@@ -393,15 +318,7 @@ function InfoCard() {
                       College/Organization
                     </Label>
                     <Input
-                      id="college"
-                      value={tempDetails.college}
-                      onChange={(e) =>
-                        setTempDetails((prev) => ({
-                          ...prev,
-                          college: e.target.value,
-                        }))
-                      }
-                      className="w-full px-4 py-3 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200"
+                      {...fieldProps("college")}
                       placeholder="e.g., University of Technology"
                     />
                   </div>
@@ -438,9 +355,7 @@ function InfoCard() {
               isOpen={isModalOpen}
               onClose={() => setIsModalOpen(false)}
               onImageChange={handleImageChange}
-              currentImage={
-                tempImagePreview || userDetails?.imageUrl || "/placeholder.png"
-              }
+              currentImage={tempImagePreview || userDetails.imageUrl || "/placeholder.png"}
             />
           </div>,
           document.body
@@ -448,5 +363,3 @@ function InfoCard() {
     </>
   );
 }
-
-export default InfoCard;

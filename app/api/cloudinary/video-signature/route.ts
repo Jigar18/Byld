@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createProjectVideoUploadSignature } from "@/lib/cloudinary";
-import { getRequestUserId } from "@/lib/session";
+import { getSession } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getRequestUserId(request);
+    const userId = (await getSession(request))?.userId;
     if (!userId) {
       return NextResponse.json({ success: false, error: "Authentication is required" }, { status: 401 });
     }

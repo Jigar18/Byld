@@ -40,38 +40,21 @@ export async function removeStoredFile(publicUrl: string, bucket: string, ownerP
   return true;
 }
 
-export async function uploadFile(
-  fileBuffer: Buffer,
-  userId: string,
-  contentType = "image/jpeg"
-) {
+async function uploadToBucket(bucket: string, filePath: string, fileBuffer: Buffer, contentType: string) {
   const supabase = getSupabase();
-  const extension = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
-  const filePath = `user-image/${userId}-${randomUUID()}.${extension}`;
   const { error } = await supabase.storage
-    .from("profile-picture")
-    .upload(filePath, fileBuffer, {
-      contentType,
-      upsert: false,
-    });
-  if (error) {
-    throw new Error(`Supabase profile image upload failed: ${error.message}`);
-  }
+    .from(bucket)
+    .upload(filePath, fileBuffer, { contentType, upsert: false });
+  if (error) throw new Error(`Supabase ${bucket} upload failed: ${error.message}`);
 
-  return supabase.storage.from("profile-picture").getPublicUrl(filePath).data
-    .publicUrl;
+  return supabase.storage.from(bucket).getPublicUrl(filePath).data.publicUrl;
+}
+
+export async function uploadFile(fileBuffer: Buffer, userId: string, contentType = "image/jpeg") {
+  const extension = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+  return uploadToBucket("profile-picture", `user-image/${userId}-${randomUUID()}.${extension}`, fileBuffer, contentType);
 }
 
 export async function uploadPdfFile(fileBuffer: Buffer, userId: string) {
-  const supabase = getSupabase();
-  const filePath = `certifications/${userId}-${randomUUID()}.pdf`;
-  const { error } = await supabase.storage
-    .from("certificates")
-    .upload(filePath, fileBuffer, {
-      contentType: "application/pdf",
-      upsert: false,
-    });
-  if (error) throw new Error(`Upload failed: ${error.message}`);
-
-  return supabase.storage.from("certificates").getPublicUrl(filePath).data.publicUrl;
+  return uploadToBucket("certificates", `certifications/${userId}-${randomUUID()}.pdf`, fileBuffer, "application/pdf");
 }

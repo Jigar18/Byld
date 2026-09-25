@@ -9,11 +9,11 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
-    const accessToken = await getAccessToken(req);
     const session = await getSession(req);
     if (!session) {
       return NextResponse.json({ error: "Authentication token is missing" }, { status: 401 });
     }
+    const accessToken = await getAccessToken(req);
 
     const response = await axios.get<{ installations?: GitHubInstallationData[] }>("https://api.github.com/user/installations", {
       headers: {

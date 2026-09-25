@@ -26,7 +26,3 @@ export async function verifySessionToken(token: string | undefined): Promise<Ses
 export async function getSession(req: NextRequest): Promise<Session | null> {
   return verifySessionToken(req.cookies.get(SESSION_COOKIE)?.value);
 }
-
-export async function getRequestUserId(request: NextRequest) {
-  return (await getSession(request))?.userId ?? null;
-}

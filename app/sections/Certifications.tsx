@@ -6,66 +6,35 @@ import { motion } from "framer-motion";
 import { Award } from "lucide-react";
 import CertificateList from "../components/CertificateList";
 import EditCertifications from "../components/EditCertifications";
-import CertificateModal from "../components/CertificateModal";
-import DeleteCertificateModal from "../components/DeleteCertificateModal";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import CredentialCardHeader from "../components/CredentialCardHeader";
 import { useUser } from "../context/UserContext";
 
 interface CertificationsProps {
-  onOpenCertificate?: (certificate: PortfolioCertificate, certificates: PortfolioCertificate[]) => void;
+  onOpenCertificate: (certificate: PortfolioCertificate, certificates: PortfolioCertificate[]) => void;
 }
 
-export default function Certifications({
-  onOpenCertificate,
-}: CertificationsProps) {
+export default function Certifications({ onOpenCertificate }: CertificationsProps) {
   const { isOwner, portfolioUsername, portfolioData } = useUser();
   const [cards, setCards] = useState<PortfolioCertificate[]>(portfolioData.certifications);
-  const [selectedCertificate, setSelectedCertificate] = useState<PortfolioCertificate | null>(
-    null
-  );
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [certificateToDelete, setCertificateToDelete] = useState<PortfolioCertificate | null>(
-    null
-  );
+  const [certificateToDelete, setCertificateToDelete] = useState<PortfolioCertificate | null>(null);
   const [certificatesAtTop, setCertificatesAtTop] = useState(true);
-
-  const handleDeleteCard = (cardToDelete: PortfolioCertificate) => {
-    setCertificateToDelete(cardToDelete);
-    setDeleteModalOpen(true);
-  };
 
   const confirmDelete = async () => {
     if (!certificateToDelete) return;
 
     try {
-      const response = await fetch(
-        `/api/deleteCertificate?id=${certificateToDelete.id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (response.ok) {
-        setCards((prevCards) =>
-          prevCards.filter((card) => card.id !== certificateToDelete.id)
-        );
-        setDeleteModalOpen(false);
-        setCertificateToDelete(null);
-      } else {
+      const response = await fetch(`/api/deleteCertificate?id=${certificateToDelete.id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
         console.error("Failed to delete certificate");
+        return;
       }
+      setCards((prevCards) => prevCards.filter((card) => card.id !== certificateToDelete.id));
+      setCertificateToDelete(null);
     } catch (error) {
       console.error("Error deleting certificate:", error);
-    }
-  };
-
-  const handleOpenCertificate = (certificate: PortfolioCertificate) => {
-    if (onOpenCertificate) {
-      onOpenCertificate(certificate, cards);
-    } else {
-      setSelectedCertificate(certificate);
-      setIsModalOpen(true);
     }
   };
 
@@ -83,7 +52,7 @@ export default function Certifications({
         icon={<Award className="h-5 w-5" />}
         action={isOwner ? <EditCertifications onAddCard={(certificate) => setCards((current) =>
           [certificate, ...current].sort((a, b) => b.id.localeCompare(a.id)),
-        )} compact /> : undefined}
+        )} /> : undefined}
       />
 
       <div className="relative min-h-0 flex-1 pt-3">
@@ -98,8 +67,8 @@ export default function Certifications({
           ) : (
           <CertificateList
             cards={cards}
-            onOpenCertificate={handleOpenCertificate}
-            onDeleteCard={handleDeleteCard}
+            onOpenCertificate={(certificate) => onOpenCertificate(certificate, cards)}
+            onDeleteCard={setCertificateToDelete}
             canEdit={isOwner}
             portfolioUsername={portfolioUsername}
           />
@@ -112,23 +81,14 @@ export default function Certifications({
         )}
       </div>
 
-      {/* Delete confirmation modal */}
-      {isOwner && <DeleteCertificateModal
-        isOpen={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setCertificateToDelete(null);
-        }}
-        onConfirm={confirmDelete}
-        certificate={certificateToDelete}
-      />}
-
-      {!onOpenCertificate && (
-        <CertificateModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          certificate={selectedCertificate}
-          certificates={cards}
+      {isOwner && (
+        <ConfirmDeleteModal
+          isOpen={Boolean(certificateToDelete)}
+          title="Delete Certificate"
+          subject={certificateToDelete?.title}
+          note="This action will permanently delete the certificate and its associated file from storage. This cannot be undone."
+          onClose={() => setCertificateToDelete(null)}
+          onConfirm={confirmDelete}
         />
       )}
     </motion.div>

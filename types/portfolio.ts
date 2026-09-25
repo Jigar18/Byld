@@ -1,3 +1,19 @@
+export const SOCIAL_PLATFORMS = [
+  "email",
+  "twitter",
+  "linkedin",
+  "instagram",
+  "github",
+  "medium",
+  "blog",
+  "leetcode",
+  "youtube",
+  "portfolio",
+  "hackerrank",
+] as const;
+
+export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number];
+
 export type PortfolioDetails = {
   firstName: string;
   lastName: string;
@@ -67,7 +83,7 @@ export type PortfolioInitialData = {
   iconMap: Record<string, string | null>;
   projects: PortfolioProjectData[];
   experiences: PortfolioExperience[];
-  socialLinks: Record<string, string | null>;
+  socialLinks: Partial<Record<SocialPlatform, string | null>>;
   certifications: PortfolioCertificate[];
   education: PortfolioEducation[];
 };

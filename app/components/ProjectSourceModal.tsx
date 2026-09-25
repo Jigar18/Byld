@@ -54,7 +54,6 @@ function GitHubLoader({ label }: { label: string }) {
 }
 
 export default function ProjectSourceModal({ isOpen, onClose, onManual, onImport }: Props) {
-  const [mounted, setMounted] = useState(false);
   const [view, setView] = useState<"choice" | "repositories">("choice");
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [query, setQuery] = useState("");
@@ -62,7 +61,6 @@ export default function ProjectSourceModal({ isOpen, onClose, onManual, onImport
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
   useEffect(() => {
     if (!isOpen) return;
     setView("choice");
@@ -107,7 +105,7 @@ export default function ProjectSourceModal({ isOpen, onClose, onManual, onImport
     }
   };
 
-  if (!mounted || !isOpen) return null;
+  if (!isOpen) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[110] grid place-items-center p-4" role="dialog" aria-modal="true" aria-label="Choose how to add a project">

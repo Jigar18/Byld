@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
         githubUrl: repository.html_url,
         liveUrl: repository.homepage?.trim() || null,
       },
+      include: { images: true },
     });
     return NextResponse.json({ project }, { status: 201 });
   } catch {

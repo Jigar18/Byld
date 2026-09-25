@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertCircle, CheckCircle2, Film, LoaderCircle, UploadCloud, X } from "lucide-react";
+import { Film, LoaderCircle, UploadCloud } from "lucide-react";
 import { compressProjectVideo } from "@/lib/compressProjectVideo";
+import { removeUnsavedProjectMedia, UploadToast, type UploadToastState } from "./projectMedia";
 
 export interface ProjectVideo {
   videoUrl: string;
@@ -93,19 +94,6 @@ async function uploadVideoToCloudinary(file: File, signature: CloudinarySignatur
   return result;
 }
 
-export async function removeUnsavedProjectVideo(publicId: string) {
-  const response = await fetch("/api/cloudinary/video", {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ publicId }),
-  });
-  if (!response.ok) {
-    const data = await response.json().catch(() => null) as { error?: string } | null;
-    throw new Error(data?.error || "Unable to remove the project demo");
-  }
-}
-
 function readDuration(file: File) {
   return new Promise<number>((resolve, reject) => {
     const previewUrl = URL.createObjectURL(file);
@@ -130,7 +118,7 @@ export default function ProjectVideoDropzone({ video, onUploaded, onRemove, disa
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [optimizingProgress, setOptimizingProgress] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ message: string; success: boolean } | null>(null);
+  const [toast, setToast] = useState<UploadToastState>(null);
 
   useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
@@ -187,7 +175,7 @@ export default function ProjectVideoDropzone({ video, onUploaded, onRemove, disa
         uploadedVideo.videoDuration > MAX_VIDEO_DURATION ||
         !["mp4", "webm"].includes(uploadedVideo.videoFormat)
       ) {
-        await removeUnsavedProjectVideo(uploadedVideo.videoPublicId);
+        await removeUnsavedProjectMedia("video", uploadedVideo.videoPublicId);
         throw new Error("The project demo must be an MP4 or WebM video up to 2 minutes and 30 MB.");
       }
 
@@ -204,13 +192,7 @@ export default function ProjectVideoDropzone({ video, onUploaded, onRemove, disa
 
   return (
     <div>
-      {toast && (
-        <div role="alert" className={`fixed right-4 top-4 z-[220] flex max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-2xl backdrop-blur-md ${toast.success ? "border-emerald-300/25 bg-emerald-950/90 text-emerald-100" : "border-red-300/25 bg-red-950/90 text-red-100"}`}>
-          {toast.success ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />}
-          <span>{toast.message}</span>
-          <button type="button" onClick={() => setToast(null)} aria-label="Dismiss notification"><X className="h-4 w-4" /></button>
-        </div>
-      )}
+      <UploadToast toast={toast} onDismiss={() => setToast(null)} />
 
       {video && (
         <div className="mb-3 overflow-hidden rounded-xl border border-white/10 bg-black/30">

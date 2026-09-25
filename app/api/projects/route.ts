@@ -6,8 +6,7 @@ import {
   getVerifiedProjectImage,
   getVerifiedProjectVideo,
 } from "@/lib/cloudinary";
-import { portfolioLookupStatus, resolvePortfolioUser } from "@/lib/publicPortfolio";
-import { getRequestUserId } from "@/lib/session";
+import { getSession } from "@/lib/session";
 
 type ProjectInput = {
   id?: string;
@@ -110,43 +109,20 @@ async function parseProject(body: ProjectInput, userId: string) {
   return { project: { title, description, techStack, githubUrl, liveUrl, ...video }, images };
 }
 
-async function removeReplacedVideo(publicId: string | null | undefined) {
-  if (!publicId) return;
-  try {
-    await deleteProjectAsset(publicId, "video");
-  } catch (error) {
-    console.error("Unable to clean up replaced project video:", error);
-  }
-}
-
-async function removeProjectImages(publicIds: string[]) {
-  await Promise.all(publicIds.map(async (publicId) => {
+// Asset cleanup is best effort: the project change has already been saved.
+async function removeAssets(publicIds: Array<string | null | undefined>, type: "image" | "video") {
+  await Promise.all(publicIds.filter((publicId): publicId is string => Boolean(publicId)).map(async (publicId) => {
     try {
-      await deleteProjectAsset(publicId, "image");
+      await deleteProjectAsset(publicId, type);
     } catch (error) {
-      console.error("Unable to clean up project image:", error);
+      console.error(`Unable to clean up project ${type}:`, error);
     }
   }));
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const user = await resolvePortfolioUser(request);
-    if (!user) return NextResponse.json({ success: false, error: "Portfolio not found" }, { status: portfolioLookupStatus(request) });
-    const projects = await db.project.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      include: { images: { orderBy: { position: "asc" } } },
-    });
-    return NextResponse.json({ success: true, projects });
-  } catch {
-    return NextResponse.json({ success: false, error: "Unable to load projects" }, { status: 500 });
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getRequestUserId(request);
+    const userId = (await getSession(request))?.userId;
     if (!userId) return NextResponse.json({ success: false, error: "Authentication token is missing" }, { status: 401 });
     const projectCount = await db.project.count({ where: { userId } });
     if (projectCount >= MAX_PROJECTS) {
@@ -172,7 +148,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const userId = await getRequestUserId(request);
+    const userId = (await getSession(request))?.userId;
     const body = (await request.json()) as ProjectInput;
     if (!userId || !body.id) return NextResponse.json({ success: false, error: "Project not found" }, { status: 401 });
     const existing = await db.project.findFirst({ where: { id: body.id, userId }, include: { images: true } });
@@ -186,11 +162,9 @@ export async function PUT(request: NextRequest) {
       const skills = await addProjectSkillsToPortfolio(tx, userId, parsed.project.techStack);
       return { project, skills };
     });
-    if (existing.videoPublicId && existing.videoPublicId !== parsed.project.videoPublicId) {
-      await removeReplacedVideo(existing.videoPublicId);
-    }
+    if (existing.videoPublicId !== parsed.project.videoPublicId) await removeAssets([existing.videoPublicId], "video");
     const retainedImageIds = new Set(parsed.images.map((image) => image.imagePublicId));
-    await removeProjectImages(existing.images.filter((image) => !retainedImageIds.has(image.imagePublicId)).map((image) => image.imagePublicId));
+    await removeAssets(existing.images.filter((image) => !retainedImageIds.has(image.imagePublicId)).map((image) => image.imagePublicId), "image");
     return NextResponse.json({ success: true, project: updated, skills });
   } catch (error) {
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Unable to update project" }, { status: 400 });
@@ -199,14 +173,14 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = await getRequestUserId(request);
+    const userId = (await getSession(request))?.userId;
     const id = request.nextUrl.searchParams.get("id");
     if (!userId || !id) return NextResponse.json({ success: false, error: "Project not found" }, { status: 401 });
     const existing = await db.project.findFirst({ where: { id, userId }, select: { videoPublicId: true, images: { select: { imagePublicId: true } } } });
     const result = await db.project.deleteMany({ where: { id, userId } });
     if (!result.count) return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
-    await removeReplacedVideo(existing?.videoPublicId);
-    await removeProjectImages(existing?.images.map((image) => image.imagePublicId) || []);
+    await removeAssets([existing?.videoPublicId], "video");
+    await removeAssets(existing?.images.map((image) => image.imagePublicId) ?? [], "image");
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ success: false, error: "Unable to delete project" }, { status: 500 });

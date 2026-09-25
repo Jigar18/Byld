@@ -1,23 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/session";
 
 async function saveEducation(req: NextRequest) {
   const isUpdate = req.method === "PUT";
   try {
-    const token = req.cookies.get("id&Uname")?.value;
-    if (!token) {
+    const userId = (await getSession(req))?.userId;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Authentication token is missing" },
         { status: 401 },
       );
     }
 
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(process.env.JWT_SECRET!),
-    );
-    const userId = payload.userId as string;
     const { id, school, degree, field, startYear, endYear, isCurrently, description } = await req.json();
     if ((isUpdate && !id) || !school || !degree || !field || !startYear) {
       return NextResponse.json(

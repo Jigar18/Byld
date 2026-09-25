@@ -1,9 +1,9 @@
 "use client";
 
 import type { PortfolioCertificate } from "@/types/portfolio";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Download, ChevronLeft, ChevronRight, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CertificateModalProps {
@@ -19,79 +19,46 @@ export default function CertificateModal({
   certificate,
   certificates,
 }: CertificateModalProps) {
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [pdfLoadError, setPdfLoadError] = useState<boolean>(false);
-  const [isLoadingPdf, setIsLoadingPdf] = useState<boolean>(true);
-  const [useDirectUrl, setUseDirectUrl] = useState<boolean>(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [pdfLoadError, setPdfLoadError] = useState(false);
+  const [isLoadingPdf, setIsLoadingPdf] = useState(true);
+  const [useDirectUrl, setUseDirectUrl] = useState(false);
+  const lastIndex = certificates.length - 1;
 
-  // Set the current index when the certificate changes
+  const showCertificate = (index: number) => {
+    setCurrentIndex(index);
+    setPdfLoadError(false);
+    setIsLoadingPdf(true);
+    setUseDirectUrl(false);
+  };
+  const handleNext = () => {
+    if (currentIndex < lastIndex) showCertificate(currentIndex + 1);
+  };
+  const handlePrevious = () => {
+    if (currentIndex > 0) showCertificate(currentIndex - 1);
+  };
+
   useEffect(() => {
-    if (certificate) {
-      const index = certificates.findIndex(
-        (cert) => cert.id === certificate.id
-      );
-      if (index !== -1) {
-        setCurrentIndex(index);
-      }
-    }
-    // Reset states when certificate changes
+    const index = certificate ? certificates.findIndex((cert) => cert.id === certificate.id) : -1;
+    if (index !== -1) setCurrentIndex(index);
     setPdfLoadError(false);
     setIsLoadingPdf(true);
     setUseDirectUrl(false);
   }, [certificate, certificates]);
 
-  const handleNext = useCallback(() => {
-    if (currentIndex < certificates.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setPdfLoadError(false);
-      setIsLoadingPdf(true);
-      setUseDirectUrl(false);
-    }
-  }, [currentIndex, certificates.length]);
-
-  const handlePrevious = useCallback(() => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setPdfLoadError(false);
-      setIsLoadingPdf(true);
-      setUseDirectUrl(false);
-    }
-  }, [currentIndex]);
-
-  // Handle keyboard navigation
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+    else if (e.key === "ArrowRight") handleNext();
+    else if (e.key === "ArrowLeft") handlePrevious();
+  };
+  // Re-bind on each render so the handler always sees the current index.
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-
-      if (e.key === "Escape") {
-        onClose();
-      } else if (e.key === "ArrowRight") {
-        handleNext();
-      } else if (e.key === "ArrowLeft") {
-        handlePrevious();
-      }
-    };
-
+    if (!isOpen) return;
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    isOpen,
-    currentIndex,
-    certificates.length,
-    onClose,
-    handleNext,
-    handlePrevious,
-  ]);
+  });
 
-  useEffect(() => {
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, []);
-
-  if (!certificates.length || currentIndex >= certificates.length) {
-    return null;
-  }
+  if (currentIndex > lastIndex) return null;
 
   const currentCertificate = certificates[currentIndex];
   const pdfUrl = useDirectUrl
@@ -203,7 +170,6 @@ export default function CertificateModal({
                   </div>
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    {/* Primary PDF viewer - iframe */}
                     <iframe
                       src={pdfUrl}
                       className="w-full h-full border-0"
@@ -211,26 +177,10 @@ export default function CertificateModal({
                       style={{ border: "none" }}
                       onLoad={() => setIsLoadingPdf(false)}
                       onError={(e) => {
-                        console.error(
-                          `PDF iframe error (${
-                            useDirectUrl ? "Direct" : "Proxy"
-                          } mode):`,
-                          e
-                        );
-                        setTimeout(() => {
-                          if (isLoadingPdf) {
-                            setPdfLoadError(true);
-                            setIsLoadingPdf(false);
-                          }
-                        }, 5000);
+                        console.error(`PDF iframe error (${useDirectUrl ? "Direct" : "Proxy"} mode):`, e);
+                        setPdfLoadError(true);
+                        setIsLoadingPdf(false);
                       }}
-                    />
-
-                    <embed
-                      src={pdfUrl}
-                      type="application/pdf"
-                      className="w-full h-full absolute inset-0 opacity-0 pointer-events-none"
-                      style={{ zIndex: -1 }}
                     />
                   </div>
                 )}
@@ -242,21 +192,7 @@ export default function CertificateModal({
                   <div className="mb-8">
                     <h2 className="mb-2 flex items-center gap-3 break-words pr-10 text-xl font-bold text-slate-100 sm:text-3xl">
                       <span className="inline-flex p-2 rounded-lg bg-zinc-900/20 text-zinc-400 shadow-lg shadow-zinc-500/20 border border-zinc-800/30">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="lucide lucide-award"
-                        >
-                          <circle cx="12" cy="8" r="6" />
-                          <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
-                        </svg>
+                        <Award className="h-5 w-5" />
                       </span>
                       {currentCertificate.title}
                     </h2>
@@ -278,7 +214,7 @@ export default function CertificateModal({
                       </Button>
                       <Button
                         onClick={handleNext}
-                        disabled={currentIndex === certificates.length - 1}
+                        disabled={currentIndex === lastIndex}
                         variant="outline"
                         className="flex items-center gap-1 bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-200 disabled:opacity-50"
                       >

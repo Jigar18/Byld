@@ -2,7 +2,7 @@
 
 import type { ChangeEvent, DragEvent } from "react";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, Upload, Camera, Loader2 } from "lucide-react";
 import { Button, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { createPortal } from "react-dom";
@@ -20,25 +20,21 @@ export default function ProfileImageModal({
   onImageChange,
   currentImage,
 }: ProfileImageModalProps) {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const selectFile = (file: File) => {
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setPreviewUrl(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        setPreviewUrl(result);
-        setSelectedImage(null);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (file) selectFile(file);
   };
 
   const handleDragOver = (e: DragEvent) => {
@@ -56,16 +52,7 @@ export default function ProfileImageModal({
     setIsDragging(false);
 
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        setPreviewUrl(result);
-        setSelectedImage(null);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (file?.type.startsWith("image/")) selectFile(file);
   };
 
   const handleSave = async () => {
@@ -96,44 +83,29 @@ export default function ProfileImageModal({
 
       if (imageUrl) {
         onImageChange(imageUrl);
-        setSelectedFile(null);
-        setPreviewUrl(null);
-        setSelectedImage(null);
         onClose();
       } else {
         console.error("Upload failed: No image URL returned");
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-      // You might want to show an error message to the user here
     } finally {
       setIsUploading(false);
     }
   };
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      setSelectedImage(null);
-      setIsUploading(false);
-    } else {
-      document.body.style.overflow = "auto";
-    }
-
+    if (!isOpen) return;
+    document.body.style.overflow = "hidden";
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setIsUploading(false);
     return () => {
       document.body.style.overflow = "auto";
     };
   }, [isOpen]);
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  if (!mounted || !isOpen) return null;
+  if (!isOpen) return null;
 
   return createPortal(
     <div
@@ -166,7 +138,7 @@ export default function ProfileImageModal({
           <div className="flex justify-center mb-6">
             <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-slate-700">
               <img
-                src={previewUrl || selectedImage || currentImage || "/placeholder.png"}
+                src={previewUrl || currentImage || "/placeholder.png"}
                 alt="-"
                 className="object-cover w-full h-full"
               />
@@ -186,7 +158,6 @@ export default function ProfileImageModal({
           >
             <input
               type="file"
-              ref={fileInputRef}
               onChange={handleFileChange}
               accept="image/*"
               className="hidden"

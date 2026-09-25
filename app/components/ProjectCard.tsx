@@ -1,16 +1,15 @@
 "use client";
 import type { PortfolioProjectData } from "@/types/portfolio";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { ExternalLink, Github, Eye, Pencil, X } from "lucide-react";
 import { useRandomImage } from "@/utils/randomImageSelect";
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
 
 interface ProjectProps {
   project: PortfolioProjectData;
-  onOpenProject?: (project: PortfolioProjectData) => void;
-  onEditProject?: (project: PortfolioProjectData) => void;
-  onDeleteProject?: (project: PortfolioProjectData) => void;
+  onOpenProject: () => void;
+  onEditProject?: () => void;
+  onDeleteProject?: () => void;
   skillIcons?: SkillIconMap;
 }
 
@@ -21,24 +20,6 @@ export default function ProjectCard({
   onDeleteProject,
   skillIcons = {},
 }: ProjectProps) {
-  const handleClick = () => {
-    if (onOpenProject) {
-      onOpenProject(project);
-    }
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onDeleteProject) {
-      onDeleteProject(project);
-    }
-  };
-
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onEditProject?.(project);
-  };
-
   const randomBg = useRandomImage();
 
   return (
@@ -51,7 +32,10 @@ export default function ProjectCard({
     >
       {/* Project actions appear without competing with the content. */}
       {onEditProject && <button
-        onClick={handleEdit}
+        onClick={(e) => {
+          e.stopPropagation();
+          onEditProject();
+        }}
         className="absolute right-11 top-2 z-10 rounded-full bg-zinc-800/90 p-2 text-white opacity-100 transition-all duration-200 hover:scale-110 hover:bg-zinc-700 sm:opacity-0 sm:group-hover:opacity-100"
         aria-label="Edit project"
         title="Edit project"
@@ -59,7 +43,10 @@ export default function ProjectCard({
         <Pencil className="h-4 w-4" />
       </button>}
       {onDeleteProject && <button
-        onClick={handleDelete}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDeleteProject();
+        }}
         className="absolute right-2 top-2 z-10 rounded-full bg-zinc-600/80 p-2 text-white opacity-100 transition-all duration-200 hover:scale-110 hover:bg-zinc-500 sm:opacity-0 sm:group-hover:opacity-100"
         aria-label="Delete project"
         title="Delete project"
@@ -70,14 +57,12 @@ export default function ProjectCard({
       <button
         type="button"
         className="group/preview relative block h-[7.5rem] w-full cursor-pointer sm:h-[13.3rem]"
-        onClick={handleClick}
+        onClick={onOpenProject}
         aria-label={`View ${project.title}`}
       >
-        <Image
-          src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
-          alt={project.title}
-          fill
-          className="object-cover"
+        <span
+          aria-hidden="true"
+          className="absolute inset-0"
           style={{ backgroundColor: "#18181b", backgroundImage: randomBg }}
         />
         <span className="absolute inset-0 flex items-center justify-center bg-slate-900/70 opacity-0 transition-opacity duration-300 group-hover/preview:opacity-100">
@@ -94,7 +79,7 @@ export default function ProjectCard({
       <div className="flex flex-1 flex-col p-3.5 sm:p-4">
         <h3
           className="portfolio-display cursor-pointer text-base font-semibold text-slate-100 transition-colors hover:text-white sm:text-lg"
-          onClick={handleClick}
+          onClick={onOpenProject}
         >
           {project.title}
         </h3>

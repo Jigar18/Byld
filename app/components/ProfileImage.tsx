@@ -8,13 +8,7 @@ import { useUser } from "../context/UserContext";
 
 export default function ProfileImage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { userDetails, isOwner, refreshUserDetails, updateUserDetails } = useUser();
-
-  const handleImageChange = async (newImageUrl: string) => {
-    updateUserDetails({ imageUrl: newImageUrl });
-    await refreshUserDetails();
-    setIsModalOpen(false);
-  };
+  const { userDetails, isOwner, updateUserDetails } = useUser();
 
   return (
     <>
@@ -27,7 +21,7 @@ export default function ProfileImage() {
       >
         <div className="relative z-10 h-16 w-16 overflow-hidden rounded-full border-[3px] border-slate-700 sm:h-28 sm:w-28 sm:border-4">
           <img
-            src={userDetails?.imageUrl || "/placeholder.png"}
+            src={userDetails.imageUrl || "/placeholder.png"}
             alt="Profile"
             className="object-cover w-full h-full"
           />
@@ -54,8 +48,8 @@ export default function ProfileImage() {
       {isOwner && <ProfileImageModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onImageChange={handleImageChange}
-        currentImage={userDetails?.imageUrl || ""}
+        onImageChange={(imageUrl) => updateUserDetails({ imageUrl })}
+        currentImage={userDetails.imageUrl || ""}
       />}
     </>
   );

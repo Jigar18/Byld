@@ -1,9 +1,9 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Edit3, Save } from "lucide-react";
+import { X, Edit3, Save, User } from "lucide-react";
 import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { useUser } from "../context/UserContext";
 
@@ -13,23 +13,11 @@ export default function About() {
     once: true,
     margin: "-100px",
   });
+  const { userDetails, isOwner, updateUserDetails } = useUser();
+  const aboutText = userDetails.about ?? "";
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [aboutText, setAboutText] = useState("");
   const [tempAboutText, setTempAboutText] = useState(aboutText);
-  const [mounted, setMounted] = useState(false);
   const [saving, setSaving] = useState(false);
-  const { userDetails, loading: userLoading, isOwner, updateUserDetails } = useUser();
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  useEffect(() => {
-    if (userDetails?.about) {
-      setAboutText(userDetails.about);
-    }
-  }, [userDetails]);
 
   const handleSaveChanges = async () => {
     try {
@@ -46,7 +34,6 @@ export default function About() {
       const data = await response.json();
 
       if (data.success) {
-        setAboutText(tempAboutText);
         updateUserDetails({ about: tempAboutText });
         setIsEditModalOpen(false);
       } else {
@@ -59,10 +46,7 @@ export default function About() {
     }
   };
 
-  const handleCloseModal = () => {
-    setTempAboutText(aboutText);
-    setIsEditModalOpen(false);
-  };
+  const handleCloseModal = () => setIsEditModalOpen(false);
 
   const handleOpenModal = () => {
     setTempAboutText(aboutText);
@@ -93,46 +77,21 @@ export default function About() {
 
           <h2 className="profile-section-label mb-4 flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.22em] sm:mb-6 sm:text-xs">
             <span className="profile-icon inline-flex rounded-lg border p-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-user"
-              >
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
+              <User className="h-5 w-5" />
             </span>
             About Me
           </h2>
 
-          {userLoading ? (
-            <div className="whitespace-pre-wrap text-sm leading-6 text-slate-300 sm:text-base sm:leading-relaxed">
-              <div className="space-y-2">
-                <div className="h-4 rounded bg-white/[0.055] animate-pulse"></div>
-                <div className="h-4 rounded bg-white/[0.055] animate-pulse w-3/4"></div>
-                <div className="h-4 rounded bg-white/[0.055] animate-pulse w-1/2"></div>
-              </div>
-            </div>
-          ) : (
-            <div className="whitespace-pre-wrap text-sm leading-6 text-slate-300 sm:text-base sm:leading-relaxed">
-              {aboutText || (isOwner
-                ? "Click the edit button to add information about yourself..."
-                : "No about information has been added yet.")}
-            </div>
-          )}
+          <div className="whitespace-pre-wrap text-sm leading-6 text-slate-300 sm:text-base sm:leading-relaxed">
+            {aboutText || (isOwner
+              ? "Click the edit button to add information about yourself..."
+              : "No about information has been added yet.")}
+          </div>
         </motion.div>
       </div>
 
       {/* Edit Modal */}
-      {mounted &&
-        isOwner &&
+      {isOwner &&
         isEditModalOpen &&
         createPortal(
           <div
@@ -172,11 +131,7 @@ export default function About() {
                   <textarea
                     id="about-text"
                     value={tempAboutText}
-                    onChange={(e) => {
-                      if (e.target.value.length <= 1000) {
-                        setTempAboutText(e.target.value);
-                      }
-                    }}
+                    onChange={(e) => setTempAboutText(e.target.value)}
                     placeholder="Write something about yourself..."
                     className="w-full h-40 p-4 bg-slate-800 border border-slate-700 rounded-lg text-slate-300 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent resize-none"
                     maxLength={1000}

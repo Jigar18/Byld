@@ -36,22 +36,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (!portfolioUser.isOwner && !isAutomatedTraffic) {
-      const visitorIdentity = session
-        ? `account:${session.userId}`
-        : `anonymous:${anonymousId}`;
-
+      const view = {
+        portfolioUserId: portfolioUser.id,
+        visitorKeyHash: visitorHash(session ? `account:${session.userId}` : `anonymous:${anonymousId}`),
+      };
       await db.portfolioView.upsert({
-        where: {
-          portfolioUserId_visitorKeyHash: {
-            portfolioUserId: portfolioUser.id,
-            visitorKeyHash: visitorHash(visitorIdentity),
-          },
-        },
+        where: { portfolioUserId_visitorKeyHash: view },
         update: { lastViewedAt: new Date() },
-        create: {
-          portfolioUserId: portfolioUser.id,
-          visitorKeyHash: visitorHash(visitorIdentity),
-        },
+        create: view,
       });
     }
 

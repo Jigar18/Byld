@@ -26,10 +26,8 @@ interface FormValues {
 
 export default function EditCertifications({
   onAddCard,
-  compact = false,
 }: {
   onAddCard: (card: PortfolioCertificate) => void;
-  compact?: boolean;
 }) {
   const {
     register,
@@ -40,17 +38,11 @@ export default function EditCertifications({
   } = useForm<FormValues>();
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const selectedFile = watch("fileInput");
-  const fileName = selectedFile?.[0]?.name ?? "";
+  const fileName = watch("fileInput")?.[0]?.name ?? "";
 
   const onSubmit = async (data: FormValues) => {
     try {
       setIsUploading(true);
-
-      if (!data.fileInput || !data.fileInput[0]) {
-        throw new Error("File is not selected");
-      }
-
       const formData = new FormData();
       formData.append("title", data.title);
       formData.append("description", data.description);
@@ -93,21 +85,14 @@ export default function EditCertifications({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {compact ? (
-          <button
-            type="button"
-            className={credentialEditButtonClass}
-            aria-label="Add certification"
-            title="Add certification"
-          >
-            <Edit3 className="h-4 w-4" />
-          </button>
-        ) : (
-          <Button className={primaryActionButtonClass}>
-            <FileUp className="h-4 w-4" />
-            Add Certificates
-          </Button>
-        )}
+        <button
+          type="button"
+          className={credentialEditButtonClass}
+          aria-label="Add certification"
+          title="Add certification"
+        >
+          <Edit3 className="h-4 w-4" />
+        </button>
       </DialogTrigger>
       <DialogContent className="fixed left-[50%] top-[50%] z-[60] max-h-[calc(100dvh-2rem)] translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-xl border border-slate-800 bg-slate-900 text-slate-100 shadow-xl sm:max-w-[600px]">
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -191,13 +176,13 @@ export default function EditCertifications({
                 />
                 <div
                   className={`w-full px-4 py-3 border border-dashed ${
-                    selectedFile && selectedFile[0]
+                    fileName
                       ? "border-zinc-500 bg-zinc-500/10"
                       : "border-slate-600 bg-slate-800"
                   } rounded-md cursor-pointer flex items-center justify-center h-20 hover:bg-slate-700/50 transition-colors`}
                   onClick={() => document.getElementById("fileInput")?.click()}
                 >
-                  {selectedFile && selectedFile[0] ? (
+                  {fileName ? (
                     <div className="flex items-center gap-2">
                       <Check className="h-5 w-5 text-zinc-400" />
                       <span className="text-slate-200">{fileName.length > 25 ? `${fileName.slice(0, 22)}...` : fileName}</span>

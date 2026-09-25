@@ -15,69 +15,41 @@ export default function Education() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [educationAtTop, setEducationAtTop] = useState(true);
 
-  const fetchEducation = async () => {
+  const handleSaveEducation = async (updatedEducation: PortfolioEducation[]) => {
+    const existingIds = new Set(education.map((edu) => edu.id).filter(Boolean));
+    const updatedIds = new Set(updatedEducation.map((edu) => edu.id).filter(Boolean));
+
+    for (const id of existingIds) {
+      if (!updatedIds.has(id)) await fetch(`/api/deleteEducation?id=${id}`, { method: "DELETE" });
+    }
+
+    for (const edu of updatedEducation) {
+      if (!edu.school || !edu.degree || !edu.field) continue;
+      const isExisting = Boolean(edu.id && existingIds.has(edu.id));
+      await fetch("/api/education", {
+        method: isExisting ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(isExisting ? { id: edu.id } : {}),
+          school: edu.school,
+          degree: edu.degree,
+          field: edu.field,
+          startYear: edu.startYear,
+          endYear: edu.endYear,
+          isCurrently: edu.isCurrently,
+        }),
+      });
+    }
+
+    // Re-read so ordering and any server-created default entry match the portfolio.
     try {
       const response = await fetch(portfolioApiUrl("/api/getEducation"));
       const data = await response.json();
-      
-      if (data.success) {
-        setEducation(data.education || []);
-      } else {
-        // Public visitors do not have an auth cookie; the empty state is intentional.
-        setEducation([]);
-      }
+      setEducation(data.success ? data.education : []);
     } catch (error) {
       console.error("Error fetching education:", error);
       setEducation([]);
     }
-  };
-
-  const handleSaveEducation = async (updatedEducation: PortfolioEducation[]) => {
-    try {
-      const existingEducation = education.filter(edu => edu.id);
-      const existingIds = new Set(existingEducation.map(edu => edu.id));
-      const updatedIds = new Set(updatedEducation.filter(edu => edu.id).map(edu => edu.id));
-
-      // Delete education entries that were removed
-      for (const edu of existingEducation) {
-        if (!updatedIds.has(edu.id)) {
-          await fetch(`/api/deleteEducation?id=${edu.id}`, {
-            method: "DELETE"
-          });
-        }
-      }
-
-      for (const edu of updatedEducation) {
-        if (!edu.school || !edu.degree || !edu.field) continue;
-        const isExisting = Boolean(edu.id && existingIds.has(edu.id));
-        await fetch("/api/education", {
-          method: isExisting ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...(isExisting ? { id: edu.id } : {}),
-            school: edu.school,
-            degree: edu.degree,
-            field: edu.field,
-            startYear: edu.startYear,
-            endYear: edu.endYear,
-            isCurrently: edu.isCurrently,
-          }),
-        });
-      }
-
-      // Refresh the education list
-      await fetchEducation();
-    } catch (error) {
-      console.error("Error saving education:", error);
-      throw error;
-    }
-  };
-
-  const formatYears = (startYear: number, endYear?: number, isCurrently?: boolean) => {
-    if (isCurrently) {
-      return `${startYear} - Present`;
-    }
-    return endYear ? `${startYear} - ${endYear}` : `${startYear}`;
   };
 
   return (
@@ -136,7 +108,9 @@ export default function Education() {
                       {edu.school}
                     </h3>
                     <span className="shrink-0 text-xs font-medium text-slate-400 sm:text-sm">
-                      {formatYears(edu.startYear, edu.endYear, edu.isCurrently)}
+                      {edu.isCurrently
+                        ? `${edu.startYear} - Present`
+                        : edu.endYear ? `${edu.startYear} - ${edu.endYear}` : edu.startYear}
                     </span>
                   </div>
                   <p className="mb-1 font-medium text-zinc-300">{edu.degree}</p>

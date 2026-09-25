@@ -4,25 +4,7 @@ import { motion } from "framer-motion";
 import { useUser } from "../context/UserContext";
 
 export default function CurrentOrganization() {
-  const { userDetails, loading } = useUser();
-
-  if (loading) {
-    return (
-      <motion.div
-        {...{
-          className:
-            "bg-zinc-600/20 border border-zinc-500/30 rounded-lg px-4 py-2 flex items-center gap-2",
-        }}
-        whileHover={{ scale: 1.05 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="w-6 h-6 rounded-full bg-zinc-500/20 flex items-center justify-center">
-          <div className="w-4 h-4 bg-zinc-400/30 rounded animate-pulse" />
-        </div>
-        <div className="h-5 w-32 bg-zinc-300/30 rounded animate-pulse" />
-      </motion.div>
-    );
-  }
+  const { userDetails } = useUser();
 
   return (
     <motion.div
@@ -53,9 +35,7 @@ export default function CurrentOrganization() {
         </svg>
       </div>
       <h2 className="max-w-[5.5rem] truncate text-center text-[11px] font-medium text-zinc-300 sm:max-w-none sm:whitespace-normal sm:text-base">
-        {userDetails?.college
-          ? userDetails.college.toUpperCase()
-          : "UNIVERSITY"}
+        {userDetails.college ? userDetails.college.toUpperCase() : "UNIVERSITY"}
       </h2>
     </motion.div>
   );

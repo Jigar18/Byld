@@ -3,33 +3,21 @@
 import { motion } from "framer-motion";
 import { useUser } from "../context/UserContext";
 
+const capitalizeWords = (str: string) => str.replace(/\b\w/g, (char) => char.toUpperCase());
+
 export default function NameBlock() {
-  const { userDetails, loading } = useUser();
+  const { userDetails } = useUser();
 
-  // Helper function to capitalize first letter of each word
-  const capitalizeWords = (str: string) => {
-    return str.replace(/\b\w/g, (char) => char.toUpperCase());
-  };
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center sm:items-start">
-        <div className="h-10 w-48 bg-slate-700 rounded animate-pulse mb-2"></div>
-        <div className="h-6 w-32 bg-slate-700 rounded animate-pulse"></div>
-      </div>
-    );
-  }
-
-  const displayName = [userDetails?.firstName, userDetails?.lastName]
-    .filter((value): value is string => Boolean(value))
+  const displayName = [userDetails.firstName, userDetails.lastName]
+    .filter(Boolean)
     .map(capitalizeWords)
     .join(" ") || "Your name";
 
-  const displayJobTitle = userDetails?.jobTitle
+  const displayJobTitle = userDetails.jobTitle
     ? capitalizeWords(userDetails.jobTitle)
     : "Add a professional title";
 
-  const displayLocation = userDetails?.location || "";
+  const displayLocation = userDetails.location;
 
   return (
     <div className="flex min-w-0 flex-col items-start">

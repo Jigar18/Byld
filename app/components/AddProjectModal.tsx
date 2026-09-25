@@ -4,9 +4,10 @@ import type { PortfolioProjectData } from "@/types/portfolio";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ExternalLink, Github, Plus, Save, Search, X } from "lucide-react";
-import ProjectVideoDropzone, { ProjectVideo, removeUnsavedProjectVideo } from "./ProjectVideoDropzone";
-import DeleteProjectVideoModal from "./DeleteProjectVideoModal";
-import ProjectImageUploader, { ProjectImage, removeUnsavedProjectImage } from "./ProjectImageUploader";
+import ProjectVideoDropzone, { ProjectVideo } from "./ProjectVideoDropzone";
+import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import ProjectImageUploader, { ProjectImage } from "./ProjectImageUploader";
+import { removeUnsavedProjectMedia } from "./projectMedia";
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
 import { ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 
@@ -28,7 +29,6 @@ const formatSkill = (skill: string) => {
 };
 
 export default function AddProjectModal({ isOpen, onClose, onSave, userSkills, skillIcons = {}, project }: ProjectEditorProps) {
-  const [mounted, setMounted] = useState(false);
   const [draft, setDraft] = useState<ProjectDraft>(emptyDraft);
   const [skillSearch, setSkillSearch] = useState("");
   const [skillSuggestions, setSkillSuggestions] = useState<string[]>([]);
@@ -40,10 +40,9 @@ export default function AddProjectModal({ isOpen, onClose, onSave, userSkills, s
   const unsavedVideoRef = useRef<string | null>(null);
   const unsavedImageIdsRef = useRef(new Set<string>());
 
-  useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
   useEffect(() => {
     if (isOpen) {
-      setDraft(project ? { title: project.title, description: project.description, techStack: project.techStack, githubUrl: project.githubUrl, liveUrl: project.liveUrl, videoUrl: project.videoUrl, videoPublicId: project.videoPublicId, videoDuration: project.videoDuration, videoBytes: project.videoBytes, videoFormat: project.videoFormat, images: project.images || [] } : emptyDraft);
+      setDraft(project ? { title: project.title, description: project.description, techStack: project.techStack, githubUrl: project.githubUrl, liveUrl: project.liveUrl, videoUrl: project.videoUrl, videoPublicId: project.videoPublicId, videoDuration: project.videoDuration, videoBytes: project.videoBytes, videoFormat: project.videoFormat, images: project.images } : emptyDraft);
       unsavedVideoRef.current = null;
       unsavedImageIdsRef.current.clear();
       setSkillSearch("");
@@ -106,13 +105,13 @@ export default function AddProjectModal({ isOpen, onClose, onSave, userSkills, s
   } : null;
 
   const setVideo = async (video: ProjectVideo) => {
-    if (unsavedVideoRef.current) await removeUnsavedProjectVideo(unsavedVideoRef.current);
+    if (unsavedVideoRef.current) await removeUnsavedProjectMedia("video", unsavedVideoRef.current);
     unsavedVideoRef.current = video.videoPublicId;
     setDraft((current) => ({ ...current, ...video }));
   };
 
   const removeVideo = async () => {
-    if (unsavedVideoRef.current) await removeUnsavedProjectVideo(unsavedVideoRef.current);
+    if (unsavedVideoRef.current) await removeUnsavedProjectMedia("video", unsavedVideoRef.current);
     unsavedVideoRef.current = null;
     setDraft((current) => ({ ...current, videoUrl: null, videoPublicId: null, videoDuration: null, videoBytes: null, videoFormat: null }));
   };
@@ -136,21 +135,17 @@ export default function AddProjectModal({ isOpen, onClose, onSave, userSkills, s
 
   const removeImage = async (image: ProjectImage) => {
     if (unsavedImageIdsRef.current.has(image.imagePublicId)) {
-      await removeUnsavedProjectImage(image.imagePublicId);
+      await removeUnsavedProjectMedia("image", image.imagePublicId);
       unsavedImageIdsRef.current.delete(image.imagePublicId);
     }
     setDraft((current) => ({ ...current, images: current.images.filter((item) => item.imagePublicId !== image.imagePublicId) }));
   };
 
-  const cleanUpUnsavedImages = () => {
-    for (const publicId of unsavedImageIdsRef.current) void removeUnsavedProjectImage(publicId);
-    unsavedImageIdsRef.current.clear();
-  };
-
   const close = () => {
-    if (unsavedVideoRef.current) void removeUnsavedProjectVideo(unsavedVideoRef.current);
+    if (unsavedVideoRef.current) void removeUnsavedProjectMedia("video", unsavedVideoRef.current);
     unsavedVideoRef.current = null;
-    cleanUpUnsavedImages();
+    for (const publicId of unsavedImageIdsRef.current) void removeUnsavedProjectMedia("image", publicId);
+    unsavedImageIdsRef.current.clear();
     onClose();
   };
 
@@ -174,7 +169,7 @@ export default function AddProjectModal({ isOpen, onClose, onSave, userSkills, s
     }
   };
 
-  if (!mounted || !isOpen) return null;
+  if (!isOpen) return null;
   const editing = Boolean(project);
 
   return createPortal(
@@ -226,7 +221,17 @@ export default function AddProjectModal({ isOpen, onClose, onSave, userSkills, s
         {error && <p className="mt-4 rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-sm text-red-200">{error}</p>}
         <div className="mt-7 flex justify-end gap-3 border-t border-white/10 pt-5"><button type="button" onClick={close} className={secondaryActionButtonClass}>Cancel</button><button disabled={saving} className={primaryActionButtonClass}>{saving ? <><ButtonSpinner />Saving...</> : <>{editing ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{editing ? "Save changes" : "Add project"}</>}</button></div>
       </form>
-      <DeleteProjectVideoModal isOpen={confirmingVideoRemoval} isDeleting={removingVideo} onClose={() => setConfirmingVideoRemoval(false)} onConfirm={confirmVideoRemoval} />
+      <ConfirmDeleteModal
+        isOpen={confirmingVideoRemoval}
+        title="Delete Demo Video"
+        message="Are you sure you want to remove this project demo video?"
+        note="The video will be permanently removed when the project changes are saved."
+        confirmLabel="Delete Video"
+        busyLabel="Removing..."
+        isBusy={removingVideo}
+        onClose={() => setConfirmingVideoRemoval(false)}
+        onConfirm={confirmVideoRemoval}
+      />
     </div>, document.body
   );
 }

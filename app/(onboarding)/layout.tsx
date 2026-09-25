@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCompletedPortfolioUsername } from "@/lib/portfolioSetup";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
+import AutofillStyles from "./AutofillStyles";
 
 export default async function OnboardingLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
@@ -14,5 +15,10 @@ export default async function OnboardingLayout({ children }: { children: React.R
     redirect(`/${encodeURIComponent(username)}`);
   }
 
-  return children;
+  return (
+    <>
+      <AutofillStyles />
+      {children}
+    </>
+  );
 }

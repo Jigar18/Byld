@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { User, Upload, Check, Loader2 } from "lucide-react";
@@ -13,18 +13,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 
-const globalStyles = `
-  input:-webkit-autofill,
-  input:-webkit-autofill:hover, 
-  input:-webkit-autofill:focus,
-  input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px #27272a inset !important;
-    -webkit-text-fill-color: #e4e4e7 !important;
-    transition: background-color 5000s ease-in-out 0s;
-    caret-color: #e4e4e7;
-  }
-  
-  /* Custom styles for ReactCrop */
+const cropStyles = `
   .ReactCrop {
     position: relative;
     max-width: 400px;
@@ -44,10 +33,8 @@ const globalStyles = `
     backdrop-filter: blur(10px);
     border-radius: 0.5rem;
     padding: 1rem;
-    }
-    `;
-// border: 1px solid rgba(51, 65, 85, 0.5);
-// background: rgba(15, 23, 42, 0.9);
+  }
+`;
 
 export default function ProfilePicturePage() {
   const [image, setImage] = useState<string | null>(null);
@@ -70,12 +57,6 @@ export default function ProfilePicturePage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const handleImageClick = () => {
-    if (inputRef.current) {
-      inputRef.current.click();
-    }
-  };
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const reader = new FileReader();
@@ -91,32 +72,23 @@ export default function ProfilePicturePage() {
     }
   };
 
-  const onImageLoad = useCallback((img: HTMLImageElement) => {
-    imgRef.current = img;
-
-    // Make the crop a perfect circle in the center
+  // Start with the largest centred square, which the circular crop turns into a circle.
+  const onImageLoad = (img: HTMLImageElement) => {
     const minSize = Math.min(img.width, img.height);
-    const x = (img.width - minSize) / 2;
-    const y = (img.height - minSize) / 2;
-
     const initialCrop = {
       unit: "px" as const,
       width: minSize,
       height: minSize,
-      x,
-      y,
+      x: (img.width - minSize) / 2,
+      y: (img.height - minSize) / 2,
     };
-
     setCrop(initialCrop);
     setCompletedCrop(initialCrop);
-
-    return false;
-  }, []);
+  };
 
   const handleDone = () => {
     const cropToUse = completedCrop || crop;
-
-    if (!imgRef.current || !cropToUse) return;
+    if (!imgRef.current) return;
 
     const canvas = document.createElement("canvas");
     const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
@@ -150,12 +122,8 @@ export default function ProfilePicturePage() {
       outputSize
     );
 
-    const base64Image = canvas.toDataURL("image/jpeg");
-
-    if (base64Image) {
-      setCroppedImage(base64Image);
-      setIsCropping(false);
-    }
+    setCroppedImage(canvas.toDataURL("image/jpeg"));
+    setIsCropping(false);
   };
 
   const handleRecrop = () => {
@@ -209,7 +177,7 @@ export default function ProfilePicturePage() {
   return (
     <>
       <style jsx global>
-        {globalStyles}
+        {cropStyles}
       </style>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-12 px-4 sm:px-6 flex items-center justify-center">
@@ -237,7 +205,7 @@ export default function ProfilePicturePage() {
                     {...{
                       className:
                         "w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-slate-800 border-2 border-dashed border-slate-700 flex items-center justify-center cursor-pointer overflow-hidden relative",
-                      onClick: handleImageClick,
+                      onClick: () => inputRef.current?.click(),
                       onMouseEnter: () => setIsHovering(true),
                       onMouseLeave: () => setIsHovering(false),
                       whileHover: { borderColor: "#a1a1aa" },
@@ -292,7 +260,8 @@ export default function ProfilePicturePage() {
                           aspect={1}
                         >
                           <Image
-                            src={image || "/placeholder.png"}
+                            ref={imgRef}
+                            src={image}
                             alt="Upload preview"
                             width={400}
                             height={400}

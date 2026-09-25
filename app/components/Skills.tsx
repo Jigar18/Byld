@@ -15,12 +15,17 @@ interface UserSkills {
   iconMap?: SkillIconMap;
 }
 
+const skillVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.8 },
+};
+
 const capitalizeFirst = (skill: string) => skill ? skill.charAt(0).toUpperCase() + skill.slice(1) : skill;
 
 export default function Skills() {
   const { isOwner, portfolioApiUrl, portfolioData } = useUser();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -30,13 +35,11 @@ export default function Skills() {
   const [iconPickerSkill, setIconPickerSkill] = useState<string | null>(null);
   const [iconChoices, setIconChoices] = useState<string[]>([]);
   const [isSearchingIcons, setIsSearchingIcons] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [skills, setSkills] = useState<string[]>(
     portfolioData.skills.map(capitalizeFirst),
   );
   const [saving, setSaving] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const skillsViewportRef = useRef<HTMLDivElement>(null);
   const [hiddenSkillCount, setHiddenSkillCount] = useState(0);
   const [skillsAtTop, setSkillsAtTop] = useState(true);
@@ -57,30 +60,22 @@ export default function Skills() {
     setHiddenSkillCount(hidden.length);
   }, []);
 
-  const fetchUserSkills = useCallback(async () => {
-    try {
-      const response = await fetch(portfolioApiUrl("/api/getUserSkills"));
-      if (response.ok) {
+  // Saving a project can add skills; Projects announces it so this card can re-read them.
+  useEffect(() => {
+    const refreshSkills = async () => {
+      try {
+        const response = await fetch(portfolioApiUrl("/api/getUserSkills"));
+        if (!response.ok) return;
         const data: UserSkills = await response.json();
         setSkills((data.skills || []).map(capitalizeFirst));
         setSkillIcons(data.iconMap || {});
+      } catch (error) {
+        console.error("Error fetching user skills:", error);
       }
-    } catch (error) {
-      console.error("Error fetching user skills:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [portfolioApiUrl]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const refreshSkills = () => void fetchUserSkills();
+    };
     window.addEventListener("portfolio:skills-updated", refreshSkills);
     return () => window.removeEventListener("portfolio:skills-updated", refreshSkills);
-  }, [fetchUserSkills]);
+  }, [portfolioApiUrl]);
 
   useEffect(() => {
     const viewport = skillsViewportRef.current;
@@ -111,7 +106,7 @@ export default function Skills() {
     setIsSearching(true);
     const timer = setTimeout(async () => {
       try {
-        const result = await fetch(`/api/skills?skill=${skillInput}`);
+        const result = await fetch(`/api/skills?skill=${encodeURIComponent(skillInput)}`);
         const data = await result.json();
         setSuggestions(data);
       } catch (error) {
@@ -203,36 +198,6 @@ export default function Skills() {
     }
   };
 
-  const skillVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.8 },
-  };
-
-  if (loading) {
-    return (
-      <motion.div
-        {...{
-          className:
-            "profile-card profile-surface-neutral profile-card-lift h-[336px] rounded-xl border p-5 shadow-md",
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -5 }}
-        transition={{ duration: 0.3 }}
-      >
-        <CredentialCardHeader title="Skills" icon={<Sparkles className="h-5 w-5" />} />
-        <div className="animate-pulse space-y-2 pt-5">
-          <div className="flex flex-wrap gap-2">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-6 rounded-full bg-white/[0.055] w-16"></div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
-
   return (
     <>
       <motion.div
@@ -303,8 +268,7 @@ export default function Skills() {
         </div>
       </motion.div>
 
-      {mounted &&
-        isOwner &&
+      {isOwner &&
         isEditModalOpen &&
         createPortal(
           <div
@@ -340,7 +304,6 @@ export default function Skills() {
                       <Search className="h-4 w-4 text-slate-400" />
                     </div>
                     <input
-                      ref={inputRef}
                       type="text"
                       value={skillInput}
                       onChange={(e) => {

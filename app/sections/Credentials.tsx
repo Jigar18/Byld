@@ -2,20 +2,14 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import type { PortfolioCertificate } from "@/types/portfolio";
 import Certifications from "./Certifications";
 import Education from "../components/Education";
 import Skills from "../components/Skills";
 import Connect from "../components/Connect";
 
-interface Card {
-  id: string;
-  title: string;
-  pdfUrl: string;
-  description: string;
-}
-
 interface CredentialsProps {
-  onOpenCertificate?: (certificate: Card, certificates: Card[]) => void;
+  onOpenCertificate: (certificate: PortfolioCertificate, certificates: PortfolioCertificate[]) => void;
 }
 
 export default function Credentials({ onOpenCertificate }: CredentialsProps) {
