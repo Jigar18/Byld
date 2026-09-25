@@ -59,97 +59,223 @@ html {
   }
 }
 
-.byldit-grid::before {
+/* Landing page ---------------------------------------------------------- */
+
+.byldit-root {
+  font-family: var(--font-landing), Arial, Helvetica, sans-serif;
+  font-variation-settings: "wdth" 100;
+}
+
+.byldit-root::before {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 0;
   pointer-events: none;
-  opacity: 0.11;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-  background-size: 72px 72px;
-  mask-image: linear-gradient(to bottom, black, transparent 78%);
+  opacity: 0.02;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.byldit-root {
-  font-family: var(--font-bricolage-grotesque), Arial, Helvetica, sans-serif;
+.byld-wide {
+  font-variation-settings: "wdth" 125;
 }
 
-.byldit-shadow-main {
+.byld-semi {
+  font-variation-settings: "wdth" 112;
+}
+
+.byld-mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+.byld-shadow {
   box-shadow:
-    0 10px 16px rgba(0, 0, 0, 0.12),
-    0 22px 34px rgba(0, 0, 0, 0.12),
-    0 32px 55px rgba(0, 0, 0, 0.14);
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 24px 48px -12px rgba(0, 0, 0, 0.55),
+    0 60px 120px -40px rgba(0, 0, 0, 0.6);
 }
 
-.byldit-shadow-card {
-  box-shadow:
-    0 7px 11px rgba(0, 0, 0, 0.1),
-    0 15px 24px rgba(0, 0, 0, 0.1),
-    0 22px 36px rgba(0, 0, 0, 0.12);
+/* Portfolio preview: blocks marked data-assemble pull into focus as they scroll in. --a (0 to 1) is
+   set from scroll position; it defaults to 1, so the page is sharp without scripting. */
+/* The preview also dims out at the bottom, frame included, so the page reads as continuing below. It
+   is a mask rather than an overlay, so the page's own background shows through. */
+.byld-reveal {
+  position: relative;
+  /* Starts about halfway down the GitHub activity card, the preview's last block. */
+  --fade: 100px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--fade)), rgba(0, 0, 0, 0.35) calc(100% - var(--fade) * 0.45), transparent calc(100% - var(--fade) * 0.08));
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--fade)), rgba(0, 0, 0, 0.35) calc(100% - var(--fade) * 0.45), transparent calc(100% - var(--fade) * 0.08));
 }
 
-.byldit-shadow-proof {
-  box-shadow:
-    0 4px 7px rgba(0, 0, 0, 0.1),
-    0 8px 13px rgba(0, 0, 0, 0.1),
-    0 12px 18px rgba(0, 0, 0, 0.12);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .byldit-shadow-card:hover {
-    box-shadow:
-      0 9px 14px rgba(0, 0, 0, 0.12),
-      0 19px 31px rgba(0, 0, 0, 0.12),
-      0 28px 46px rgba(0, 0, 0, 0.14);
+@media (min-width: 640px) {
+  .byld-reveal {
+    --fade: 160px;
   }
 }
 
-.byldit-preview-fade {
-  position: relative;
+.byld-reveal [data-assemble] {
+  opacity: calc(0.1 + var(--a, 1) * 0.9);
+  filter: blur(calc((1 - var(--a, 1)) * 12px));
+  transform: translateY(calc((1 - var(--a, 1)) * 40px)) scale(calc(0.965 + var(--a, 1) * 0.035));
 }
 
-.byldit-preview-fade::after {
+/* The pointer light: a wash over the page and a brighter trace along its border. */
+.byld-reveal-spot {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  border-radius: 18px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background: radial-gradient(560px circle at var(--x, 50%) var(--y, 0%), rgba(243, 244, 245, 0.07), transparent 45%);
+}
+
+.byld-reveal-spot::before {
   content: "";
   position: absolute;
-  inset: auto 0 0;
-  z-index: 10;
-  height: 8%;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgba(8, 8, 9, 0),
-    rgba(8, 8, 9, 0.52) 58%,
-    rgba(8, 8, 9, 0.94) 100%
-  );
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--x, 50%) var(--y, 0%), rgba(243, 244, 245, 0.7), transparent 50%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 }
 
-@keyframes byldit-resume-drift {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(-2deg); }
-  50% { transform: translate3d(-3px, 6px, 0) rotate(-3deg); }
+.byld-reveal:hover .byld-reveal-spot {
+  opacity: 1;
 }
 
-@keyframes byldit-proof-drift {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(1deg); }
-  50% { transform: translate3d(3px, -7px, 0) rotate(0deg); }
+@media (min-width: 640px) {
+  .byld-reveal-spot {
+    border-radius: 24px;
+  }
 }
 
-@keyframes byldit-proof-pulse {
-  0%, 100% { opacity: 0.35; transform: scale(0.75); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-  50% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 9px rgba(255, 255, 255, 0.045); }
+@media (hover: none) {
+  .byld-reveal-spot {
+    display: none;
+  }
 }
 
-.byldit-resume {
-  animation: byldit-resume-drift 7s ease-in-out infinite;
+@media (prefers-reduced-motion: reduce) {
+  .byld-reveal [data-assemble] {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
 }
 
-.byldit-proof-stack {
-  animation: byldit-proof-drift 6s ease-in-out infinite;
+/* Feature list autoplay timer. */
+.byld-progress {
+  animation-name: byld-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
 }
 
-.byldit-proof-pulse {
-  animation: byldit-proof-pulse 2.6s ease-in-out infinite;
+@keyframes byld-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Hero headline: each line slides up out of its own mask. */
+.byld-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+
+.byld-line > span {
+  display: block;
+  animation: byld-line-in 1s cubic-bezier(0.19, 1, 0.22, 1) var(--t, 0ms) both;
+}
+
+@keyframes byld-line-in {
+  from { transform: translateY(105%); }
+  to { transform: translateY(0); }
+}
+
+.byld-fade {
+  animation: byld-fade-in 0.9s ease var(--t, 0ms) both;
+}
+
+@keyframes byld-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Hero contribution graph: a year of cells fills in, then the letters light. */
+.byld-cell {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 24%;
+  background: var(--c);
+  animation: byld-cell-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) var(--t) both;
+  transition: filter 0.25s ease;
+}
+
+.byld-cell[data-l="0"] { --c: #141518; }
+.byld-cell[data-l="1"] { --c: #2A2C31; }
+.byld-cell[data-l="2"] { --c: #5c6066; }
+.byld-cell[data-l="3"] { --c: #969a9f; }
+.byld-cell[data-l="4"] { --c: #f3f4f5; }
+
+.byld-cell.is-mark {
+  animation:
+    byld-cell-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) var(--t) both,
+    byld-mark-in 0.9s ease-out var(--m) both;
+}
+
+@keyframes byld-cell-in {
+  from { opacity: 0; transform: scale(0.35); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes byld-mark-in {
+  from { background: #2A2C31; box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+  45% { background: #ffffff; box-shadow: 0 0 22px rgba(255, 255, 255, 0.55); }
+  to { background: #f3f4f5; box-shadow: 0 0 12px rgba(255, 255, 255, 0.16); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .byld-cell:hover {
+    filter: brightness(1.9);
+    transition-duration: 0s;
+  }
+}
+
+/* Closing call to action: typed username caret. */
+.byld-caret {
+  animation: byld-caret 1.05s steps(1) infinite;
+}
+
+@keyframes byld-caret {
+  50% { opacity: 0; }
+}
+
+/* FAQ: smooth height where the browser supports it, instant elsewhere. */
+.byld-faq {
+  interpolate-size: allow-keywords;
+}
+
+.byld-faq::details-content {
+  height: 0;
+  overflow: clip;
+  transition: height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), content-visibility 0.35s allow-discrete;
+}
+
+.byld-faq[open]::details-content {
+  height: auto;
+}
+
+.byld-scroll-x {
+  scrollbar-width: none;
+}
+
+.byld-scroll-x::-webkit-scrollbar {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -159,6 +285,7 @@ html {
   .byldit-root *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }

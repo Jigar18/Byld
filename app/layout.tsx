@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import {
-  Bricolage_Grotesque,
+  Archivo,
   Geist,
   Geist_Mono,
   Kaushan_Script,
@@ -19,9 +19,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const landingDisplay = Bricolage_Grotesque({
-  variable: "--font-bricolage-grotesque",
+const landingDisplay = Archivo({
+  variable: "--font-landing",
   subsets: ["latin"],
+  axes: ["wdth"],
 });
 
 const loaderMark = Kaushan_Script({

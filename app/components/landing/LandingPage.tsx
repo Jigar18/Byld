@@ -1,35 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Check,
-  ChevronDown,
-  Code2,
-  FileText,
-  Github,
-  Layers3,
-  Sparkles,
-  UserRound,
-} from "lucide-react";
+import { Github, Plus } from "lucide-react";
 import LandingNav from "./LandingNav";
-import { RevealOnce } from "./ProjectModalMockup";
-import {
-  ActivityEvidence,
-  CareerEvidence,
-  OwnershipControls,
-  PortfolioPreview,
-  ProjectFragment,
-  ProjectsEvidence,
-} from "./ProductMockups";
-
-const steps = [
-  { icon: Github, title: "Connect GitHub", copy: "Sign in using the account where your work already lives." },
-  { icon: Layers3, title: "Connect repositories", copy: "Install the GitHub App for repository access and contribution data." },
-  { icon: UserRound, title: "Set the foundation", copy: "Add your role, location, education, skills, and profile picture." },
-  { icon: Sparkles, title: "Publish and keep building", copy: "Share your public link, then add projects and experience at your pace." },
-];
+import HeroGraph from "./HeroGraph";
+import ProductExplorer from "./ProductExplorer";
+import { BranchSteps, PreviewReveal, TypedHandle } from "./LandingMotion";
+import { PortfolioPreview } from "./ProductMockups";
 
 const faqs = [
+  ["How do I create a portfolio website with Byldit?", "Sign in with GitHub, install the GitHub App, and complete your profile. Add your projects, skills, and experience, then share your public portfolio link."],
+  ["Do I need a domain or separate hosting?", "No. Your portfolio is hosted on Byldit at byldit.vercel.app followed by your GitHub username. You can share that link once you finish setup."],
+  ["What should a developer portfolio include?", "Start with projects that show the work you want to do. Explain the problem, your contribution, and the result. Add repository links or live demos, then include your skills, experience, and ways to contact you."],
   ["What comes from GitHub?", "Your GitHub identity and contribution activity are connected. You choose the projects to feature and write their story."],
   ["Do private repositories appear automatically?", "No. Repositories only become part of your public portfolio when you choose to present them."],
   ["Do I need to code anything?", "No. Guided forms and simple owner controls handle the portfolio content."],
@@ -37,184 +18,129 @@ const faqs = [
   ["What do visitors see?", "Visitors see the content you publish—not your editing controls or account actions."],
 ];
 
-const proofProjects = [
-  { name: "Stratos", stack: "Java · Spring", background: "repeating-linear-gradient(45deg, #252a29 0 5px, #111413 5px 10px)" },
-  { name: "Relay", stack: "React · Node.js", background: "radial-gradient(circle at 25% 30%, #78827f 0 8%, transparent 9%), linear-gradient(135deg, #292f2d, #101312)" },
-  { name: "Orbit", stack: "TypeScript", background: "linear-gradient(90deg, transparent 46%, #5d6864 47% 52%, transparent 53%), linear-gradient(#191d1c 48%, #707a76 49% 52%, #191d1c 53%)" },
-];
-
-function Brand({ compact = false }: { compact?: boolean }) {
-  return (
-    <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="Byldit home">
-      <Image src="/landing/byldit-mark-mono.webp" alt="" width={compact ? 28 : 32} height={compact ? 28 : 32} className="rounded-lg" priority />
-      <span className={`${compact ? "text-[15.4px]" : "text-sm"} font-semibold tracking-[-0.02em] text-white`}>Byldit</span>
-    </Link>
-  );
-}
+const delay = (ms: number) => ({ "--t": `${ms}ms` }) as React.CSSProperties;
 
 function XLogo() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[22px] w-[22px] fill-current">
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
     </svg>
   );
 }
 
-function Eyebrow({ children, center = false }: { children: React.ReactNode; center?: boolean }) {
-  return <p className={`font-mono text-[9px] uppercase leading-5 tracking-[0.2em] text-zinc-500 sm:text-[10px] sm:tracking-[0.22em] ${center ? "text-center" : ""}`}>{children}</p>;
-}
-
-function FeatureDivider() {
-  return (
-    <div aria-hidden="true" className="mx-auto flex h-14 w-full max-w-[1120px] items-center sm:h-16">
-      <span className="h-px w-full bg-gradient-to-r from-white/[0.04] via-white/[0.3] to-white/[0.04]" />
-    </div>
-  );
-}
-
 function PrimaryButton({ className = "" }: { className?: string }) {
   return (
-    <a href="/api/github/auth" className={`group inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-zinc-100 px-5 text-sm font-semibold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-950 ${className}`}>
-      <Github className="h-4 w-4" />Continue with GitHub<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+    <a href="/api/github/auth" data-landing-cta className={`inline-flex h-14 items-center justify-center gap-2.5 rounded-full bg-[#F3F4F5] px-7 text-[16px] font-semibold text-[#08080A] shadow-[0_0_0_1px_rgba(255,255,255,0.4)_inset,0_12px_32px_-8px_rgba(243,244,245,0.35)] transition hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.5)_inset,0_18px_40px_-8px_rgba(243,244,245,0.45)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F3F4F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#08080A] ${className}`}>
+      <Github className="h-[18px] w-[18px]" />Continue with GitHub
     </a>
   );
 }
 
-function ProofVisual() {
+function SectionHeading({ title, copy, id }: { title: React.ReactNode; copy?: string; id?: string }) {
   return (
-    <div className="byldit-proof-visual relative mx-auto h-[360px] w-full max-w-[590px]" aria-label="A résumé PDF transforming into a personal developer portfolio">
-      <div className="byldit-resume byldit-shadow-proof absolute left-0 top-8 w-[44%] -rotate-2 rounded-lg border border-white/[0.14] bg-[#111315] p-4 sm:left-[2%] sm:p-5">
-        <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
-          <div className="flex items-center gap-2"><FileText className="h-3.5 w-3.5 text-[#9AA8A3]" /><span className="font-mono text-[7px] text-[#9AA8A3]">ALEX_RESUME.PDF</span></div>
-          <span className="rounded border border-white/10 px-1.5 py-0.5 font-mono text-[6px] text-zinc-600">1 PAGE</span>
-        </div>
-        <div className="mt-4"><p className="text-[13px] font-semibold tracking-[-0.02em] text-[#F2F7F5]">Alex</p><p className="mt-1 font-mono text-[7px] uppercase tracking-[0.12em] text-[#9AA8A3]">Senior software engineer</p></div>
-        <div className="mt-5 border-t border-white/[0.08] pt-3">
-          <p className="font-mono text-[6px] font-semibold uppercase tracking-[0.18em] text-[#7FE0C3]">Experience</p>
-          <div className="mt-2 flex items-start justify-between gap-2"><p className="text-[8px] font-medium text-zinc-300">Senior Engineer · OpenAI</p><span className="font-mono text-[6px] text-zinc-600">2023—NOW</span></div>
-          <ul className="mt-2 space-y-1.5 text-[7px] leading-[1.45] text-zinc-500"><li>• Built reliable developer platforms.</li><li>• Shipped collaborative tooling.</li><li>• Improved release speed by 35%.</li></ul>
-        </div>
-        <div className="mt-4 border-t border-white/[0.08] pt-3"><p className="font-mono text-[6px] uppercase tracking-[0.18em] text-zinc-500">Skills</p><p className="mt-2 text-[7px] text-zinc-500">TypeScript · React · Node.js · PostgreSQL</p></div>
-        <span className="absolute -bottom-3 -right-3 grid h-9 w-9 place-items-center rounded-full border border-white/[0.12] bg-[#111315] font-mono text-[7px] text-[#9AA8A3]">PDF</span>
-      </div>
-
-      <div className="absolute left-[39%] top-[47%] z-20 hidden w-[19%] items-center sm:flex"><span className="h-px flex-1 bg-gradient-to-r from-zinc-700 to-[#7FE0C3]" /><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[#7FE0C3]/30 bg-[#0c1512] text-[#7FE0C3]"><ArrowRight className="h-3.5 w-3.5" /></span></div>
-
-      <div className="byldit-proof-stack absolute right-0 top-3 w-[58%] rotate-1">
-        <div className="absolute inset-0 translate-x-4 translate-y-4 rounded-xl border border-white/[0.05] bg-[#090b0b]" />
-        <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-xl border border-white/[0.08] bg-[#0d1010]" />
-        <div className="byldit-shadow-proof relative overflow-hidden rounded-xl border border-white/[0.16] bg-[#0a0b0b]">
-          <div className="flex h-8 items-center border-b border-white/[0.09] bg-white/[0.025] px-3"><div className="flex gap-1"><span className="h-1.5 w-1.5 rounded-full bg-zinc-600" /><span className="h-1.5 w-1.5 rounded-full bg-zinc-700" /><span className="h-1.5 w-1.5 rounded-full bg-[#7FE0C3]" /></div><span className="mx-auto rounded bg-black/20 px-5 py-1 font-mono text-[6px] text-zinc-500">byldit.vercel.app/alex</span></div>
-          <div className="p-3">
-            <div className="flex items-center gap-2.5 rounded-lg border border-white/[0.11] bg-white/[0.025] p-3">
-              <Image src="/landing/demo-avatar-mono.webp" alt="" width={36} height={36} className="h-9 w-9 rounded-full border-2 border-zinc-600 object-cover" />
-              <div><p className="text-[10px] font-semibold text-[#F2F7F5]">Alex</p><p className="mt-0.5 text-[6px] text-[#9AA8A3]">Senior Software Engineer</p><p className="mt-1 font-mono text-[5px] text-zinc-600">Earth, Milky Way</p></div>
-              <span className="ml-auto rounded-md border border-white/[0.1] bg-white/[0.03] px-2 py-1.5 font-mono text-[6px] text-[#9AA8A3]">OPENAI</span>
-            </div>
-
-            <div className="mt-3 border-l border-[#7FE0C3]/25 pl-3"><p className="font-mono text-[6px] uppercase tracking-[0.18em] text-[#7FE0C3]">About me</p><p className="mt-2 text-[6px] leading-[1.55] text-zinc-500">I build scalable developer tools with a focus on reliability, thoughtful engineering, and software that stays adaptable as teams grow.</p></div>
-
-            <div className="mt-3 border-t border-white/[0.08] pt-3"><div className="flex items-center justify-between"><div className="flex items-center gap-1.5"><span className="grid h-5 w-5 place-items-center rounded border border-[#7FE0C3]/20 text-[#7FE0C3]"><Code2 className="h-2.5 w-2.5" /></span><div><p className="font-mono text-[6px] uppercase tracking-[0.18em] text-[#7FE0C3]">Projects</p><p className="mt-0.5 text-[5px] text-zinc-600">Selected work and proof of craft.</p></div></div><span className="rounded border border-white/[0.09] px-1.5 py-1 font-mono text-[5px] text-zinc-600">+ ADD</span></div>
-              <div className="mt-2.5 grid grid-cols-3 gap-1.5">{proofProjects.map((project) => <article key={project.name} className="overflow-hidden rounded-md border border-white/[0.1] bg-[#101212]"><div className="h-10 border-b border-white/[0.08]" style={{ background: project.background }} /><div className="p-2"><p className="text-[7px] font-semibold text-[#F2F7F5]">{project.name}</p><p className="mt-1 font-mono text-[4px] text-zinc-600">{project.stack}</p></div></article>)}</div>
-            </div>
-          </div>
-        </div>
-        <span className="byldit-proof-pulse absolute -right-3 top-1/2 h-2 w-2 rounded-full bg-[#7FE0C3]" />
-      </div>
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:items-end lg:gap-16">
+      <h2 id={id} className="byld-wide max-w-[14em] text-[clamp(2.15rem,4.6vw,4.4rem)] font-bold leading-[1.02] tracking-[-0.045em] text-[#F3F4F5]">{title}</h2>
+      {copy && <p className="max-w-sm text-[17px] leading-8 text-[#8E9197] lg:justify-self-end">{copy}</p>}
     </div>
   );
 }
 
 export default function LandingPage() {
   return (
-    <main className="byldit-root min-h-screen overflow-hidden bg-[#121212] text-zinc-100 selection:bg-zinc-100 selection:text-zinc-950">
+    <main className="byldit-root relative min-h-screen overflow-hidden bg-[#08080A] text-[#C9CBCF] selection:bg-[#F3F4F5] selection:text-[#08080A]">
       <LandingNav />
 
-      <section className="byldit-grid relative px-5 pb-24 pt-44 sm:px-8 sm:pb-32 sm:pt-48 lg:pt-52">
-        <div className="relative z-10 mx-auto max-w-[1280px] text-center">
-          <Eyebrow center>Built from your GitHub. Finished by you.</Eyebrow>
-          <h1 className="mx-auto mt-7 max-w-[1120px] font-semibold tracking-[-0.055em] text-white">
-            <span className="mx-auto block w-fit text-[clamp(2.55rem,5.3vw,5.5rem)] leading-[0.94] lg:whitespace-nowrap">The code shows how.</span>
-            <span className="mx-auto mt-4 block w-fit text-[clamp(2.25rem,3.9vw,4.2rem)] leading-[0.96] text-zinc-500 lg:whitespace-nowrap">The portfolio shows why.</span>
-            <span className="mx-auto mt-5 block w-fit text-[clamp(1.95rem,3vw,3.35rem)] leading-none tracking-[-0.04em] text-zinc-300">That’s the story.</span>
-          </h1>
-          <p className="mx-auto mt-8 max-w-2xl text-base leading-7 text-zinc-400 sm:text-lg sm:leading-8">Bring your projects, contributions, skills, and experience into one link that shows what you can actually do.</p>
-          <div className="mt-8 flex justify-center"><PrimaryButton className="w-full sm:w-auto" /></div>
-          <div className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[10px] text-zinc-600">{["Guided setup", "No code required", "One link to share"].map((item) => <span key={item} className="flex items-center gap-2"><Check className="h-3 w-3 text-zinc-400" />{item}</span>)}</div>
+      <section className="relative z-10 px-5 pt-32 sm:px-8 sm:pt-36 lg:pt-40">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[720px] bg-[radial-gradient(ellipse_60%_55%_at_30%_0%,rgba(243,244,245,0.045),transparent_70%)]" />
+        <div className="relative mx-auto max-w-[1280px]">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-16">
+            <h1 className="byld-wide text-[clamp(3rem,8.4vw,7.6rem)] font-[750] leading-[0.94] tracking-[-0.055em] text-[#F3F4F5]">
+              <span className="byld-line"><span style={delay(80)}>Show what</span></span>
+              <span className="byld-line"><span style={delay(220)}>you’ve built.</span></span>
+            </h1>
+            <p className="byld-fade max-w-[22rem] text-[17px] leading-8 text-[#8E9197] sm:text-[19px] sm:leading-[1.65] lg:pb-3" style={delay(460)}>
+              Your GitHub, turned into a portfolio site in minutes. No code, no hosting.
+            </p>
+          </div>
+          <div className="mt-16 sm:mt-20">
+            <HeroGraph />
+          </div>
         </div>
-        <div className="relative z-10 mx-auto mt-20 w-full max-w-[1120px] sm:mt-24"><div className="pointer-events-none absolute inset-x-[26%] bottom-[-2%] h-16 rounded-full bg-white/[0.012] blur-[40px]" /><PortfolioPreview /></div>
       </section>
 
-      <section id="product" className="scroll-mt-28 px-5 py-24 sm:px-8 lg:py-36">
-        <FeatureDivider />
-        <div className="mx-auto grid max-w-[1120px] items-center gap-12 py-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20 lg:py-28">
+      <section id="product" aria-labelledby="product-title" className="relative z-10 scroll-mt-24 px-5 pt-32 sm:px-8 lg:pt-48">
+        <div className="mx-auto max-w-[1280px]">
+          <SectionHeading id="product-title" title="One link that does the explaining." copy="Who you are, what you’ve shipped, and how often you ship." />
+          <div className="mt-14 sm:mt-20">
+            <PreviewReveal><PortfolioPreview /></PreviewReveal>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="features-title" className="relative z-10 px-5 pb-32 pt-28 sm:px-8 lg:pb-44 lg:pt-40">
+        <div className="mx-auto max-w-[1280px]">
+          <SectionHeading id="features-title" title="Everything a repository can’t say." />
+          <div className="mt-14 lg:mt-20">
+            <ProductExplorer />
+          </div>
+        </div>
+      </section>
+
+      <section id="how-it-works" aria-labelledby="how-title" className="relative z-10 scroll-mt-24 border-y border-[#1D1F22] bg-[#0C0D0F] px-5 py-28 sm:px-8 lg:py-40">
+        <div className="mx-auto max-w-[1280px]">
+          <SectionHeading id="how-title" title="Live in four steps." />
+          <div className="mt-16 lg:mt-24">
+            <BranchSteps />
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" aria-labelledby="faq-title" className="relative z-10 scroll-mt-24 px-5 py-28 sm:px-8 lg:py-40">
+        <div className="mx-auto grid max-w-[1280px] gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
           <div>
-            <Eyebrow>Built for proof</Eyebrow>
-            <h2 className="mt-6 text-[clamp(3.2rem,7vw,6.7rem)] font-semibold leading-[0.88] tracking-[-0.065em] text-[#F2F7F5]"><span className="block">Show the <span className="relative inline-block">work.<span className="absolute inset-x-0 bottom-[-0.04em] h-[0.07em] rounded-full bg-[#7FE0C3]" /></span></span><span className="mt-[0.16em] block">Skip the<br className="hidden sm:block" /> résumé PDF.</span></h2>
-            <p className="mt-7 max-w-lg text-base leading-7 text-zinc-400">Turn repository links, job titles, and credentials into proof people can actually explore.</p>
+            <h2 id="faq-title" className="byld-wide text-[clamp(2.15rem,4.6vw,4.4rem)] font-bold leading-[1.02] tracking-[-0.045em] text-[#F3F4F5] lg:sticky lg:top-32">Before you connect.</h2>
           </div>
-          <ProofVisual />
-        </div>
-
-        <div className="mx-auto max-w-[1120px]">
-          <FeatureDivider />
-          <div className="grid items-center gap-10 py-20 lg:grid-cols-2 lg:gap-20 lg:py-28"><RevealOnce><div><span className="font-mono text-[10px] text-zinc-700">01 / PROJECTS</span><h3 className="mt-5 text-[clamp(2.25rem,3.4vw,3.5rem)] font-semibold leading-[0.98] tracking-[-0.05em] text-white">Projects, with the why.</h3><p className="mt-5 max-w-lg text-base leading-7 text-zinc-500 sm:text-lg sm:leading-8">Add the story, stack, repository, live link, and demo behind what you shipped.</p></div></RevealOnce><ProjectsEvidence /></div>
-          <FeatureDivider />
-          <div className="grid items-center gap-10 py-20 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20 lg:py-28"><div className="order-2 lg:order-1"><ActivityEvidence /></div><div className="order-1 lg:order-2 lg:pl-8"><span className="font-mono text-[10px] text-zinc-700">02 / ACTIVITY</span><h3 className="mt-5 text-[clamp(2.25rem,3.4vw,3.5rem)] font-semibold leading-[0.98] tracking-[-0.05em] text-white">Proof that keeps moving.</h3><p className="mt-5 max-w-lg text-base leading-7 text-zinc-500 sm:text-lg sm:leading-8">Your full year of GitHub activity stays connected, so the portfolio keeps changing with your work.</p></div></div>
-          <FeatureDivider />
-          <div className="grid items-center gap-10 py-20 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20 lg:py-28"><div><span className="font-mono text-[10px] text-zinc-700">03 / CAREER</span><h3 className="mt-5 text-[clamp(2.25rem,3.4vw,3.5rem)] font-semibold leading-[0.98] tracking-[-0.05em] text-white">More than code.</h3><p className="mt-5 max-w-lg text-base leading-7 text-zinc-500 sm:text-lg sm:leading-8">Bring your experience, skills, education, certifications, and ways to reach you into the same story.</p></div><CareerEvidence /></div>
-          <FeatureDivider />
-        </div>
-      </section>
-
-      <section className="px-5 py-24 sm:px-8 lg:py-32">
-        <div className="mx-auto grid max-w-[1120px] gap-12 lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:gap-24"><div><Eyebrow>Yours to keep shaping</Eyebrow><h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-white sm:text-6xl">It grows when<br />you do.</h2><p className="mt-6 max-w-md text-base leading-7 text-zinc-400">Update your portfolio as your work changes—no code, no rebuild, no starting over.</p></div><OwnershipControls /></div>
-        <FeatureDivider />
-      </section>
-
-      <section id="how-it-works" className="scroll-mt-28 px-5 py-24 sm:px-8 lg:py-32">
-        <div className="mx-auto max-w-[1120px]"><div className="grid gap-6 lg:grid-cols-2 lg:items-end"><div><Eyebrow>Four steps. No guesswork.</Eyebrow><h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-white sm:text-6xl">From GitHub<br />to live.</h2></div><p className="max-w-md text-sm leading-6 text-zinc-400 lg:justify-self-end">Follow the guided setup once, then keep refining your portfolio whenever your work changes.</p></div>
-          <div className="mt-16 grid border-y border-white/[0.08] sm:grid-cols-2 lg:grid-cols-4">{steps.map(({ icon: Icon, title, copy }, index) => <article key={title} className="border-b border-white/[0.08] p-6 sm:border-r sm:p-7 lg:border-b-0 last:border-r-0"><div className="flex items-start justify-between"><span className="grid h-11 w-11 place-items-center rounded-xl border border-white/10 text-zinc-400"><Icon className="h-5 w-5" /></span><span className="font-mono text-[9px] text-zinc-700">0{index + 1}</span></div><h3 className="mt-10 text-base font-semibold text-white">{title}</h3><p className="mt-3 text-xs leading-5 text-zinc-500">{copy}</p></article>)}</div>
-        </div>
-        <FeatureDivider />
-      </section>
-
-      <section id="faq" className="scroll-mt-28 px-5 py-24 sm:px-8 lg:py-32">
-        <div className="mx-auto grid max-w-[1000px] gap-12 lg:grid-cols-[0.65fr_1.35fr] lg:gap-20"><div><Eyebrow>Before you connect</Eyebrow><h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-white sm:text-5xl">Good to know.</h2></div><div className="divide-y divide-white/[0.08] border-y border-white/[0.08]">{faqs.map(([question, answer]) => <details key={question} className="group"><summary className="flex cursor-pointer list-none items-center justify-between gap-5 py-6 text-sm font-medium text-white [&::-webkit-details-marker]:hidden">{question}<ChevronDown className="h-4 w-4 shrink-0 text-zinc-600 transition group-open:rotate-180" /></summary><p className="max-w-2xl pb-6 pr-8 text-sm leading-6 text-zinc-400">{answer}</p></details>)}</div></div>
-        <FeatureDivider />
-      </section>
-
-      <section className="relative overflow-hidden px-5 py-28 sm:px-8 lg:py-40"><div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,.045),transparent_48%)]" /><ProjectFragment /><div className="relative z-10 mx-auto max-w-4xl text-center"><Eyebrow center>Ready when your work is</Eyebrow><h2 className="mt-6 text-4xl font-semibold leading-[1.02] tracking-[-0.055em] text-white sm:text-7xl">Stop explaining your work.<br /><span className="text-zinc-500">Show it.</span></h2><p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-zinc-400">Bring the proof, progress, and story together—and share one link that does them justice.</p><div className="mt-9 flex justify-center"><PrimaryButton className="w-full sm:w-auto" /></div></div></section>
-
-      <footer className="border-t border-white/[0.08] px-5 py-10 sm:px-8">
-        <div className="mx-auto flex max-w-[1120px] flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <Brand compact />
-            <p className="mt-3 text-[13.2px] text-zinc-600">One home for the work behind the developer.</p>
-          </div>
-          <div className="flex items-center gap-5 text-zinc-500">
-            <a
-              href="https://github.com/Jigar18/Byld"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Byldit on GitHub"
-              className="transition hover:text-white"
-            >
-              <Github className="h-[22px] w-[22px]" />
-            </a>
-            <a
-              href="https://x.com/jigark0"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Jigar on X"
-              className="transition hover:text-white"
-            >
-              <XLogo />
-            </a>
+          <div className="border-t border-[#1D1F22]">
+            {faqs.map(([question, answer]) => (
+              <details key={question} className="byld-faq group border-b border-[#1D1F22]">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-[17px] font-medium text-[#F3F4F5] transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F3F4F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#08080A] sm:text-lg [&::-webkit-details-marker]:hidden">
+                  {question}
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#1D1F22] text-[#8E9197] transition duration-300 group-open:rotate-45 group-open:border-[#5C6066] group-open:text-[#F3F4F5]"><Plus className="h-4 w-4" /></span>
+                </summary>
+                <p className="max-w-2xl pb-7 pr-12 text-[16px] leading-7 text-[#8E9197]">{answer}</p>
+              </details>
+            ))}
           </div>
         </div>
-        <div className="mx-auto mt-8 max-w-[1120px] border-t border-white/[0.06] pt-5 font-mono text-[9.9px] uppercase tracking-[0.14em] text-zinc-800">
-          © {new Date().getFullYear()} Byldit
+      </section>
+
+      <section aria-labelledby="cta-title" className="relative z-10 overflow-hidden border-t border-[#1D1F22] px-5 py-32 sm:px-8 lg:py-44">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[520px] bg-[radial-gradient(ellipse_55%_60%_at_50%_100%,rgba(243,244,245,0.05),transparent_70%)]" />
+        <div className="relative mx-auto max-w-[1280px]">
+          <h2 id="cta-title" className="byld-wide max-w-[13em] text-[clamp(2.3rem,5.4vw,5.2rem)] font-bold leading-[1] tracking-[-0.045em] text-[#F3F4F5]">Your GitHub username is already your address.</h2>
+          <p className="byld-mono mt-10 break-all text-[clamp(1.2rem,3.6vw,3.1rem)] leading-tight tracking-[-0.02em] text-[#6B6F75] sm:mt-14">
+            byldit.vercel.app/<TypedHandle />
+          </p>
+          <div className="mt-12 sm:mt-16">
+            <PrimaryButton className="w-full sm:w-auto" />
+          </div>
+        </div>
+      </section>
+
+      <footer className="relative z-10 border-t border-[#1D1F22] px-5 py-10 sm:px-8">
+        <div className="mx-auto flex max-w-[1280px] flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F3F4F5]" aria-label="Byldit home">
+              <Image src="/landing/byldit-mark-mono.webp" alt="" width={30} height={30} className="rounded-[8px]" />
+              <span className="byld-wide text-[16px] font-bold tracking-[-0.03em] text-[#F3F4F5]">Byldit</span>
+            </Link>
+            <p className="text-[14px] text-[#6B6F75]">Developer portfolios, built from GitHub.</p>
+          </div>
+          <div className="flex items-center gap-6 text-[#8E9197]">
+            <span className="text-[13px] text-[#6B6F75]">© {new Date().getFullYear()} Byldit</span>
+            <a href="https://github.com/Jigar18/Byld" target="_blank" rel="noreferrer" aria-label="Byldit on GitHub" className="rounded transition hover:text-[#F3F4F5] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F3F4F5]"><Github className="h-5 w-5" /></a>
+            <a href="https://x.com/jigark0" target="_blank" rel="noreferrer" aria-label="Jigar on X" className="rounded transition hover:text-[#F3F4F5] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F3F4F5]"><XLogo /></a>
+          </div>
         </div>
       </footer>
     </main>

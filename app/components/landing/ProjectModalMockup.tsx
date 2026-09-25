@@ -1,6 +1,3 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,30 +12,6 @@ import SkillIcon from "../SkillIcon";
 
 const techStack = ["Java", "JavaScript", "Spring Boot", "TypeScript", "React", "PostgreSQL", "Docker", "Ngrok"];
 const mockupSkillIcons = { Ngrok: "simple-icons:ngrok" };
-
-export function RevealOnce({
-  children,
-  className = "",
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-}) {
-  const reduceMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      {...{ className }}
-      initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.46, delay, ease: [0.22, 1, 0.36, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 function SectionTitle({ icon: Icon, children }: { icon: typeof FileText; children: React.ReactNode }) {
   return (
@@ -95,8 +68,7 @@ function ArchitecturePreview() {
 
 export default function ProjectModalMockup() {
   return (
-    <RevealOnce delay={0.06}>
-      <article aria-label="Miniature Stratos project modal preview" className="byldit-shadow-card mx-auto h-[410px] w-full max-w-[520px] overflow-hidden rounded-xl border border-white/[0.12] bg-gradient-to-b from-[#18181b] to-[#0d0d0f] transition-[transform,box-shadow] duration-200 ease-out lg:hover:-translate-y-[3px]">
+      <article aria-label="Miniature Stratos project modal preview" className="byld-shadow mx-auto h-[410px] w-full max-w-[520px] overflow-hidden rounded-xl border border-white/[0.12] bg-gradient-to-b from-[#18181b] to-[#0d0d0f]">
         <header className="relative h-[68px] border-b border-white/[0.09] bg-white/[0.015] px-4 py-3">
           <div className="flex items-center gap-1.5 text-[6px] text-zinc-500 sm:text-[7px]">
             <span>Project 1 of 3</span>
@@ -139,6 +111,5 @@ export default function ProjectModalMockup() {
           </section>
         </div>
       </article>
-    </RevealOnce>
   );
 }
