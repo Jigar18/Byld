@@ -10,46 +10,20 @@ import CredentialCardHeader, { credentialEditButtonClass } from "./CredentialCar
 import { primaryActionButtonClass } from "@/components/ui/button";
 
 export default function Education() {
-  const { isOwner, portfolioApiUrl, portfolioData } = useUser();
+  const { isOwner, portfolioData } = useUser();
   const [education, setEducation] = useState<PortfolioEducation[]>(portfolioData.education);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [educationAtTop, setEducationAtTop] = useState(true);
 
   const handleSaveEducation = async (updatedEducation: PortfolioEducation[]) => {
-    const existingIds = new Set(education.map((edu) => edu.id).filter(Boolean));
-    const updatedIds = new Set(updatedEducation.map((edu) => edu.id).filter(Boolean));
-
-    for (const id of existingIds) {
-      if (!updatedIds.has(id)) await fetch(`/api/deleteEducation?id=${id}`, { method: "DELETE" });
-    }
-
-    for (const edu of updatedEducation) {
-      if (!edu.school || !edu.degree || !edu.field) continue;
-      const isExisting = Boolean(edu.id && existingIds.has(edu.id));
-      await fetch("/api/education", {
-        method: isExisting ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...(isExisting ? { id: edu.id } : {}),
-          school: edu.school,
-          degree: edu.degree,
-          field: edu.field,
-          startYear: edu.startYear,
-          endYear: edu.endYear,
-          isCurrently: edu.isCurrently,
-        }),
-      });
-    }
-
-    // Re-read so ordering and any server-created default entry match the portfolio.
-    try {
-      const response = await fetch(portfolioApiUrl("/api/getEducation"));
-      const data = await response.json();
-      setEducation(data.success ? data.education : []);
-    } catch (error) {
-      console.error("Error fetching education:", error);
-      setEducation([]);
-    }
+    const response = await fetch("/api/education", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ education: updatedEducation }),
+    });
+    if (!response.ok) throw new Error("Failed to save education");
+    const data = (await response.json()) as { education: PortfolioEducation[] };
+    setEducation(data.education);
   };
 
   return (

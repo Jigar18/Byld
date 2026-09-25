@@ -124,18 +124,21 @@ const getMonthLabels = (calendar: ContributionCalendar) =>
   });
 
 export default function GitHubHeatmap() {
-  const { isOwner, portfolioApiUrl } = useUser();
-  const [visible, setVisible] = useState(true);
+  const { isOwner, portfolioApiUrl, portfolioData } = useUser();
+  // Visitors never load (or see) a heatmap the owner has hidden.
+  const [visible, setVisible] = useState(portfolioData.showGitHubHeatmap);
+  const shouldLoad = isOwner || portfolioData.showGitHubHeatmap;
   const [available, setAvailable] = useState(true);
   const [calendar, setCalendar] = useState<ContributionCalendar | null>(null);
   const [contributionYear, setContributionYear] = useState<number | null>(null);
   const [currentYearContributions, setCurrentYearContributions] = useState<
     number | null
   >(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(shouldLoad);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (!shouldLoad) return;
     const loadContributions = async () => {
       try {
         const response = await fetch(portfolioApiUrl("/api/github/contributions"), {
@@ -159,7 +162,7 @@ export default function GitHubHeatmap() {
       }
     };
     void loadContributions();
-  }, [portfolioApiUrl]);
+  }, [portfolioApiUrl, shouldLoad]);
 
   const updateVisibility = async () => {
     if (!isOwner || saving) return;
@@ -172,8 +175,9 @@ export default function GitHubHeatmap() {
         credentials: "include",
         body: JSON.stringify({ visible: nextVisible }),
       });
-      if (!response.ok) return;
-      setVisible(nextVisible);
+      if (response.ok) setVisible(nextVisible);
+    } catch (error) {
+      console.error("Unable to update GitHub heatmap visibility", error);
     } finally {
       setSaving(false);
     }

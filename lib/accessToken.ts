@@ -11,10 +11,16 @@ export class GitHubInstallationNotFoundError extends Error {
   }
 }
 
+// Installation tokens live for an hour, so reuse them instead of minting one per request.
+const installationTokens = new Map<string, { token: string; expiresAt: number }>();
+
 export async function getInstallationAccessTokenById(installationId: string) {
+  const cached = installationTokens.get(installationId);
+  if (cached && cached.expiresAt - Date.now() > 5 * 60_000) return cached.token;
+
   const jwtToken = await getGitHubAppJwt();
 
-  const tokenResponse = await axios.post(
+  const tokenResponse = await axios.post<{ token?: string; expires_at?: string }>(
     `https://api.github.com/app/installations/${installationId}/access_tokens`,
     {},
     {
@@ -28,11 +34,15 @@ export async function getInstallationAccessTokenById(installationId: string) {
     }
   );
 
-  const accessToken = tokenResponse.data.token as string | undefined;
+  const accessToken = tokenResponse.data.token;
   if (!accessToken) {
     throw new Error("No access token returned from GitHub API");
   }
 
+  installationTokens.set(installationId, {
+    token: accessToken,
+    expiresAt: Date.parse(tokenResponse.data.expires_at ?? "") || Date.now() + 55 * 60_000,
+  });
   return accessToken;
 }
 
@@ -152,25 +162,4 @@ export async function getInstallationAccessToken(req: NextRequest) {
     }
     throw new Error("Unable to create GitHub App installation access token");
   }
-}
-
-
-//this function access token is for the scope for fetching details like email or /user things etc.,
-// Storing this in the database
-export async function getAccessToken(req: NextRequest) {
-  const session = await getSession(req);
-  if (!session) {
-    throw new Error("Authentication token is missing");
-  }
-
-  const user = await db.user.findUnique({
-    where: { id: session.userId },
-    select: { accessToken: true },
-  });
-
-  if (!user?.accessToken) {
-    throw new Error("GitHub OAuth token is missing");
-  }
-
-  return user.accessToken;
 }

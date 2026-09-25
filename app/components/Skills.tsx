@@ -10,11 +10,6 @@ import { useUser } from "../context/UserContext";
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
 import { ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 
-interface UserSkills {
-  skills: string[];
-  iconMap?: SkillIconMap;
-}
-
 const skillVariants = {
   hidden: { opacity: 0, scale: 0.8 },
   visible: { opacity: 1, scale: 1 },
@@ -24,20 +19,16 @@ const skillVariants = {
 const capitalizeFirst = (skill: string) => skill ? skill.charAt(0).toUpperCase() + skill.slice(1) : skill;
 
 export default function Skills() {
-  const { isOwner, portfolioApiUrl, portfolioData } = useUser();
+  const { isOwner, skills, setSkills, skillIcons, setSkillIcons } = useUser();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [tempSkills, setTempSkills] = useState<string[]>([]);
-  const [skillIcons, setSkillIcons] = useState<SkillIconMap>(portfolioData.iconMap);
   const [tempSkillIcons, setTempSkillIcons] = useState<SkillIconMap>({});
   const [iconPickerSkill, setIconPickerSkill] = useState<string | null>(null);
   const [iconChoices, setIconChoices] = useState<string[]>([]);
   const [isSearchingIcons, setIsSearchingIcons] = useState(false);
-  const [skills, setSkills] = useState<string[]>(
-    portfolioData.skills.map(capitalizeFirst),
-  );
   const [saving, setSaving] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const skillsViewportRef = useRef<HTMLDivElement>(null);
@@ -59,23 +50,6 @@ export default function Skills() {
     ).filter((item) => item.getBoundingClientRect().bottom > viewportBottom + 1);
     setHiddenSkillCount(hidden.length);
   }, []);
-
-  // Saving a project can add skills; Projects announces it so this card can re-read them.
-  useEffect(() => {
-    const refreshSkills = async () => {
-      try {
-        const response = await fetch(portfolioApiUrl("/api/getUserSkills"));
-        if (!response.ok) return;
-        const data: UserSkills = await response.json();
-        setSkills((data.skills || []).map(capitalizeFirst));
-        setSkillIcons(data.iconMap || {});
-      } catch (error) {
-        console.error("Error fetching user skills:", error);
-      }
-    };
-    window.addEventListener("portfolio:skills-updated", refreshSkills);
-    return () => window.removeEventListener("portfolio:skills-updated", refreshSkills);
-  }, [portfolioApiUrl]);
 
   useEffect(() => {
     const viewport = skillsViewportRef.current;
@@ -99,25 +73,30 @@ export default function Skills() {
     if (skillInput.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
+      setIsSearching(false);
       return;
     }
 
     setShowSuggestions(true);
     setIsSearching(true);
+    const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
-        const result = await fetch(`/api/skills?skill=${encodeURIComponent(skillInput)}`);
-        const data = await result.json();
-        setSuggestions(data);
+        const result = await fetch(`/api/skills?skill=${encodeURIComponent(skillInput)}`, { signal: controller.signal });
+        setSuggestions(result.ok ? await result.json() : []);
       } catch (error) {
+        if (controller.signal.aborted) return;
         console.error("Error fetching skills:", error);
         setSuggestions([]);
       } finally {
-        setIsSearching(false);
+        if (!controller.signal.aborted) setIsSearching(false);
       }
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [skillInput]);
 
   const handleEditClick = () => {

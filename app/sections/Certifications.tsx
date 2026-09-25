@@ -15,14 +15,16 @@ interface CertificationsProps {
 }
 
 export default function Certifications({ onOpenCertificate }: CertificationsProps) {
-  const { isOwner, portfolioUsername, portfolioData } = useUser();
+  const { isOwner, portfolioData } = useUser();
   const [cards, setCards] = useState<PortfolioCertificate[]>(portfolioData.certifications);
   const [certificateToDelete, setCertificateToDelete] = useState<PortfolioCertificate | null>(null);
   const [certificatesAtTop, setCertificatesAtTop] = useState(true);
+  const [deleting, setDeleting] = useState(false);
 
   const confirmDelete = async () => {
     if (!certificateToDelete) return;
 
+    setDeleting(true);
     try {
       const response = await fetch(`/api/deleteCertificate?id=${certificateToDelete.id}`, {
         method: "DELETE",
@@ -35,6 +37,8 @@ export default function Certifications({ onOpenCertificate }: CertificationsProp
       setCertificateToDelete(null);
     } catch (error) {
       console.error("Error deleting certificate:", error);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -70,7 +74,6 @@ export default function Certifications({ onOpenCertificate }: CertificationsProp
             onOpenCertificate={(certificate) => onOpenCertificate(certificate, cards)}
             onDeleteCard={setCertificateToDelete}
             canEdit={isOwner}
-            portfolioUsername={portfolioUsername}
           />
           )}
         </div>
@@ -87,6 +90,7 @@ export default function Certifications({ onOpenCertificate }: CertificationsProp
           title="Delete Certificate"
           subject={certificateToDelete?.title}
           note="This action will permanently delete the certificate and its associated file from storage. This cannot be undone."
+          isBusy={deleting}
           onClose={() => setCertificateToDelete(null)}
           onConfirm={confirmDelete}
         />

@@ -84,7 +84,11 @@ export async function GET(req: NextRequest) {
       })
       .slice(0, 3);
 
-    return NextResponse.json({ icons });
+    // Portfolio visitors request these for every project skill; let browsers and the CDN reuse them.
+    return NextResponse.json(
+      { icons },
+      { headers: { "Cache-Control": "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800" } },
+    );
   } catch {
     return NextResponse.json({ icons: preferred.slice(0, 3) });
   }

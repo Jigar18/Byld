@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import {
   deleteProjectAsset,
   getVerifiedProjectImage,
   getVerifiedProjectVideo,
 } from "@/lib/cloudinary";
+import { addProjectSkillsToPortfolio } from "@/lib/projectSkills";
 import { getSession } from "@/lib/session";
 
 type ProjectInput = {
@@ -33,32 +33,6 @@ const isWebUrl = (value: string | null) => {
     return false;
   }
 };
-
-const mergeSkills = (currentSkills: string[], projectSkills: string[]) => {
-  const merged = [...currentSkills];
-  for (const skill of projectSkills) {
-    if (merged.some((current) => current.toLowerCase() === skill.toLowerCase())) continue;
-    merged.push(skill.charAt(0).toUpperCase() + skill.slice(1));
-  }
-  return merged;
-};
-
-async function addProjectSkillsToPortfolio(
-  tx: Prisma.TransactionClient,
-  userId: string,
-  projectSkills: string[],
-) {
-  const existing = await tx.skill.findFirst({ where: { userId } });
-  const skills = mergeSkills(existing?.skills ?? [], projectSkills);
-
-  if (existing && skills.length !== existing.skills.length) {
-    await tx.skill.update({ where: { id: existing.id }, data: { skills } });
-  } else if (!existing && skills.length) {
-    await tx.skill.create({ data: { userId, skills } });
-  }
-
-  return skills;
-}
 
 async function parseProject(body: ProjectInput, userId: string) {
   const title = typeof body.title === "string" ? body.title.trim() : "";

@@ -24,11 +24,9 @@ export async function GET(req: NextRequest) {
         .map((repo) => ({
           id: repo.id,
           name: repo.name,
-          fullName: repo.full_name,
           description: repo.description,
           private: repo.private,
           language: repo.language,
-          updatedAt: repo.pushed_at,
           imported: importedUrls.has(repo.html_url),
         })),
     });

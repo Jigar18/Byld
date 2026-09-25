@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
       (body.items ?? []).flatMap((item) => {
         const skill = item.name?.replace(/-/g, " ");
         return skill ? [skill.charAt(0).toUpperCase() + skill.slice(1)] : [];
-      })
+      }),
+      { headers: { "Cache-Control": "public, max-age=3600, s-maxage=3600" } },
     );
   } catch {
     return NextResponse.json([]);

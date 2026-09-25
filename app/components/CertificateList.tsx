@@ -9,7 +9,6 @@ interface CertificateListProps {
   onOpenCertificate: (certificate: PortfolioCertificate) => void;
   onDeleteCard: (certificate: PortfolioCertificate) => void;
   canEdit?: boolean;
-  portfolioUsername: string;
 }
 
 export default function CertificateList({
@@ -17,7 +16,6 @@ export default function CertificateList({
   onOpenCertificate,
   onDeleteCard,
   canEdit = false,
-  portfolioUsername,
 }: CertificateListProps) {
   return (
     <div className="space-y-1">
@@ -55,7 +53,7 @@ export default function CertificateList({
               </p>
               <div className="mt-2 flex gap-4">
                 <a
-                  href={`/api/download-certificate?id=${card.id}&username=${encodeURIComponent(portfolioUsername)}`}
+                  href={`/api/download-certificate?id=${card.id}`}
                   className="inline-flex items-center gap-1.5 text-xs text-zinc-400 transition-colors hover:text-white"
                   onClick={(e) => e.stopPropagation()}
                   download

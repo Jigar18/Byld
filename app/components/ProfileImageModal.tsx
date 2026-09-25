@@ -7,6 +7,31 @@ import { X, Upload, Camera, Loader2 } from "lucide-react";
 import { Button, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
 import { createPortal } from "react-dom";
 
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const MAX_DIMENSION = 800;
+const UPLOAD_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+// The avatar is shown at 112px at most, so large photos are scaled down before upload.
+// This also converts formats the server does not accept (such as GIF) to JPEG.
+async function prepareImage(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+  if (scale === 1 && UPLOAD_TYPES.has(file.type) && file.size <= MAX_UPLOAD_BYTES) {
+    bitmap.close();
+    return file;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const type = file.type === "image/png" ? "image/png" : "image/jpeg";
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.9));
+  if (!blob || blob.size > MAX_UPLOAD_BYTES) throw new Error("Image is too large");
+  return blob;
+}
+
 interface ProfileImageModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -24,8 +49,10 @@ export default function ProfileImageModal({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [error, setError] = useState("");
 
   const selectFile = (file: File) => {
+    setError("");
     setSelectedFile(file);
     const reader = new FileReader();
     reader.onload = () => setPreviewUrl(reader.result as string);
@@ -62,10 +89,14 @@ export default function ProfileImageModal({
     }
 
     setIsUploading(true);
+    setError("");
 
     try {
+      const image = await prepareImage(selectedFile).catch(() => {
+        throw new Error("This image could not be read. Try a JPG, PNG, or WebP photo.");
+      });
       const formData = new FormData();
-      formData.append("image", selectedFile, "profile-picture.jpg");
+      formData.append("image", image, "profile-picture.jpg");
 
       const uploadResponse = await fetch("/api/uploadProfilePicture", {
         method: "POST",
@@ -74,21 +105,19 @@ export default function ProfileImageModal({
       });
 
       if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
+        const errorData = await uploadResponse.json().catch(() => ({}));
         throw new Error(errorData.error || "Upload failed");
       }
 
       const result = await uploadResponse.json();
       const imageUrl = result.imageUrl;
 
-      if (imageUrl) {
-        onImageChange(imageUrl);
-        onClose();
-      } else {
-        console.error("Upload failed: No image URL returned");
-      }
+      if (!imageUrl) throw new Error("Upload failed");
+      onImageChange(imageUrl);
+      onClose();
     } catch (error) {
       console.error("Error uploading image:", error);
+      setError(error instanceof Error ? error.message : "Upload failed");
     } finally {
       setIsUploading(false);
     }
@@ -100,6 +129,7 @@ export default function ProfileImageModal({
     setSelectedFile(null);
     setPreviewUrl(null);
     setIsUploading(false);
+    setError("");
     return () => {
       document.body.style.overflow = "auto";
     };
@@ -176,6 +206,12 @@ export default function ProfileImageModal({
               </p>
             </label>
           </div>
+
+          {error && (
+            <p role="alert" className="mb-4 rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-sm text-red-200">
+              {error}
+            </p>
+          )}
 
           {/* Action buttons */}
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">

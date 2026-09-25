@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
@@ -20,7 +21,6 @@ const CONTRIBUTIONS_QUERY = `
           totalContributions
           weeks {
             contributionDays {
-              color
               contributionCount
               contributionLevel
               date
@@ -39,7 +39,6 @@ const CONTRIBUTIONS_QUERY = `
 `;
 
 type ContributionDay = {
-  color: string;
   contributionCount: number;
   contributionLevel:
     | "NONE"
@@ -90,7 +89,6 @@ const fetchContributionCalendar = async (
       query: CONTRIBUTIONS_QUERY,
       variables: { login: username, calendarFrom, yearFrom, to },
     }),
-    cache: "no-store",
   });
 
   return {
@@ -99,50 +97,22 @@ const fetchContributionCalendar = async (
   };
 };
 
-export async function GET(request: NextRequest) {
-  try {
-    const portfolioUser = await resolvePortfolioUser(request);
-    if (!portfolioUser) {
-      return NextResponse.json({ success: false, error: "Portfolio not found" }, { status: 404 });
-    }
-
-    const user = await db.user.findUnique({
-      where: { id: portfolioUser.id },
-      select: {
-        username: true,
-        installationId: true,
-        showGitHubHeatmap: true,
-      },
-    });
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Portfolio not found" }, { status: 404 });
-    }
-    if (!portfolioUser.isOwner && !user.showGitHubHeatmap) {
-      return NextResponse.json({ success: true, visible: false });
-    }
+// The calendar is shared by every visitor, so GitHub is asked at most once per window.
+const getContributionCalendar = unstable_cache(
+  async (userId: string, username: string, installationId: string | null) => {
     let githubAccessToken: string | null = null;
     try {
-      githubAccessToken = await getUserAccessTokenById(portfolioUser.id);
+      githubAccessToken = await getUserAccessTokenById(userId);
     } catch (error) {
       console.error(
         "Unable to refresh the GitHub user token for contributions",
         error instanceof Error ? error.message : "Unknown error",
       );
     }
-    if (!githubAccessToken && user.installationId) {
-      try {
-        githubAccessToken = await getInstallationAccessTokenById(user.installationId);
-      } catch (error) {
-        console.error(
-          "Unable to create GitHub installation token for contributions",
-          error instanceof Error ? error.message : "Unknown error"
-        );
-      }
+    if (!githubAccessToken && installationId) {
+      githubAccessToken = await getInstallationAccessTokenById(installationId);
     }
-
-    if (!githubAccessToken) {
-      return NextResponse.json({ success: true, visible: user.showGitHubHeatmap, available: false });
-    }
+    if (!githubAccessToken) throw new Error("No GitHub token is available for contributions");
 
     const now = new Date();
     const contributionYear = now.getUTCFullYear();
@@ -155,28 +125,20 @@ export async function GET(request: NextRequest) {
     const to = now.toISOString();
     let result = await fetchContributionCalendar(
       githubAccessToken,
-      user.username,
+      username,
       calendarFrom,
       yearFrom,
       to,
     );
 
-    if (result.response.status === 401 && user.installationId) {
-      try {
-        const installationToken = await getInstallationAccessTokenById(user.installationId);
-        result = await fetchContributionCalendar(
-          installationToken,
-          user.username,
-          calendarFrom,
-          yearFrom,
-          to,
-        );
-      } catch (error) {
-        console.error(
-          "Unable to retry GitHub contributions with an installation token",
-          error instanceof Error ? error.message : "Unknown error",
-        );
-      }
+    if (result.response.status === 401 && installationId) {
+      result = await fetchContributionCalendar(
+        await getInstallationAccessTokenById(installationId),
+        username,
+        calendarFrom,
+        yearFrom,
+        to,
+      );
     }
 
     const { response: githubResponse, data: githubData } = result;
@@ -189,23 +151,39 @@ export async function GET(request: NextRequest) {
       !calendar ||
       currentYearContributions === undefined
     ) {
-      console.error("GitHub contribution query failed", githubData.errors ?? githubResponse.status);
-      return NextResponse.json(
-        { success: false, error: "GitHub contribution activity is unavailable" },
-        { status: 502 }
-      );
+      throw new Error(`GitHub contribution query failed: ${JSON.stringify(githubData.errors ?? githubResponse.status)}`);
     }
 
-    const response = NextResponse.json({
+    return { contributionYear, currentYearContributions, calendar };
+  },
+  ["github-contributions"],
+  { revalidate: 600 },
+);
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = await resolvePortfolioUser(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Portfolio not found" }, { status: 404 });
+    }
+    if (!user.isOwner && !user.showGitHubHeatmap) {
+      return NextResponse.json({ success: true, visible: false });
+    }
+
+    let contributions;
+    try {
+      contributions = await getContributionCalendar(user.id, user.username, user.installationId);
+    } catch (error) {
+      console.error("Unable to load GitHub contributions", error instanceof Error ? error.message : error);
+      return NextResponse.json({ success: true, visible: user.showGitHubHeatmap, available: false });
+    }
+
+    return NextResponse.json({
       success: true,
       visible: user.showGitHubHeatmap,
       available: true,
-      contributionYear,
-      currentYearContributions,
-      calendar,
+      ...contributions,
     });
-    response.headers.set("Cache-Control", "no-store");
-    return response;
   } catch (error) {
     console.error("Failed to load GitHub contributions", error);
     return NextResponse.json(

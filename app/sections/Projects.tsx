@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -58,15 +58,16 @@ const findMissingSkillIcons = async (
 };
 
 export default function Projects() {
-  const { isOwner, portfolioData } = useUser();
+  const { isOwner, portfolioData, skills, setSkills, skillIcons: savedSkillIcons } = useUser();
   const ref = useRef<HTMLDivElement | null>(null);
   const isInView = useInView(ref as React.RefObject<HTMLElement>, {
     once: true,
     margin: "-100px",
   });
   const [projects, setProjects] = useState<PortfolioProjectData[]>(portfolioData.projects);
-  const [skills, setSkills] = useState<string[]>(portfolioData.skills);
-  const [skillIcons, setSkillIcons] = useState<SkillIconMap>(portfolioData.iconMap);
+  // Looked-up logos for project skills without a saved icon; saved choices always win.
+  const [foundIcons, setFoundIcons] = useState<SkillIconMap>({});
+  const skillIcons = useMemo(() => ({ ...foundIcons, ...savedSkillIcons }), [foundIcons, savedSkillIcons]);
   const [editorOpen, setEditorOpen] = useState(false);
   const [sourceOpen, setSourceOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<PortfolioProjectData | null>(
@@ -74,6 +75,7 @@ export default function Projects() {
   );
   const [projectToDelete, setProjectToDelete] =
     useState<PortfolioProjectData | null>(null);
+  const [deletingProject, setDeletingProject] = useState(false);
   const [selectedProject, setSelectedProject] = useState<PortfolioProjectData | null>(
     null,
   );
@@ -99,7 +101,7 @@ export default function Projects() {
       portfolioData.projects.map((project) => project.techStack),
       portfolioData.iconMap,
     ).then((icons) => {
-      if (active) setSkillIcons((current) => ({ ...current, ...icons }));
+      if (active) setFoundIcons((current) => ({ ...current, ...icons }));
     });
     return () => { active = false; };
   }, [portfolioData.iconMap, portfolioData.projects]);
@@ -134,12 +136,9 @@ export default function Projects() {
           )
         : [data.project, ...current],
     );
-    if (data.skills) {
-      setSkills(data.skills);
-      window.dispatchEvent(new Event("portfolio:skills-updated"));
-    }
+    if (data.skills) setSkills(data.skills);
     const addedIcons = await findMissingSkillIcons([data.project.techStack], skillIcons);
-    setSkillIcons((current) => ({ ...current, ...addedIcons }));
+    setFoundIcons((current) => ({ ...current, ...addedIcons }));
   };
 
   const saveProjectVideo = async (projectId: string, video: ProjectVideo) => {
@@ -168,15 +167,22 @@ export default function Projects() {
 
   const deleteProject = async () => {
     if (!projectToDelete) return;
-    const response = await fetch(`/api/projects?id=${projectToDelete.id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    if (response.ok)
-      setProjects((current) =>
-        current.filter((project) => project.id !== projectToDelete.id),
-      );
-    setProjectToDelete(null);
+    setDeletingProject(true);
+    try {
+      const response = await fetch(`/api/projects?id=${projectToDelete.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (response.ok)
+        setProjects((current) =>
+          current.filter((project) => project.id !== projectToDelete.id),
+        );
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    } finally {
+      setDeletingProject(false);
+      setProjectToDelete(null);
+    }
   };
 
   const openEditor = (project: PortfolioProjectData | null = null) => {
@@ -214,14 +220,15 @@ export default function Projects() {
       credentials: "include",
       body: JSON.stringify({ repositoryId }),
     });
-    const data = (await response.json()) as { project?: PortfolioProjectData; error?: string };
+    const data = (await response.json()) as { project?: PortfolioProjectData; skills?: string[]; error?: string };
     if (!response.ok || !data.project) throw new Error(data.error || "Unable to import project");
     setProjects((current) => [data.project!, ...current]);
+    if (data.skills) setSkills(data.skills);
     const importedIcons = await findMissingSkillIcons(
       [data.project.techStack],
       skillIcons,
     );
-    setSkillIcons((current) => ({ ...current, ...importedIcons }));
+    setFoundIcons((current) => ({ ...current, ...importedIcons }));
     setSourceOpen(false);
     setSelectedProject(data.project);
   };
@@ -418,6 +425,7 @@ export default function Projects() {
           title="Delete Project"
           subject={projectToDelete?.title}
           note="This action cannot be undone."
+          isBusy={deletingProject}
           onClose={() => setProjectToDelete(null)}
           onConfirm={deleteProject}
         />

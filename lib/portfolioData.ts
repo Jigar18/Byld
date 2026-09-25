@@ -28,6 +28,7 @@ export async function loadPortfolioData(username: string) {
     select: {
       id: true,
       username: true,
+      showGitHubHeatmap: true,
       details: true,
       skills: { take: 1, select: { skills: true, iconMap: true } },
       projects: {
@@ -109,6 +110,7 @@ export async function loadPortfolioData(username: string) {
   return {
     id: user.id,
     username: user.username,
+    showGitHubHeatmap: user.showGitHubHeatmap,
     details: {
       firstName: user.details.firstName,
       lastName: user.details.lastName,

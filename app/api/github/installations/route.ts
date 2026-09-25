@@ -1,6 +1,6 @@
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
-import { getAccessToken } from "@/lib/accessToken";
+import { getUserAccessTokenById } from "@/lib/accessToken";
 import { getSession } from "@/lib/session";
 import {
   GitHubInstallationData,
@@ -13,7 +13,10 @@ export async function GET(req: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Authentication token is missing" }, { status: 401 });
     }
-    const accessToken = await getAccessToken(req);
+    const accessToken = await getUserAccessTokenById(session.userId);
+    if (!accessToken) {
+      return NextResponse.json({ error: "GitHub OAuth token is missing" }, { status: 401 });
+    }
 
     const response = await axios.get<{ installations?: GitHubInstallationData[] }>("https://api.github.com/user/installations", {
       headers: {

@@ -6,15 +6,16 @@ export async function resolvePortfolioUser(request: NextRequest) {
   const requestedUsername = request.nextUrl.searchParams.get("username")?.trim();
   const session = await getSession(request);
 
+  const select = { id: true, username: true, installationId: true, showGitHubHeatmap: true };
   const user = requestedUsername
     ? await db.user.findFirst({
         where: { username: { equals: requestedUsername, mode: "insensitive" } },
-        select: { id: true, username: true },
+        select,
       })
     : session
       ? await db.user.findUnique({
           where: { id: session.userId },
-          select: { id: true, username: true },
+          select,
         })
       : null;
 
@@ -22,10 +23,7 @@ export async function resolvePortfolioUser(request: NextRequest) {
 
   return {
     ...user,
+    session,
     isOwner: session?.userId === user.id,
   };
-}
-
-export function portfolioLookupStatus(request: NextRequest) {
-  return request.nextUrl.searchParams.has("username") ? 404 : 401;
 }

@@ -8,6 +8,7 @@ import {
   repositoryTitle,
   topicSkills,
 } from "@/lib/githubPortfolio";
+import { addProjectSkillsToPortfolio } from "@/lib/projectSkills";
 import { getSession } from "@/lib/session";
 
 const MAX_PROJECTS = 4;
@@ -41,18 +42,22 @@ export async function POST(request: NextRequest) {
     ])).slice(0, 8);
     const description = repository.description?.trim() || readmeSummary ||
       `${repositoryTitle(repository.name)} is a ${techStack[0] ? `${techStack[0]} ` : ""}project imported from GitHub.`;
-    const project = await db.project.create({
-      data: {
-        userId: session.userId,
-        title: repositoryTitle(repository.name),
-        description,
-        techStack,
-        githubUrl: repository.html_url,
-        liveUrl: repository.homepage?.trim() || null,
-      },
-      include: { images: true },
+    const { project, skills } = await db.$transaction(async (tx) => {
+      const project = await tx.project.create({
+        data: {
+          userId: session.userId,
+          title: repositoryTitle(repository.name),
+          description,
+          techStack,
+          githubUrl: repository.html_url,
+          liveUrl: repository.homepage?.trim() || null,
+        },
+        include: { images: true },
+      });
+      const skills = await addProjectSkillsToPortfolio(tx, session.userId, techStack);
+      return { project, skills };
     });
-    return NextResponse.json({ project }, { status: 201 });
+    return NextResponse.json({ project, skills }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "The GitHub project could not be imported" }, { status: 502 });
   }

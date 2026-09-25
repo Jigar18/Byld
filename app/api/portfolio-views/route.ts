@@ -2,7 +2,6 @@ import { createHmac, randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolvePortfolioUser } from "@/lib/publicPortfolio";
-import { getSession } from "@/lib/session";
 
 const VISITOR_COOKIE = "portfolio_visitor_id";
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
@@ -22,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Portfolio not found" }, { status: 404 });
     }
 
-    const session = await getSession(request);
+    const { session } = portfolioUser;
     const userAgent = request.headers.get("user-agent") ?? "";
     const isAutomatedTraffic = BOT_PATTERN.test(userAgent);
     let anonymousId = request.cookies.get(VISITOR_COOKIE)?.value;

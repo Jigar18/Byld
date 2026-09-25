@@ -78,6 +78,7 @@ export type PortfolioProjectData = {
 export type PortfolioInitialData = {
   username: string;
   isOwner: boolean;
+  showGitHubHeatmap: boolean;
   details: PortfolioDetails;
   skills: string[];
   iconMap: Record<string, string | null>;

@@ -2,6 +2,7 @@ import { timingSafeEqual } from "crypto";
 import axios from "axios";
 import { SignJWT } from "jose";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserAccessTokenById } from "@/lib/accessToken";
 import { db } from "@/lib/db";
 import {
   GitHubInstallationData,
@@ -38,22 +39,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Invalid GitHub App setup action" }, { status: 400 });
     }
 
-    const user = await db.user.findUnique({
-      where: { id: session.userId },
-      select: { accessToken: true },
-    });
-    if (!user?.accessToken) {
-      return NextResponse.json({ error: "GitHub OAuth token is missing" }, { status: 401 });
-    }
-
     try {
+      const accessToken = await getUserAccessTokenById(session.userId);
+      if (!accessToken) {
+        return NextResponse.json({ error: "GitHub OAuth token is missing" }, { status: 401 });
+      }
+
       const installationResponse = await axios.get<{
         installations?: GitHubInstallationData[];
       }>(
         "https://api.github.com/user/installations",
         {
           headers: {
-            Authorization: `Bearer ${user.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             Accept: "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
           },

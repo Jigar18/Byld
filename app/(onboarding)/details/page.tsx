@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, type ReactNode } from "react";
+import React, { useState, useEffect, useRef, type ReactNode } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
@@ -133,25 +133,23 @@ export default function Details() {
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const searchTimer = useRef<number | undefined>(undefined);
+  const latestSearch = useRef(0);
+
   const router = useRouter();
 
   useEffect(() => {
     const fetchGitHubDetails = async () => {
       try {
-        const [profileResponse, emailResponse] = await Promise.all([
-          fetch("/api/github/profile"),
-          fetch("/api/emailFetch"),
-        ]);
-        const profile = profileResponse.ok
-          ? await profileResponse.json() as { firstName?: string; lastName?: string; location?: string }
-          : {};
-        const email = emailResponse.ok ? await emailResponse.json() as { email?: string } : {};
+        const response = await fetch("/api/github/profile");
+        if (!response.ok) return;
+        const profile = await response.json() as { firstName?: string; lastName?: string; location?: string; email?: string };
         setFormData((current) => ({
           ...current,
           firstName: current.firstName || profile.firstName || "",
           lastName: current.lastName || profile.lastName || "",
           location: current.location || profile.location || "",
-          email: current.email || email.email || "",
+          email: current.email || profile.email || "",
         }));
       } catch {
         // GitHub profile data is optional; all fields remain editable.
@@ -168,16 +166,28 @@ export default function Details() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const searchWhileTyping = async (
+  // Debounced so a search runs once typing pauses, and only the latest result is shown.
+  const searchWhileTyping = (
     e: React.ChangeEvent<HTMLInputElement>,
     search: (query: string) => Promise<string[]>,
     setSuggestions: (suggestions: string[]) => void,
   ) => {
     const { value } = e.target;
     handleInputChange(e);
+    window.clearTimeout(searchTimer.current);
+    const searchId = ++latestSearch.current;
+    if (value.length < 2) {
+      setSuggestions([]);
+      setIsSearching(false);
+      return;
+    }
     setIsSearching(true);
-    setSuggestions(value.length < 2 ? [] : await search(value));
-    setIsSearching(false);
+    searchTimer.current = window.setTimeout(async () => {
+      const suggestions = await search(value);
+      if (searchId !== latestSearch.current) return;
+      setSuggestions(suggestions);
+      setIsSearching(false);
+    }, 300);
   };
 
   const nextStep = () => setCurrentStep((prev) => prev + 1);

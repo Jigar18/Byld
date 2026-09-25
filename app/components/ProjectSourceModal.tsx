@@ -9,7 +9,6 @@ import { secondaryActionButtonClass } from "@/components/ui/button";
 type Repository = {
   id: number;
   name: string;
-  fullName: string;
   description: string | null;
   private: boolean;
   language: string | null;
@@ -80,6 +79,8 @@ export default function ProjectSourceModal({ isOpen, onClose, onManual, onImport
 
   const openRepositories = async () => {
     setView("repositories");
+    // Going back and forth between the views reuses the list already loaded.
+    if (repositories.length) return;
     setLoading(true);
     setError("");
     try {

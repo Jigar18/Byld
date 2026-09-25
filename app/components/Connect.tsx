@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Edit3, Check, Share2 } from "lucide-react";
 import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
@@ -108,6 +108,7 @@ export default function Connect() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const toastTimer = useRef<number | undefined>(undefined);
 
   const copyToClipboard = async (link: SocialLink) => {
     try {
@@ -117,7 +118,9 @@ export default function Connect() {
       console.error("Failed to copy: ", err);
       setToastMessage("Failed to copy link");
     }
-    setTimeout(() => setToastMessage(null), 3000);
+    // Restart the timer so a second copy is not hidden early by the first one.
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToastMessage(null), 3000);
   };
 
   const handleOpenModal = () => {

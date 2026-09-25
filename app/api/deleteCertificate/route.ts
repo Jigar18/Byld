@@ -31,8 +31,11 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    await removeStoredFile(certificate.pdfUrl, "certificates", `certifications/${session.userId}-`);
     await db.certifications.delete({ where: { id: certificateId } });
+    // The record is gone either way; a leftover file must not turn this into a failure.
+    await removeStoredFile(certificate.pdfUrl, "certificates", `certifications/${session.userId}-`).catch((error) =>
+      console.error("Unable to remove the certificate file:", error)
+    );
 
     return NextResponse.json({
       success: true,
