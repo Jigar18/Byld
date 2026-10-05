@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import {
-  Archivo,
+  Funnel_Display,
+  Funnel_Sans,
   Geist,
   Geist_Mono,
   Kaushan_Script,
   Manrope,
   Sora,
 } from "next/font/google";
+import { applyThemeBeforePaint } from "./components/landing/landingTheme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,10 +21,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const landingDisplay = Archivo({
-  variable: "--font-landing",
+const landingDisplay = Funnel_Display({
+  variable: "--font-landing-display",
   subsets: ["latin"],
-  axes: ["wdth"],
+});
+
+const landingSans = Funnel_Sans({
+  variable: "--font-landing-sans",
+  subsets: ["latin"],
 });
 
 const loaderMark = Kaushan_Script({
@@ -45,11 +51,11 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://byldit.vercel.app"),
   title: "Byldit",
   description:
-    "Bring your projects, GitHub contributions, skills, and experience into one developer portfolio built to be explored.",
+    "Turn your GitHub into a developer portfolio. Sign in, choose the repositories to show, and your page is live at your username.",
   icons: "/landing/byldit-mark-mono.webp",
   openGraph: {
-    title: "Byldit — Give your work a place to speak",
-    description: "Build a developer portfolio from the work already living on your GitHub.",
+    title: "Byldit — Turn your GitHub into a portfolio",
+    description: "Sign in, choose the repositories to show, and your page is live at your username. No code, no hosting.",
     url: "https://byldit.vercel.app",
     siteName: "Byldit",
     type: "website",
@@ -57,8 +63,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Byldit — Give your work a place to speak",
-    description: "Build a developer portfolio from the work already living on your GitHub.",
+    title: "Byldit — Turn your GitHub into a portfolio",
+    description: "Sign in, choose the repositories to show, and your page is live at your username. No code, no hosting.",
     images: ["/og.png"],
   },
 };
@@ -74,10 +80,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // The theme script below adds data-lp-theme to <html> before React hydrates it.
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${landingDisplay.variable} ${loaderMark.variable} ${profileBody.variable} ${profileDisplay.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${landingDisplay.variable} ${landingSans.variable} ${loaderMark.variable} ${profileBody.variable} ${profileDisplay.variable} antialiased`}
       >
+        <script dangerouslySetInnerHTML={{ __html: applyThemeBeforePaint }} />
         {children}
       </body>
     </html>
