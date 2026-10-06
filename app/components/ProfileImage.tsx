@@ -34,7 +34,7 @@ export default function ProfileImage() {
             type="button"
             onClick={() => setIsModalOpen(true)}
             aria-label="Edit profile picture"
-            className="absolute -bottom-1.5 -right-1.5 grid size-9 place-items-center rounded-full border border-sheet-edge bg-sheet-raised text-ink transition-colors hover:bg-ink hover:text-on-ink lg:bottom-1.5 lg:right-1.5 lg:size-10"
+            className="absolute -bottom-1.5 -right-1.5 grid size-10 place-items-center rounded-full border-[3px] border-paper bg-ink text-on-ink transition-colors hover:bg-brand hover:text-white lg:bottom-[5%] lg:right-[5%] lg:size-12"
           >
             <Camera className="size-4" />
           </button>

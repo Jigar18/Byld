@@ -234,7 +234,7 @@ export default function GitHubHeatmap() {
             data-date={day.date}
             data-count={day.contributionCount}
             className={cn(
-              "aspect-square rounded-[3px] transition-transform duration-150 hover:scale-[1.6] motion-reduce:transform-none",
+              "aspect-[2/3] rounded-[3px] transition-transform duration-150 hover:scale-[1.2] motion-reduce:transform-none",
               contributionLevels[getContributionLevel(day)],
             )}
             style={{ gridColumnStart: weekIndex + 2, gridRowStart: day.weekday + 2 }}
@@ -333,7 +333,7 @@ export default function GitHubHeatmap() {
 
           <div className="min-w-0">
             {/* The padding leaves room for a pointed-at day to grow without being cut off by the scroller. */}
-            <div ref={scrollerRef} className="ui-scroll-quiet -m-1.5 overflow-x-auto p-1.5">
+            <div ref={scrollerRef} className="ui-scroll-quiet -m-1 overflow-x-auto p-1">
               <div
                 role="img"
                 aria-label={`GitHub contributions, day by day, over the last 12 months: ${calendar.totalContributions.toLocaleString()} in total.`}
@@ -383,7 +383,7 @@ export default function GitHubHeatmap() {
                 <span>Less</span>
                 <span aria-hidden="true" className="flex gap-1">
                   {contributionLevels.map((color) => (
-                    <span key={color} className={cn("size-3 rounded-[3px]", color)} />
+                    <span key={color} className={cn("h-[15px] w-2.5 rounded-[3px]", color)} />
                   ))}
                 </span>
                 <span>More</span>

@@ -2,6 +2,7 @@
 
 import { Eye } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { useUser } from "../context/UserContext";
 
 const VISITOR_STORAGE_KEY = "portfolio_anonymous_visitor_id";
@@ -14,7 +15,7 @@ function getAnonymousVisitorId() {
   return visitorId;
 }
 
-export default function PortfolioViewCount() {
+export default function PortfolioViewCount({ className }: { className?: string }) {
   const { portfolioUsername } = useUser();
   const [count, setCount] = useState<number | null>(null);
   const requested = useRef(false);
@@ -49,10 +50,10 @@ export default function PortfolioViewCount() {
       role="img"
       aria-label={count === null ? "Loading unique portfolio views" : `${count} unique portfolio views`}
       title="Unique visitors"
-      className="inline-flex items-center gap-1.5 text-sm font-medium tabular-nums text-ink-soft"
+      className={cn("tabular-nums", className)}
     >
-      <Eye aria-hidden="true" className="size-4" strokeWidth={1.8} />
-      {count ?? "—"}
+      <Eye aria-hidden="true" />
+      {count === null ? "—" : `${count.toLocaleString("en")} ${count === 1 ? "view" : "views"}`}
     </div>
   );
 }

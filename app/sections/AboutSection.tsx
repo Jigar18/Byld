@@ -11,6 +11,15 @@ import { useUser } from "../context/UserContext";
 
 const MAX_ABOUT_LENGTH = 1000;
 
+// A single line break is usually left over from pasting a CV, so the text runs on through it;
+// only an empty line starts a new paragraph.
+const flowParagraphs = (text: string) =>
+  text
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.replace(/\s*\n\s*/g, " ").trim())
+    .filter(Boolean)
+    .join("\n\n");
+
 // The hero's lead paragraph. Long ones are cut to a few lines, with the rest a press away.
 export default function About() {
   const { userDetails, isOwner, updateUserDetails } = useUser();
@@ -82,11 +91,11 @@ export default function About() {
           ref={textRef}
           id="about-lead"
           className={cn(
-            "whitespace-pre-wrap text-[17px] leading-[1.65] text-ink-soft sm:text-lg sm:leading-[1.65]",
+            "whitespace-pre-line text-[17px] leading-[1.65] text-ink-soft sm:text-lg sm:leading-[1.65]",
             !expanded && "line-clamp-4",
           )}
         >
-          {aboutText}
+          {flowParagraphs(aboutText)}
         </p>
       ) : (
         <p className="text-ink-soft">
@@ -151,7 +160,7 @@ export default function About() {
           maxLength={MAX_ABOUT_LENGTH}
         />
         <div className="mt-2 flex justify-between gap-4 text-sm text-ink-soft">
-          <span>Line breaks are kept, so you can write in paragraphs.</span>
+          <span>Leave an empty line to start a new paragraph.</span>
           <span className="shrink-0 tabular-nums">
             {tempAboutText.length}/{MAX_ABOUT_LENGTH}
           </span>

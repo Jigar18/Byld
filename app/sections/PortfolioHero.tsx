@@ -14,44 +14,50 @@ const capitalizeWords = (text: string) => text.replace(/\b\w/g, (char) => char.t
 // The hero's lines come in one after another when the page is ready; this sets a line's turn.
 const riseTurn = (turn: number) => ({ "--rise": turn }) as CSSProperties;
 
-// A dark sheet standing on the page with the owner's picture and the facts about them. It turns to face the pointer.
-function IdentitySheet() {
+// The owner's picture stands on the page by itself, inside a thin ring. On wide screens it leans toward
+// the pointer, and the ring is lit where the pointer is near it.
+function Portrait() {
+  return (
+    <div className="pf-portrait-rig relative order-first w-max lg:order-last lg:mr-6">
+      <div aria-hidden="true" className="pf-glow" />
+      <div
+        data-light
+        data-tilt="12"
+        className="pf-portrait relative size-[104px] sm:size-[124px] lg:size-[290px] xl:size-[320px]"
+      >
+        <span aria-hidden="true" className="pf-portrait-ring" />
+        <span aria-hidden="true" className="pf-portrait-orbit" />
+        <div className="pf-portrait-photo size-full">
+          <ProfileImage />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const factClass = "flex items-center gap-2 [&_svg]:size-4 [&_svg]:shrink-0";
+
+function ProfileFacts() {
   const { userDetails } = useUser();
 
   return (
-    <div className="pf-pass-rig relative order-first lg:order-last">
-      <div aria-hidden="true" className="pf-glow" />
-      <div data-light data-tilt="9" className="pf-pass ui-sheet flex items-center gap-5 p-4 lg:block lg:p-6">
-        <span aria-hidden="true" className="pf-pass-back" />
-
-        <div className="pf-pass-photo relative size-[84px] flex-none lg:mx-auto lg:mb-9 lg:mt-5 lg:size-[212px]">
-          <span aria-hidden="true" className="pf-pass-orbit" />
-          <ProfileImage />
-        </div>
-
-        <div className="pf-pass-facts min-w-0 flex-1 lg:px-1">
-          {(userDetails.location || userDetails.college) && (
-            <ul className="mb-2.5 space-y-1.5 text-[15px] leading-snug lg:mb-4 lg:space-y-2.5 lg:text-base">
-              {userDetails.college && (
-                <li className="flex gap-2.5">
-                  <Building2 aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ink-soft lg:mt-[3px]" />
-                  {userDetails.college}
-                </li>
-              )}
-              {userDetails.location && (
-                <li className="flex gap-2.5">
-                  <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ink-soft lg:mt-[3px]" />
-                  {userDetails.location}
-                </li>
-              )}
-            </ul>
-          )}
-          <PortfolioViewCount />
-        </div>
-
-        <span aria-hidden="true" className="pf-pass-glare" />
-      </div>
-    </div>
+    <ul className="flex flex-wrap gap-x-6 gap-y-2 text-[15px] text-ink-soft sm:text-base">
+      {userDetails.college && (
+        <li className={factClass}>
+          <Building2 aria-hidden="true" />
+          {userDetails.college}
+        </li>
+      )}
+      {userDetails.location && (
+        <li className={factClass}>
+          <MapPin aria-hidden="true" />
+          {userDetails.location}
+        </li>
+      )}
+      <li>
+        <PortfolioViewCount className={factClass} />
+      </li>
+    </ul>
   );
 }
 
@@ -64,7 +70,7 @@ export default function PortfolioHero() {
   return (
     <section
       aria-labelledby="portfolio-name"
-      className="grid items-center gap-9 pb-14 pt-9 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_330px] lg:gap-20 lg:pb-24 lg:pt-20"
+      className="grid items-center gap-7 pb-14 pt-9 sm:gap-8 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-20 lg:pb-24 lg:pt-20"
     >
       <div className="min-w-0">
         <h1
@@ -84,22 +90,26 @@ export default function PortfolioHero() {
           </p>
         )}
 
+        <div className="pf-rise mt-4 sm:mt-5" style={riseTurn(2)}>
+          <ProfileFacts />
+        </div>
+
         {isOwner && (
-          <div className="pf-rise mt-5" style={riseTurn(1)}>
+          <div className="pf-rise mt-5" style={riseTurn(2)}>
             <EditProfile />
           </div>
         )}
 
-        <div className="pf-rise mt-6 sm:mt-7" style={riseTurn(2)}>
+        <div className="pf-rise mt-6 sm:mt-7" style={riseTurn(3)}>
           <About />
         </div>
 
-        <div className="pf-rise mt-7 sm:mt-9" style={riseTurn(3)}>
+        <div className="pf-rise mt-7 sm:mt-9" style={riseTurn(4)}>
           <ProfileLinks />
         </div>
       </div>
 
-      <IdentitySheet />
+      <Portrait />
     </section>
   );
 }

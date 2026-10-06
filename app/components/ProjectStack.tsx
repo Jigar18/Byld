@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, type KeyboardEvent, useRef, useState } from "react";
+import { type CSSProperties, type KeyboardEvent, type MouseEvent, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ExternalLink, Github, Maximize2, Pencil, Play, Trash2 } from "lucide-react";
 import type { PortfolioProjectData } from "@/types/portfolio";
 import { Button } from "@/components/ui/button";
@@ -21,8 +21,7 @@ interface ProjectStackProps {
 const SHOWN_TECH_COUNT = 6;
 const SWIPE_DISTANCE = 44;
 
-const roundControlClass =
-  "grid size-9 place-items-center rounded-full bg-well text-ink-soft transition-colors hover:bg-ink hover:text-on-ink [&_svg]:size-[18px]";
+const pagerControlClass = "grid size-9 place-items-center rounded-full transition-colors [&_svg]:size-[18px]";
 
 function ProjectCover({ project }: { project: PortfolioProjectData }) {
   const coverImage = [...project.images].sort((left, right) => left.position - right.position)[0];
@@ -106,102 +105,118 @@ export default function ProjectStack({
     bringToFront(frontIndex + (distance < 0 ? 1 : -1));
   };
 
+  // The text beside the stack opens the project as well, unless the press lands on one of its own controls
+  // or is the end of selecting some of that text.
+  const openFromDetails = (event: MouseEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest("a, button")) return;
+    if (window.getSelection()?.toString()) return;
+    onOpenProject(front);
+  };
+
   return (
     <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.22fr)_minmax(0,1fr)] lg:gap-12">
-      <div
-        className="pf-stack"
-        style={{ "--behind": count - 1 } as CSSProperties}
-        onPointerDown={(event) => {
-          dragStartX.current = event.clientX;
-          swiped.current = false;
-        }}
-        onPointerUp={(event) => finishDrag(event.clientX)}
-        onPointerCancel={() => (dragStartX.current = null)}
-        // A drag with the mouse ends in a click on the cover it started on, which must not open the project.
-        onClickCapture={(event) => {
-          if (!swiped.current) return;
-          swiped.current = false;
-          event.stopPropagation();
-        }}
-      >
-        <div className="pf-stack-rig" data-tilt="4">
-          {projects.map((project, index) => {
-            const depth = (index - frontIndex + count) % count;
-            const isFront = depth === 0;
-            const isShuffling = shuffle?.projectId === project.id;
+      <div className="min-w-0">
+        <div
+          className="pf-stack"
+          style={{ "--behind": count - 1 } as CSSProperties}
+          onPointerDown={(event) => {
+            dragStartX.current = event.clientX;
+            swiped.current = false;
+          }}
+          onPointerUp={(event) => finishDrag(event.clientX)}
+          onPointerCancel={() => (dragStartX.current = null)}
+          // A drag with the mouse ends in a click on the cover it started on, which must not open the project.
+          onClickCapture={(event) => {
+            if (!swiped.current) return;
+            swiped.current = false;
+            event.stopPropagation();
+          }}
+        >
+          <div className="pf-stack-rig" data-tilt="4">
+            {projects.map((project, index) => {
+              const depth = (index - frontIndex + count) % count;
+              const isFront = depth === 0;
+              const isShuffling = shuffle?.projectId === project.id;
 
-            return (
-              <button
-                key={project.id}
-                type="button"
-                onClick={() => (isFront ? onOpenProject(project) : bringToFront(index))}
-                aria-label={isFront ? `View ${project.title}` : `Show ${project.title}`}
-                tabIndex={isFront ? 0 : -1}
-                data-shuffle={isShuffling ? shuffle.move : undefined}
-                onAnimationEnd={isShuffling ? () => setShuffle(null) : undefined}
-                className="pf-stack-cover group text-left"
-                style={{ "--depth": depth } as CSSProperties}
-              >
-                <ProjectCover project={project} />
-                {isFront && (
-                  <span className="absolute bottom-4 left-4 inline-flex h-10 translate-y-2 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-black opacity-0 shadow-lg transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 motion-reduce:transform-none">
-                    <Maximize2 aria-hidden="true" className="size-4" />
-                    View project
-                  </span>
-                )}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={project.id}
+                  type="button"
+                  onClick={() => (isFront ? onOpenProject(project) : bringToFront(index))}
+                  aria-label={isFront ? `View ${project.title}` : `Show ${project.title}`}
+                  tabIndex={isFront ? 0 : -1}
+                  data-shuffle={isShuffling ? shuffle.move : undefined}
+                  onAnimationEnd={isShuffling ? () => setShuffle(null) : undefined}
+                  className="pf-stack-cover group text-left"
+                  style={{ "--depth": depth } as CSSProperties}
+                >
+                  <ProjectCover project={project} />
+                  {isFront && (
+                    <span className="absolute bottom-4 left-4 inline-flex h-10 translate-y-2 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-black opacity-0 shadow-lg transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 motion-reduce:transform-none">
+                      <Maximize2 aria-hidden="true" className="size-4" />
+                      View project
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Under the covers, so it is plain at a glance that this is one project of several. */}
+        {count > 1 && (
+          <div className="mt-5 flex w-max items-center gap-1 rounded-full bg-well p-1 sm:mt-6">
+            <button
+              type="button"
+              onClick={() => bringToFront(frontIndex - 1)}
+              aria-label="Previous project"
+              className={cn(pagerControlClass, "text-ink-soft hover:bg-ink hover:text-on-ink")}
+            >
+              <ChevronLeft aria-hidden="true" />
+            </button>
+            <p className="min-w-[10ch] px-1 text-center text-sm text-ink-soft">
+              Project <span className="font-semibold tabular-nums text-ink">{frontIndex + 1}</span> of {count}
+            </p>
+            <button
+              type="button"
+              onClick={() => bringToFront(frontIndex + 1)}
+              aria-label="Next project"
+              // Filled, so the way on to the next project is the first thing seen here.
+              className={cn(pagerControlClass, "bg-ink text-on-ink hover:bg-brand hover:text-white")}
+            >
+              <ChevronRight aria-hidden="true" />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="min-w-0">
         {count > 1 && (
-          <div className="mb-6 flex items-start gap-3">
-            <div
-              ref={tabsRef}
-              role="tablist"
-              aria-label="Projects"
-              onKeyDown={moveBetweenTabs}
-              className="flex min-w-0 flex-1 flex-wrap gap-1.5"
-            >
-              {projects.map((project, index) => (
-                <button
-                  key={project.id}
-                  type="button"
-                  role="tab"
-                  id={`project-tab-${project.id}`}
-                  aria-selected={index === frontIndex}
-                  aria-controls="project-details"
-                  tabIndex={index === frontIndex ? 0 : -1}
-                  onClick={() => bringToFront(index)}
-                  className={cn(
-                    "h-9 max-w-[20ch] truncate rounded-full px-4 text-sm font-semibold transition-colors duration-300",
-                    index === frontIndex ? "bg-ink text-on-ink" : "bg-well text-ink-soft hover:text-ink",
-                  )}
-                >
-                  {project.title}
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-none gap-1.5">
+          <div
+            ref={tabsRef}
+            role="tablist"
+            aria-label="Projects"
+            onKeyDown={moveBetweenTabs}
+            className="mb-6 flex flex-wrap gap-1.5"
+          >
+            {projects.map((project, index) => (
               <button
+                key={project.id}
                 type="button"
-                onClick={() => bringToFront(frontIndex - 1)}
-                aria-label="Previous project"
-                className={roundControlClass}
+                role="tab"
+                id={`project-tab-${project.id}`}
+                aria-selected={index === frontIndex}
+                aria-controls="project-details"
+                tabIndex={index === frontIndex ? 0 : -1}
+                onClick={() => bringToFront(index)}
+                className={cn(
+                  "h-9 max-w-[20ch] truncate rounded-full px-4 text-sm font-semibold transition-colors duration-300",
+                  index === frontIndex ? "bg-ink text-on-ink" : "bg-well text-ink-soft hover:text-ink",
+                )}
               >
-                <ChevronLeft aria-hidden="true" />
+                {project.title}
               </button>
-              <button
-                type="button"
-                onClick={() => bringToFront(frontIndex + 1)}
-                aria-label="Next project"
-                className={roundControlClass}
-              >
-                <ChevronRight aria-hidden="true" />
-              </button>
-            </div>
+            ))}
           </div>
         )}
 
@@ -211,9 +226,10 @@ export default function ProjectStack({
           id="project-details"
           role={count > 1 ? "tabpanel" : undefined}
           aria-labelledby={count > 1 ? `project-tab-${front.id}` : undefined}
-          className="pf-swap"
+          onClick={openFromDetails}
+          className="pf-swap group/details -m-3 cursor-pointer rounded-[20px] p-3"
         >
-          <h3 className="font-display text-[30px] font-semibold leading-[1.04] tracking-[-0.03em] [overflow-wrap:anywhere] sm:text-[36px]">
+          <h3 className="font-display text-[30px] font-semibold leading-[1.04] tracking-[-0.03em] transition-colors duration-200 [overflow-wrap:anywhere] group-hover/details:text-brand-text sm:text-[36px]">
             {front.title}
           </h3>
           <p className="mt-3 line-clamp-4 leading-[1.65] text-ink-soft">{front.description}</p>

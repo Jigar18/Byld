@@ -28,8 +28,9 @@ const months = [
   "December",
 ];
 
-const COLLAPSED_COUNT = 2;
-const COLLAPSED_POINTS = 3;
+const COLLAPSED_ROLE_COUNT = 2;
+// A role on its own has the section to itself; roles that share it each give up a point to keep it short.
+const collapsedPointCount = (roleCount: number) => (roleCount > 1 ? 2 : 3);
 
 const bulletPattern = /^\s*(?:[•●▪◦·]\s*|[*–—-]\s+)/;
 
@@ -145,12 +146,11 @@ function MonthYearSelects({
   );
 }
 
-function RolePoints({ contributions }: { contributions: string[] }) {
+function RolePoints({ contributions, collapsedCount }: { contributions: string[]; collapsedCount: number }) {
   const [expanded, setExpanded] = useState(false);
   const points = tidyContributions(contributions);
-  // One hidden point is not worth a control of its own.
-  const collapsible = points.length > COLLAPSED_POINTS + 1;
-  const shownPoints = collapsible && !expanded ? points.slice(0, COLLAPSED_POINTS) : points;
+  const hiddenCount = points.length - collapsedCount;
+  const shownPoints = expanded ? points : points.slice(0, collapsedCount);
 
   if (points.length === 0) return null;
 
@@ -166,7 +166,7 @@ function RolePoints({ contributions }: { contributions: string[] }) {
           </li>
         ))}
       </ul>
-      {collapsible && (
+      {hiddenCount > 0 && (
         <Button
           variant="ghost"
           size="sm"
@@ -175,7 +175,7 @@ function RolePoints({ contributions }: { contributions: string[] }) {
           className="-ml-2 mt-2 font-semibold text-ink"
         >
           <ChevronDown aria-hidden="true" className={cn("transition-transform duration-200", expanded && "rotate-180")} />
-          {expanded ? "Show fewer" : `Show ${points.length - COLLAPSED_POINTS} more`}
+          {expanded ? "Show fewer points" : `Show ${hiddenCount} more ${hiddenCount === 1 ? "point" : "points"}`}
         </Button>
       )}
     </div>
@@ -282,8 +282,8 @@ export default function Experience() {
     }
   };
 
-  const shownExperience = expanded ? experience : experience.slice(0, COLLAPSED_COUNT);
-  const hiddenCount = experience.length - COLLAPSED_COUNT;
+  const shownExperience = expanded ? experience : experience.slice(0, COLLAPSED_ROLE_COUNT);
+  const hiddenCount = experience.length - COLLAPSED_ROLE_COUNT;
 
   return (
     <PortfolioSection
@@ -351,7 +351,7 @@ export default function Experience() {
                 </div>
               </div>
 
-              <RolePoints contributions={exp.contributions} />
+              <RolePoints contributions={exp.contributions} collapsedCount={collapsedPointCount(experience.length)} />
             </li>
           ))}
         </ol>
@@ -366,7 +366,7 @@ export default function Experience() {
           className="-ml-3.5 mt-6"
         >
           <ChevronDown aria-hidden="true" className={cn("transition-transform duration-200", expanded && "rotate-180")} />
-          {expanded ? "Show fewer" : `Show ${hiddenCount} more`}
+          {expanded ? "Show fewer roles" : `Show ${hiddenCount} more ${hiddenCount === 1 ? "role" : "roles"}`}
         </Button>
       )}
 
