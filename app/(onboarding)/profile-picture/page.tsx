@@ -255,7 +255,7 @@ export default function ProfilePicturePage() {
               width={400}
               height={400}
               onLoad={(e) => onImageLoad(e.currentTarget)}
-              className="max-w-full"
+              className="w-[400px] max-w-full"
             />
           </ReactCrop>
         )}

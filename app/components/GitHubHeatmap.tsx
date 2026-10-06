@@ -2,7 +2,7 @@
 
 import { type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ButtonSpinner } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, pxToRem } from "@/lib/utils";
 import { useUser } from "../context/UserContext";
 import { contributionLevels } from "./contributionHeatmapStyles";
 import PortfolioSection from "./PortfolioSection";
@@ -342,7 +342,7 @@ export default function GitHubHeatmap() {
                 className="grid w-full gap-[3px]"
                 style={{
                   gridTemplateColumns: `auto repeat(${calendar.weeks.length}, minmax(0, 1fr))`,
-                  minWidth: calendar.weeks.length * MIN_WEEK_WIDTH + DAY_LABEL_WIDTH,
+                  minWidth: pxToRem(calendar.weeks.length * MIN_WEEK_WIDTH + DAY_LABEL_WIDTH),
                 }}
               >
                 {getMonthLabels(calendar).map(({ label, weekIndex }) => (

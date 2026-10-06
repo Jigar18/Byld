@@ -77,9 +77,13 @@ html {
   scroll-behavior: smooth;
 }
 
-/* The landing page was drawn against a 90% root size; the rest of the app uses the browser default. */
-@media (min-width: 768px) {
-  html:has(.lp) {
+/*
+  From tablet width up, the whole interface is drawn at nine tenths of the size it is written in. Every size
+  reaches the browser in rem (postcss-px-to-rem.cjs converts the px ones), so this is the only number to change.
+  Phones keep the full size.
+*/
+@media (min-width: 640px) {
+  html {
     font-size: 90%;
   }
 }

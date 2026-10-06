@@ -20,7 +20,7 @@ export default function BrandMark({ name = "always" }: { name?: keyof typeof nam
         alt=""
         width={34}
         height={34}
-        className="rounded-[10px] shadow-[0_0_0_1px_rgb(var(--c-line))]"
+        className="size-[34px] rounded-[10px] shadow-[0_0_0_1px_rgb(var(--c-line))]"
       />
       <span className={nameClassByVisibility[name]}>Byldit</span>
     </Link>

@@ -2,6 +2,7 @@
 const config = {
   plugins: {
     tailwindcss: {},
+    "./postcss-px-to-rem.cjs": {},
   },
 };
 

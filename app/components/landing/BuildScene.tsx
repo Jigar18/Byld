@@ -7,6 +7,7 @@ import GitHubButton from "./GitHubButton";
 import { fetchGitHubPreview, GITHUB_USERNAME, GitHubPreviewError, samplePortfolio } from "./githubPreview";
 import { ActivitySheet, ExperienceSheet, ProfileSheet, ProjectsSheet, SkillsSheet } from "./PortfolioSheets";
 import ThemeToggle from "../ThemeToggle";
+import { pxToRem } from "@/lib/utils";
 
 const layers = [
   {
@@ -44,7 +45,7 @@ const layers = [
 const chapterLabels = ["Scroll to take it apart", ...layers.map((layer) => layer.label), "Finished page"];
 const FINAL_CHAPTER = chapterLabels.length - 1;
 
-// Sheet geometry, mirrored in landing.css.
+// Sheet geometry, mirrored in landing.css. All of the scene's lengths are in that stylesheet's px.
 const SHEET_WIDTH = 620;
 const SHEET_HEIGHT = 280;
 const PAGE_GAP = 14;
@@ -131,7 +132,7 @@ export default function BuildScene() {
           (1 - ease(ramp(progress, end - CROSSFADE, end + CROSSFADE)));
         const pageOffset = (index - MIDDLE_LAYER) * (SHEET_HEIGHT + PAGE_GAP) * flat;
         const height = (MIDDLE_LAYER - index) * gap + PULL_Z * pull;
-        sheet.style.transform = `translate3d(0, ${pageOffset + PULL_Y * pull}px, ${height}px)`;
+        sheet.style.transform = `translate3d(0, ${pxToRem(pageOffset + PULL_Y * pull)}, ${pxToRem(height)})`;
         sheet.style.setProperty("--veil", (0.72 * inspecting * (1 - pull)).toFixed(3));
       });
 
@@ -150,9 +151,9 @@ export default function BuildScene() {
       const tilt = 1 - flat;
 
       rig.style.transform =
-        `translate3d(${mix(stackX, 0, flat)}px, ${mix(stackY, pageY, flat)}px, 0) scale3d(${scale}, ${scale}, ${scale}) ` +
+        `translate3d(${pxToRem(mix(stackX, 0, flat))}, ${pxToRem(mix(stackY, pageY, flat))}, 0) scale3d(${scale}, ${scale}, ${scale}) ` +
         `rotateX(${(TILT_X - tiltY * 4) * tilt}deg) rotateZ(${(TILT_Z + tiltX * 5) * tilt}deg)`;
-      shadow.style.transform = `translate3d(0, 0, ${-MIDDLE_LAYER * gap - 80}px) scale(${1 + open * 0.08})`;
+      shadow.style.transform = `translate3d(0, 0, ${pxToRem(-MIDDLE_LAYER * gap - 80)}) scale(${1 + open * 0.08})`;
       shadow.style.opacity = String(1 - flat);
       stage.dataset.flat = String(flat > 0.02);
 
@@ -173,7 +174,7 @@ export default function BuildScene() {
         const visibility = ease(enter) * (1 - ease(exit));
         chapterVisibility.current[index] = visibility;
         chapter.style.opacity = String(visibility);
-        chapter.style.transform = `translate3d(0, ${(1 - ease(enter)) * 24 - ease(exit) * 24}px, 0)`;
+        chapter.style.transform = `translate3d(0, ${pxToRem((1 - ease(enter)) * 24 - ease(exit) * 24)}, 0)`;
         chapter.style.pointerEvents = visibility > 0.5 ? "auto" : "none";
         if (visibility > 0.5) mostVisible = index;
       });
@@ -213,8 +214,10 @@ export default function BuildScene() {
     };
 
     const measure = () => {
-      stageWidth = stage.clientWidth;
-      stageHeight = stage.clientHeight;
+      // The stage is measured in screen pixels; dividing by the root scale puts it in the scene's own.
+      const rootScale = parseFloat(getComputedStyle(document.documentElement).fontSize) / 16;
+      stageWidth = stage.clientWidth / rootScale;
+      stageHeight = stage.clientHeight / rootScale;
       readScroll();
     };
 
@@ -355,7 +358,7 @@ export default function BuildScene() {
                     if (element) sheetRefs.current[index] = element;
                   }}
                   className="lp-sheet"
-                  style={{ "--i": index, transform: `translate3d(0, 0, ${(MIDDLE_LAYER - index) * REST_GAP}px)` } as CSSProperties}
+                  style={{ "--i": index, transform: `translate3d(0, 0, ${pxToRem((MIDDLE_LAYER - index) * REST_GAP)})` } as CSSProperties}
                   onClick={() => jumpToChapter(index + 1)}
                 >
                   <div className="lp-sheet-body">

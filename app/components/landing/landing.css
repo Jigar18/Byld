@@ -232,6 +232,8 @@ html[data-lp-theme="dark"] .lp {
 }
 
 .lp-brand img {
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
 }
 
