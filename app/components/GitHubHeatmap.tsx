@@ -234,7 +234,7 @@ export default function GitHubHeatmap() {
             data-date={day.date}
             data-count={day.contributionCount}
             className={cn(
-              "aspect-[2/3] rounded-[3px] transition-transform duration-150 hover:scale-[1.2] motion-reduce:transform-none",
+              "aspect-square rounded-[3px] transition-transform duration-150 hover:scale-[1.2] motion-reduce:transform-none",
               contributionLevels[getContributionLevel(day)],
             )}
             style={{ gridColumnStart: weekIndex + 2, gridRowStart: day.weekday + 2 }}
@@ -383,7 +383,7 @@ export default function GitHubHeatmap() {
                 <span>Less</span>
                 <span aria-hidden="true" className="flex gap-1">
                   {contributionLevels.map((color) => (
-                    <span key={color} className={cn("h-[15px] w-2.5 rounded-[3px]", color)} />
+                    <span key={color} className={cn("size-3 rounded-[3px]", color)} />
                   ))}
                 </span>
                 <span>More</span>
