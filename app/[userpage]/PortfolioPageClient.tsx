@@ -1,27 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import About from "../sections/AboutSection";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Certifications from "../sections/Certifications";
-import Contact from "../sections/Contact";
 import Experience from "../sections/Experience";
-import ProfileSheet from "../sections/ProfileSheet";
+import PortfolioHero from "../sections/PortfolioHero";
 import Projects from "../sections/Projects";
 import CertificateModal from "../components/CertificateModal";
 import Education from "../components/Education";
 import GitHubHeatmap from "../components/GitHubHeatmap";
 import PortfolioLoader from "../components/PortfolioLoader";
+import PortfolioTopBar from "../components/PortfolioTopBar";
 import Skills from "../components/Skills";
+import { usePointerLight } from "../components/usePointerLight";
+import { useRevealOnScroll } from "../components/useRevealOnScroll";
 import { UserProvider, useUser } from "../context/UserContext";
+import { cn } from "@/lib/utils";
 import type { PortfolioCertificate, PortfolioInitialData } from "@/types/portfolio";
+
+const cardGapClass = "grid gap-5 sm:gap-6";
 
 function PortfolioFooter() {
   const { userDetails } = useUser();
   const name = [userDetails.firstName, userDetails.lastName].filter(Boolean).join(" ");
 
   return (
-    <footer className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-line pt-6 text-sm text-ink-soft">
+    <footer className="mt-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-2 text-sm text-ink-soft">
       <p>
         © {new Date().getFullYear()} {name}
       </p>
@@ -33,11 +37,14 @@ function PortfolioFooter() {
 }
 
 export default function PortfolioPage({ initialData }: { initialData: PortfolioInitialData }) {
-  // The loader stays on top until hydration, so the sheet settles once and no control shows before it can respond.
+  // The loader stays on top until hydration, so the hero comes in once and no control shows before it can respond.
   const [hydrated, setHydrated] = useState(false);
   const [selectedCertificate, setSelectedCertificate] = useState<PortfolioCertificate | null>(null);
   const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
   const [allCertificates, setAllCertificates] = useState<PortfolioCertificate[]>([]);
+  const pageRef = useRef<HTMLDivElement>(null);
+  usePointerLight(pageRef);
+  useRevealOnScroll(pageRef);
 
   useEffect(() => {
     setHydrated(true);
@@ -45,20 +52,21 @@ export default function PortfolioPage({ initialData }: { initialData: PortfolioI
 
   // Visitors only get the sections that have something in them. The owner gets all of them, so each can be filled in.
   const sections = useMemo(() => {
-    const { details, projects, experiences, skills, education, certifications, socialLinks } = initialData;
+    const { projects, experiences, skills, education, certifications } = initialData;
     return [
-      { id: "about", label: "About", hasContent: Boolean(details.about) },
       { id: "projects", label: "Projects", hasContent: projects.length > 0 },
       { id: "activity", label: "Activity", hasContent: initialData.showGitHubHeatmap },
       { id: "experience", label: "Experience", hasContent: experiences.length > 0 },
       { id: "skills", label: "Skills", hasContent: skills.length > 0 },
       { id: "education", label: "Education", hasContent: education.length > 0 },
       { id: "certificates", label: "Certificates", hasContent: certifications.length > 0 },
-      { id: "contact", label: "Contact", hasContent: Object.values(socialLinks).some(Boolean) },
     ].filter((section) => initialData.isOwner || section.hasContent);
   }, [initialData]);
 
   const shows = (id: string) => sections.some((section) => section.id === id);
+  // The career on the left and what backs it up on the right. With only one side filled, it takes the full width.
+  const hasCareerColumn = shows("experience") || shows("education");
+  const hasProofColumn = shows("skills") || shows("certificates");
 
   const handleOpenCertificate = (certificate: PortfolioCertificate, certificates: PortfolioCertificate[]) => {
     setSelectedCertificate(certificate);
@@ -74,26 +82,48 @@ export default function PortfolioPage({ initialData }: { initialData: PortfolioI
         </div>
       )}
 
-      <div
-        className="pf mx-auto grid w-full max-w-[1320px] gap-9 p-3 sm:p-5 lg:grid-cols-[372px_minmax(0,1fr)] lg:gap-14 lg:p-7"
-        data-ready={hydrated}
-      >
-        <ProfileSheet sections={sections} />
+      <div id="top" ref={pageRef} className="pf min-h-dvh" data-ready={hydrated}>
+        <div aria-hidden="true" className="pf-table" />
+        <div aria-hidden="true" className="pf-table-light" />
 
-        <div className="pf-content min-w-0 px-2 pb-5 sm:px-3 lg:px-0 lg:pb-3 lg:pt-9">
-          <main className="pb-11 sm:pb-14">
-            {shows("about") && <About />}
+        <div className="mx-auto w-full max-w-[1240px] px-4 pb-8 pt-3 sm:px-6 sm:pt-4 lg:px-8">
+          <PortfolioTopBar sections={sections} />
+          <PortfolioHero />
+
+          <main className={cardGapClass}>
             {shows("projects") && <Projects />}
             {shows("activity") && <GitHubHeatmap />}
-            {shows("experience") && <Experience />}
-            {shows("skills") && <Skills />}
-            {shows("education") && <Education />}
-            {shows("certificates") && <Certifications onOpenCertificate={handleOpenCertificate} />}
-            {shows("contact") && <Contact />}
+
+            {(hasCareerColumn || hasProofColumn) && (
+              <div
+                className={cn(
+                  cardGapClass,
+                  "items-start",
+                  hasCareerColumn && hasProofColumn && "lg:grid-cols-[minmax(0,1.12fr)_minmax(0,1fr)]",
+                )}
+              >
+                {hasCareerColumn && (
+                  <div className={cn(cardGapClass, "min-w-0")}>
+                    {shows("experience") && <Experience />}
+                    {shows("education") && <Education />}
+                  </div>
+                )}
+                {hasProofColumn && (
+                  <div className={cn(cardGapClass, "min-w-0")}>
+                    {shows("skills") && <Skills />}
+                    {shows("certificates") && <Certifications onOpenCertificate={handleOpenCertificate} />}
+                  </div>
+                )}
+              </div>
+            )}
+
             {sections.length === 0 && (
-              <p className="text-lg text-ink-soft">This portfolio is still being put together. Check back soon.</p>
+              <p className="pf-card px-6 py-12 text-center text-lg text-ink-soft sm:py-16">
+                This portfolio is still being put together. Check back soon.
+              </p>
             )}
           </main>
+
           <PortfolioFooter />
         </div>
       </div>

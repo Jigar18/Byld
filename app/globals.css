@@ -29,6 +29,16 @@
   --c-sheet-text: 232 234 240;
   --c-sheet-soft: 139 145 160;
   --sheet-glow: rgb(22 34 120 / 0.42);
+  /* Portfolio cards sit on the paper; wells are the quieter fills set into a card. */
+  --c-surface: 255 255 255;
+  --c-well: 240 242 247;
+  --surface-shadow: 0 1px 2px rgb(18 26 66 / 0.05), 0 22px 44px -30px rgb(18 26 66 / 0.3);
+  /* GitHub activity, from a day with nothing to the busiest ones. */
+  --c-heat-0: 229 232 240;
+  --c-heat-1: 190 200 255;
+  --c-heat-2: 132 150 255;
+  --c-heat-3: 70 95 255;
+  --c-heat-4: 22 38 178;
   --radius: 0.5rem;
 
   background: rgb(var(--c-paper));
@@ -51,6 +61,14 @@ html[data-lp-theme="dark"] {
   --c-sheet-line: 40 44 58;
   --c-sheet-edge: 61 67 87;
   --sheet-glow: rgb(45 72 255 / 0.5);
+  --c-surface: 15 17 25;
+  --c-well: 25 28 40;
+  --surface-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  --c-heat-0: 28 32 45;
+  --c-heat-1: 32 44 120;
+  --c-heat-2: 43 64 200;
+  --c-heat-3: 90 112 255;
+  --c-heat-4: 185 195 255;
 
   color-scheme: dark;
 }
@@ -201,6 +219,21 @@ html[data-lp-theme="dark"] .theme-sun {
     white-space: nowrap;
   }
 
+  /* A chip on a portfolio card: a well, with no outline. */
+  .pf-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: rgb(var(--c-well));
+    color: rgb(var(--c-ink));
+    font-size: 14.5px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
   /* Drafting dots, as on the landing page's table. */
   .ui-dots {
     background-image: radial-gradient(circle, rgb(var(--c-dot)) 1px, transparent 1.4px);
@@ -338,84 +371,387 @@ html[data-lp-theme="dark"] .theme-sun {
 }
 
 /* Portfolio page -----------------------------------------------------------
-   The profile sheet settles onto the table once, when the page is ready; nothing else animates in. */
+   Light follows the pointer. usePointerLight writes the pointer's place on the page to --lx/--ly,
+   its place over every [data-light] surface to --mx/--my, and a tilt to every [data-tilt] object. */
 
-.pf-sheet {
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 44px 70px -48px var(--sheet-glow);
+.pf {
+  position: relative;
+  isolation: isolate;
+  /* The pointer's light is drawn past the page's edges; clip keeps it from adding scroll. */
+  overflow: clip;
 }
 
-.pf[data-ready="false"] .pf-sheet,
-.pf[data-ready="false"] .pf-content {
+/* The drafting table. Its dots show around the hero; further down only the pointer's light picks them out. */
+.pf-table,
+.pf-table-light {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.pf-table {
+  inset: 0;
+  background-image: radial-gradient(circle, rgb(var(--c-dot)) 1px, transparent 1.4px);
+  background-size: 30px 30px;
+  -webkit-mask-image: linear-gradient(#000 0, #000 300px, transparent 760px);
+  mask-image: linear-gradient(#000 0, #000 300px, transparent 760px);
+}
+
+/* A small square that travels with the pointer. Its dots are offset back by the same amount, so they stay on the table's grid. */
+.pf-table-light {
+  top: 0;
+  left: 0;
+  width: 560px;
+  height: 560px;
+  background-image:
+    radial-gradient(circle, rgb(var(--c-accent)) 1.1px, transparent 1.6px),
+    radial-gradient(closest-side, rgb(var(--c-accent) / 0.1), transparent);
+  background-position: calc(280px - var(--lx, 0px)) calc(280px - var(--ly, 0px)), center;
+  background-size: 30px 30px, 100% 100%;
+  -webkit-mask-image: radial-gradient(closest-side, #000, transparent);
+  mask-image: radial-gradient(closest-side, #000, transparent);
   opacity: 0;
+  transform: translate3d(calc(var(--lx, 0px) - 280px), calc(var(--ly, 0px) - 280px), 0);
+  transition: opacity 0.5s ease;
 }
 
-.pf[data-ready="true"] .pf-sheet {
-  transform-origin: 50% 100%;
-  animation: pf-sheet-settle 0.9s cubic-bezier(0.2, 0.85, 0.25, 1) backwards;
+.pf[data-lit] .pf-table-light {
+  opacity: 1;
 }
 
-.pf[data-ready="true"] .pf-content {
-  animation: pf-content-in 0.6s ease 0.3s backwards;
+/* A wash of ultramarine behind the identity sheet. */
+.pf-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: min(760px, 140vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(var(--c-brand) / 0.2), transparent);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
-@keyframes pf-sheet-settle {
-  from { opacity: 0; transform: perspective(1500px) rotateX(24deg) rotateZ(-5deg) translate3d(0, 46px, 0) scale(0.93); }
+html[data-lp-theme="dark"] .pf-glow {
+  background: radial-gradient(closest-side, rgb(var(--c-brand) / 0.36), transparent);
 }
 
-@keyframes pf-content-in {
-  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+.pf-card {
+  position: relative;
+  border-radius: 28px;
+  background: rgb(var(--c-surface));
+  box-shadow: var(--surface-shadow);
+  scroll-margin-top: 88px;
 }
 
-.pf-section {
-  scroll-margin-top: 32px;
+/* The card's edge, lit where the pointer is near it. The mask leaves only a thin ring of the gradient. */
+.pf-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: radial-gradient(360px circle at var(--mx, -999px) var(--my, -999px), rgb(var(--c-accent)), transparent 72%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
 }
 
-/* The sheet's section index. The marker dot shows which section is on screen.
-   It only appears where the sheet is pinned beside the content and tall enough to hold it. */
-.pf-index {
-  display: none;
+.pf[data-lit] .pf-card::before {
+  opacity: 1;
 }
 
-@media (min-width: 1024px) and (min-height: 760px) {
-  .pf-index {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 16px;
+/* Cards further down are laid on the table as they are scrolled to. useRevealOnScroll marks the page and
+   then each card it has seen, so without the script nothing is held back. */
+@media (prefers-reduced-motion: no-preference) {
+  .pf[data-reveals] .pf-card {
+    transition: opacity 0.7s ease, transform 0.9s cubic-bezier(0.2, 0.85, 0.25, 1);
+  }
+
+  .pf[data-reveals] .pf-card:not([data-seen]) {
+    opacity: 0;
+    transform: perspective(1600px) rotateX(7deg) translate3d(0, 44px, 0);
   }
 }
 
-.pf-index a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 32px;
-  border-radius: 8px;
-  color: rgb(var(--c-ink-soft));
-  font-size: 15px;
-  font-weight: 500;
-  transition: color 0.2s ease;
+/* The name catches the pointer's light: its letters take the accent colour where the pointer passes. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .pf-name {
+    /* Room for the descenders, which the tight leading would otherwise leave outside the painted box. */
+    margin-block: -0.12em;
+    padding-block: 0.12em;
+    background: radial-gradient(
+      280px circle at var(--mx, -999px) var(--my, -999px),
+      rgb(var(--c-accent)),
+      rgb(var(--c-ink)) 76%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
-.pf-index a::before {
-  content: "";
-  width: 6px;
-  height: 6px;
+/* The identity sheet. On wide screens it stands in 3D and turns to face the pointer. */
+.pf-pass {
+  position: relative;
+  border-radius: 26px;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 44px 70px -48px var(--sheet-glow);
+}
+
+.pf-pass-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(320px circle at var(--mx, 50%) var(--my, -40%), rgb(255 255 255 / 0.16), transparent 68%);
+  pointer-events: none;
+}
+
+/* A drafted circle around the picture, with one mark travelling along it. */
+.pf-pass-orbit {
+  position: absolute;
+  inset: -8px;
+  border: 1.5px dashed rgb(var(--c-sheet-edge));
   border-radius: 50%;
-  background: rgb(var(--c-sheet-edge));
-  transition: background-color 0.2s ease, transform 0.3s cubic-bezier(0.2, 0.85, 0.25, 1);
+  animation: pf-orbit 40s linear infinite;
 }
 
-.pf-index a:hover,
-.pf-index a[aria-current="true"] {
-  color: rgb(var(--c-ink));
-}
-
-.pf-index a[aria-current="true"]::before {
+.pf-pass-orbit::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -5px;
+  width: 9px;
+  height: 9px;
+  margin-top: -4.5px;
+  border-radius: 50%;
   background: rgb(var(--c-accent));
-  transform: scale(1.5);
+  box-shadow: 0 0 14px 2px rgb(var(--c-accent) / 0.7);
+}
+
+@keyframes pf-orbit {
+  from { transform: translateZ(var(--orbit-z, 0px)) rotate(0deg); }
+  to { transform: translateZ(var(--orbit-z, 0px)) rotate(360deg); }
+}
+
+.pf-pass-back {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .pf-pass-rig {
+    perspective: 1300px;
+  }
+
+  .pf-pass {
+    /* Drafting dots behind the picture, fading out before the facts. */
+    background-image:
+      linear-gradient(transparent 34%, rgb(var(--c-sheet)) 66%),
+      radial-gradient(circle, rgb(var(--c-sheet-edge)) 1px, transparent 1.4px);
+    background-size: 100% 100%, 20px 20px;
+    transform: rotateX(calc(5deg + var(--tilt-x, 0deg))) rotateY(calc(-12deg + var(--tilt-y, 0deg)));
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.2, 0.85, 0.25, 1);
+  }
+
+  /* An ultramarine sheet lies under the dark one and shows more or less of itself as the pair turns. */
+  .pf-pass-back {
+    display: block;
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgb(var(--c-brand));
+    transform: translate3d(26px, 22px, -70px) rotate(5deg);
+  }
+
+  /* A second plane behind the face gives the sheet its thickness, as on the landing page's stack. */
+  .pf-pass::before,
+  .pf-pass::after {
+    content: "";
+    position: absolute;
+  }
+
+  .pf-pass::before {
+    inset: 0;
+    border-radius: inherit;
+    background: rgb(var(--c-sheet-edge));
+    transform: translateZ(-10px);
+  }
+
+  .pf-pass::after {
+    inset: 12% 0 -9%;
+    border-radius: 60px;
+    background: var(--sheet-glow);
+    filter: blur(42px);
+    transform: translateZ(-80px);
+  }
+
+  /* The picture and the facts float a little above the sheet, so they shift against it as it turns. */
+  .pf-pass-photo {
+    transform: translateZ(26px);
+    transform-style: preserve-3d;
+  }
+
+  .pf-pass-orbit {
+    --orbit-z: -18px;
+    inset: -17px;
+  }
+
+  .pf-pass-facts {
+    transform: translateZ(14px);
+  }
+
+  .pf-pass-glare {
+    transform: translateZ(1px);
+  }
+}
+
+/* The projects, stacked like the sheets on the landing page. --depth is how far back a cover sits. */
+.pf-stack {
+  --step-x: 30px;
+  --step-y: -24px;
+  padding: calc(var(--behind) * 17px) calc(var(--behind) * 21px) 0 0;
+  perspective: 1700px;
+  /* Sideways drags shuffle the stack; up and down still scrolls the page. */
+  touch-action: pan-y;
+}
+
+/* Pointing at the stack fans the covers out a little. */
+@media (hover: hover) {
+  .pf-stack:hover {
+    --fan: 7px;
+  }
+}
+
+@media (min-width: 640px) {
+  .pf-stack {
+    --step-x: 44px;
+    --step-y: -34px;
+    padding: calc(var(--behind) * 25px) calc(var(--behind) * 31px) 0 0;
+  }
+}
+
+.pf-stack-rig {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+.pf-stack-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 20px;
+  background: rgb(var(--c-sheet));
+  box-shadow: 0 30px 50px -34px rgb(0 0 0 / 0.55);
+  transform: translate3d(
+    calc(var(--depth) * (var(--step-x) + var(--fan, 0px))),
+    calc(var(--depth) * (var(--step-y) - var(--fan, 0px))),
+    calc(var(--depth) * -60px)
+  );
+  transition: transform 0.7s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+/* Covers further back fade towards the card they stand on. */
+.pf-stack-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--c-surface) / calc(var(--depth) * 0.22));
+  pointer-events: none;
+  transition: background-color 0.7s ease;
+}
+
+/* The cover dealt off the front leaves to one side and comes back in at the back of the stack;
+   the one called up from the back does the reverse. --behind is the depth of the last cover. */
+.pf-stack-cover[data-shuffle="to-back"] {
+  animation: pf-stack-to-back 0.7s cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+.pf-stack-cover[data-shuffle="to-front"] {
+  animation: pf-stack-to-front 0.7s cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+@keyframes pf-stack-to-back {
+  0% { opacity: 1; transform: translate3d(0, 0, 0); }
+  42% { opacity: 0; transform: translate3d(-9%, 6%, 30px) rotate(-5deg); }
+  43% {
+    opacity: 0;
+    transform: translate3d(
+      calc(var(--behind) * var(--step-x) + 30px),
+      calc(var(--behind) * var(--step-y) - 24px),
+      calc(var(--behind) * -60px - 40px)
+    );
+  }
+}
+
+@keyframes pf-stack-to-front {
+  0% {
+    opacity: 1;
+    transform: translate3d(calc(var(--behind) * var(--step-x)), calc(var(--behind) * var(--step-y)), calc(var(--behind) * -60px));
+  }
+  42% {
+    opacity: 0;
+    transform: translate3d(
+      calc(var(--behind) * var(--step-x) + 30px),
+      calc(var(--behind) * var(--step-y) - 24px),
+      calc(var(--behind) * -60px - 40px)
+    );
+  }
+  43% { opacity: 0; transform: translate3d(-9%, 6%, 30px) rotate(-5deg); }
+}
+
+/* The text beside the stack is replaced when another project comes to the front. */
+.pf-swap {
+  animation: pf-swap 0.45s cubic-bezier(0.2, 0.85, 0.25, 1) backwards;
+}
+
+@keyframes pf-swap {
+  from { opacity: 0; transform: translate3d(14px, 0, 0); }
+}
+
+/* One entrance, when the page is ready: the hero's lines rise in turn and the sheet lands. */
+.pf[data-ready="false"] .pf-rise,
+.pf[data-ready="false"] .pf-pass {
+  opacity: 0;
+}
+
+.pf[data-ready="true"] .pf-rise {
+  animation: pf-rise 0.8s cubic-bezier(0.2, 0.85, 0.25, 1) calc(var(--rise, 0) * 80ms) backwards;
+}
+
+.pf[data-ready="true"] .pf-pass {
+  animation: pf-rise 0.8s cubic-bezier(0.2, 0.85, 0.25, 1) backwards;
+}
+
+@media (min-width: 1024px) {
+  .pf[data-ready="true"] .pf-pass {
+    animation: pf-pass-land 1.1s cubic-bezier(0.2, 0.85, 0.25, 1) 0.1s backwards;
+  }
+}
+
+@keyframes pf-rise {
+  from { opacity: 0; transform: translate3d(0, 22px, 0); }
+}
+
+@keyframes pf-pass-land {
+  from { opacity: 0; transform: rotateX(34deg) rotateY(-38deg) translate3d(0, 70px, -220px); }
 }
 
 /* Onboarding -------------------------------------------------------------- */
+
+/* The dark sheets beside the onboarding forms. */
+.ob-sheet {
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 44px 70px -48px var(--sheet-glow);
+}
 
 /* The profile picture cropper: keep tall photos inside the sheet. */
 .crop-circle {
@@ -448,10 +784,19 @@ html[data-lp-theme="dark"] .theme-sun {
   }
 
   .ui-stack-sheet,
-  .pf-sheet,
-  .pf-content,
+  .pf-rise,
+  .pf-pass,
+  .pf-stack-cover,
+  .pf-swap,
+  .pf-pass-orbit,
   .ob-written,
   .ob-step {
     animation: none !important;
+  }
+
+  .pf-pass,
+  .pf-stack-rig,
+  .pf-stack-cover {
+    transition: none;
   }
 }

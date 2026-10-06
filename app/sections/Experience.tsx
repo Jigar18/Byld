@@ -29,6 +29,27 @@ const months = [
 ];
 
 const COLLAPSED_COUNT = 2;
+const COLLAPSED_POINTS = 3;
+
+const bulletPattern = /^\s*(?:[•●▪◦·]\s*|[*–—-]\s+)/;
+
+// People paste these from a CV, where one point wraps over several lines and each point starts with its own
+// bullet. A pasted list is put back together: a line without a bullet belongs to the point before it.
+const tidyContributions = (lines: string[]) => {
+  const pastedWithBullets = lines.some((line) => bulletPattern.test(line));
+  const points: string[] = [];
+
+  for (const line of lines) {
+    const text = line.replace(bulletPattern, "").trim();
+    if (!text) continue;
+    if (pastedWithBullets && !bulletPattern.test(line) && points.length > 0) {
+      points[points.length - 1] += ` ${text}`;
+    } else {
+      points.push(text);
+    }
+  }
+  return points;
+};
 
 const dateValue = (year?: string | null, month?: string | null) => {
   const numericYear = Number(year);
@@ -120,6 +141,43 @@ function MonthYearSelects({
           ))}
         </select>
       </div>
+    </div>
+  );
+}
+
+function RolePoints({ contributions }: { contributions: string[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const points = tidyContributions(contributions);
+  // One hidden point is not worth a control of its own.
+  const collapsible = points.length > COLLAPSED_POINTS + 1;
+  const shownPoints = collapsible && !expanded ? points.slice(0, COLLAPSED_POINTS) : points;
+
+  if (points.length === 0) return null;
+
+  return (
+    <div className="col-span-2 mt-4 sm:col-span-1 sm:col-start-2">
+      <ul className="space-y-2.5">
+        {shownPoints.map((point, index) => (
+          <li
+            key={index}
+            className="relative pl-5 leading-[1.6] text-ink-soft before:absolute before:left-0.5 before:top-[0.68em] before:size-[5px] before:rounded-full before:bg-ink-faint before:content-['']"
+          >
+            {point}
+          </li>
+        ))}
+      </ul>
+      {collapsible && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setExpanded((current) => !current)}
+          aria-expanded={expanded}
+          className="-ml-2 mt-2 font-semibold text-ink"
+        >
+          <ChevronDown aria-hidden="true" className={cn("transition-transform duration-200", expanded && "rotate-180")} />
+          {expanded ? "Show fewer" : `Show ${points.length - COLLAPSED_POINTS} more`}
+        </Button>
+      )}
     </div>
   );
 }
@@ -249,21 +307,20 @@ export default function Experience() {
       {experience.length === 0 ? (
         <p className="text-ink-soft">No experience yet. Add the roles you want people to see.</p>
       ) : (
-        <ol>
-          {shownExperience.map((exp, index) => (
-            <li key={exp.id} className="relative pb-9 pl-7 last:pb-0 sm:pl-9">
-              {index < shownExperience.length - 1 && (
-                <span aria-hidden="true" className="absolute bottom-0 left-[5px] top-3 w-px bg-line" />
-              )}
+        <ol className="grid gap-9">
+          {shownExperience.map((exp) => (
+            <li key={exp.id} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4">
               <span
                 aria-hidden="true"
                 className={cn(
-                  "absolute left-0 top-[9px] size-[11px] rounded-full border-2",
-                  exp.isCurrentRole ? "border-brand bg-brand" : "border-ink-faint bg-paper",
+                  "grid size-11 place-items-center rounded-xl font-display text-lg font-semibold",
+                  exp.isCurrentRole ? "bg-brand text-white" : "bg-well",
                 )}
-              />
+              >
+                {exp.company.trim().charAt(0).toUpperCase()}
+              </span>
 
-              <div className="flex flex-wrap items-start justify-between gap-x-5 gap-y-1">
+              <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-5 gap-y-1">
                 <div className="min-w-0">
                   <h3 className="font-display text-xl font-semibold leading-snug tracking-[-0.01em]">{exp.company}</h3>
                   <p className="mt-0.5 font-medium text-ink-soft">{exp.position}</p>
@@ -294,18 +351,7 @@ export default function Experience() {
                 </div>
               </div>
 
-              {exp.contributions.length > 0 && (
-                <ul className="mt-3.5 max-w-[68ch] space-y-2">
-                  {exp.contributions.map((text, contributionIndex) => (
-                    <li
-                      key={contributionIndex}
-                      className="relative pl-5 leading-[1.65] before:absolute before:left-0 before:top-[0.8em] before:h-px before:w-2.5 before:bg-ink-faint before:content-['']"
-                    >
-                      {text}
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <RolePoints contributions={exp.contributions} />
             </li>
           ))}
         </ol>

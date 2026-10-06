@@ -226,7 +226,7 @@ export default function SkillsPage() {
         </Button>
       </div>
 
-      <section aria-labelledby="your-skills" className="ui-sheet pf-sheet rounded-[28px] p-6 sm:p-8">
+      <section aria-labelledby="your-skills" className="ui-sheet ob-sheet rounded-[28px] p-6 sm:p-8">
         <h2 id="your-skills" className="font-display text-2xl font-semibold tracking-[-0.02em]">
           Your skills
         </h2>

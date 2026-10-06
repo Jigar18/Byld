@@ -18,15 +18,15 @@ export default function CertificateList({
   canEdit = false,
 }: CertificateListProps) {
   return (
-    <ul className="divide-y divide-line border-y border-line">
+    <ul className="grid gap-3">
       {cards.map((card) => (
-        <li key={card.id} className="flex flex-wrap items-center gap-x-5 gap-y-3 py-4 sm:flex-nowrap">
-          <div className="min-w-0 flex-1 basis-full sm:basis-0">
-            <h3 className="font-display text-lg font-semibold leading-snug tracking-[-0.01em]">{card.title}</h3>
+        <li key={card.id} className="rounded-[20px] bg-well p-4 sm:p-5">
+          <h3 className="font-display text-lg font-semibold leading-snug tracking-[-0.01em]">{card.title}</h3>
+          {card.description && (
             <p className="mt-1 line-clamp-2 text-[15px] leading-relaxed text-ink-soft">{card.description}</p>
-          </div>
+          )}
 
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="mt-4 flex items-center gap-1.5">
             <Button
               variant="secondary"
               size="sm"
@@ -48,7 +48,7 @@ export default function CertificateList({
                 size="icon-sm"
                 onClick={() => onDeleteCard(card)}
                 aria-label={`Delete ${card.title}`}
-                className="hover:text-danger"
+                className="ml-auto hover:text-danger"
               >
                 <Trash2 aria-hidden="true" />
               </Button>

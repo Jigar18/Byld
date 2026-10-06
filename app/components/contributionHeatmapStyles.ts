@@ -1,8 +1,8 @@
-// From no activity to the busiest days, on the dark activity sheet.
+// From no activity to the busiest days. The colours are set per theme in globals.css.
 export const contributionLevels = [
-  "bg-sheet-raised",
-  "bg-[#202c78]",
-  "bg-[#2b40c8]",
-  "bg-[#5a70ff]",
-  "bg-[#b9c3ff]",
+  "bg-[rgb(var(--c-heat-0))]",
+  "bg-[rgb(var(--c-heat-1))]",
+  "bg-[rgb(var(--c-heat-2))]",
+  "bg-[rgb(var(--c-heat-3))]",
+  "bg-[rgb(var(--c-heat-4))]",
 ] as const;

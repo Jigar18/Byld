@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Info, Plus } from "lucide-react";
-import ProjectCard from "../components/ProjectCard";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import AddProjectModal from "../components/AddProjectModal";
 import type { PortfolioProjectData } from "@/types/portfolio";
 import PortfolioSection from "../components/PortfolioSection";
 import ProjectModal from "../components/ProjectModal";
 import ProjectSourceModal from "../components/ProjectSourceModal";
+import ProjectStack from "../components/ProjectStack";
 import type { ProjectVideo } from "../components/ProjectVideoDropzone";
 import type { ProjectImage } from "../components/ProjectImageUploader";
 import { removeUnsavedProjectMedia } from "../components/projectMedia";
@@ -68,6 +68,7 @@ export default function Projects() {
   const [selectedProject, setSelectedProject] = useState<PortfolioProjectData | null>(
     null,
   );
+  const [frontProjectId, setFrontProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -101,6 +102,7 @@ export default function Projects() {
           )
         : [data.project, ...current],
     );
+    if (!editingProject) setFrontProjectId(data.project.id);
     if (data.skills) setSkills(data.skills);
     const addedIcons = await findMissingSkillIcons([data.project.techStack], skillIcons);
     setFoundIcons((current) => ({ ...current, ...addedIcons }));
@@ -191,6 +193,7 @@ export default function Projects() {
     const data = (await response.json()) as { project?: PortfolioProjectData; skills?: string[]; error?: string };
     if (!response.ok || !data.project) throw new Error(data.error || "Unable to import project");
     setProjects((current) => [data.project!, ...current]);
+    setFrontProjectId(data.project.id);
     if (data.skills) setSkills(data.skills);
     const importedIcons = await findMissingSkillIcons(
       [data.project.techStack],
@@ -202,8 +205,6 @@ export default function Projects() {
   };
 
   const projectLimitReached = projects.length >= MAX_PROJECTS;
-  // An odd number of projects would leave a hole in the grid, so the first one takes a full row.
-  const firstProjectIsWide = projects.length % 2 === 1;
 
   return (
     <PortfolioSection
@@ -243,7 +244,7 @@ export default function Projects() {
       )}
 
       {projects.length === 0 ? (
-        <div className="rounded-[24px] border-[1.5px] border-dashed border-ink-faint px-6 py-12 text-center sm:py-16">
+        <div className="rounded-[22px] bg-well px-6 py-12 text-center sm:py-16">
           <h3 className="font-display text-[22px] font-semibold tracking-[-0.015em]">No projects yet</h3>
           <p className="mx-auto mt-2 max-w-[44ch] text-ink-soft">
             {isOwner
@@ -258,22 +259,15 @@ export default function Projects() {
           )}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
-          {projects.map((project, index) => (
-            <div key={project.id} className={firstProjectIsWide && index === 0 ? "grid sm:col-span-2" : "grid"}>
-              <ProjectCard
-                project={project}
-                wide={firstProjectIsWide && index === 0}
-                skillIcons={skillIcons}
-                onOpenProject={() => setSelectedProject(project)}
-                onEditProject={isOwner ? () => openEditor(project) : undefined}
-                onDeleteProject={
-                  isOwner ? () => setProjectToDelete(project) : undefined
-                }
-              />
-            </div>
-          ))}
-        </div>
+        <ProjectStack
+          projects={projects}
+          frontId={frontProjectId}
+          onFrontChange={setFrontProjectId}
+          skillIcons={skillIcons}
+          onOpenProject={setSelectedProject}
+          onEditProject={isOwner ? openEditor : undefined}
+          onDeleteProject={isOwner ? setProjectToDelete : undefined}
+        />
       )}
       {isOwner && (
         <ConfirmDeleteModal

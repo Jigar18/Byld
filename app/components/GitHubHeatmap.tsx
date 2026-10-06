@@ -1,7 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
-import { useEffect, useRef, useState } from "react";
+import { type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ButtonSpinner } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useUser } from "../context/UserContext";
@@ -124,10 +123,34 @@ const getMonthLabels = (calendar: ContributionCalendar) =>
     }];
   });
 
-// Fixed 11px days: a year of them fits the content column at full width, and narrower screens scroll.
-const weekColumnsClass = "grid flex-1 grid-cols-[repeat(var(--heatmap-weeks),11px)] justify-between gap-x-[3px]";
-const dayRowsClass = "grid grid-rows-[repeat(7,11px)] gap-[3px]";
-const noticeClass = "grid min-h-36 place-items-center px-4 text-center text-[15px] text-ink-soft";
+const summarizeCalendar = (calendar: ContributionCalendar) => {
+  let longestStreak = 0;
+  let streak = 0;
+  let busiestDay: ContributionDay | undefined;
+  for (const day of calendar.weeks.flatMap((week) => week.contributionDays)) {
+    streak = day.contributionCount > 0 ? streak + 1 : 0;
+    longestStreak = Math.max(longestStreak, streak);
+    if (day.contributionCount > (busiestDay?.contributionCount ?? 0)) busiestDay = day;
+  }
+  return { longestStreak, busiestDay };
+};
+
+const formatDay = (date: string, withYear = true) =>
+  new Date(`${date}T00:00:00.000Z`).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: withYear ? "numeric" : undefined,
+    timeZone: "UTC",
+  });
+
+const countContributions = (count: number) =>
+  count === 0 ? "No contributions" : `${count.toLocaleString()} ${count === 1 ? "contribution" : "contributions"}`;
+
+// Narrower than this and the days get too small to point at, so the year scrolls sideways instead.
+const MIN_WEEK_WIDTH = 14;
+const DAY_LABEL_WIDTH = 34;
+const noticeClass = "grid min-h-40 place-items-center rounded-[22px] bg-well px-5 text-center text-[15px] text-ink-soft";
+const statRowClass = "flex items-baseline justify-between gap-4";
 
 export default function GitHubHeatmap() {
   const { isOwner, portfolioApiUrl, portfolioData } = useUser();
@@ -143,6 +166,7 @@ export default function GitHubHeatmap() {
   const [loading, setLoading] = useState(shouldLoad);
   const [saving, setSaving] = useState(false);
   const [visibilityFailed, setVisibilityFailed] = useState(false);
+  const [pointedDay, setPointedDay] = useState<{ date: string; count: number } | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -200,6 +224,33 @@ export default function GitHubHeatmap() {
     if (scroller) scroller.scrollLeft = scroller.scrollWidth;
   }, [calendar, visible]);
 
+  // Built once per calendar: pointing at a day re-renders the readout, not the year of squares.
+  const dayCells = useMemo(
+    () =>
+      calendar?.weeks.flatMap((week, weekIndex) =>
+        week.contributionDays.map((day) => (
+          <span
+            key={day.date}
+            data-date={day.date}
+            data-count={day.contributionCount}
+            className={cn(
+              "aspect-square rounded-[3px] transition-transform duration-150 hover:scale-[1.6] motion-reduce:transform-none",
+              contributionLevels[getContributionLevel(day)],
+            )}
+            style={{ gridColumnStart: weekIndex + 2, gridRowStart: day.weekday + 2 }}
+          />
+        )),
+      ),
+    [calendar],
+  );
+  const summary = useMemo(() => (calendar ? summarizeCalendar(calendar) : null), [calendar]);
+
+  const readPointedDay = (event: PointerEvent<HTMLDivElement>) => {
+    const cell = (event.target as HTMLElement).closest<HTMLElement>("[data-date]");
+    // Moving across the gap between two days keeps the last one, so the readout does not flicker.
+    if (cell?.dataset.date) setPointedDay({ date: cell.dataset.date, count: Number(cell.dataset.count) });
+  };
+
   if (!isOwner && !loading && !visible) return null;
 
   return (
@@ -238,86 +289,109 @@ export default function GitHubHeatmap() {
         </p>
       )}
 
-      <div className="ui-sheet overflow-hidden rounded-[24px] p-5 sm:p-7">
-        {loading ? (
-          <p role="status" className={cn(noticeClass, "grid-flow-col content-center justify-center gap-2.5")}>
-            <ButtonSpinner />
-            Loading activity…
-          </p>
-        ) : !visible ? (
-          <p className={noticeClass}>Visitors don’t see your GitHub activity. Turn it on to show the last year of contributions.</p>
-        ) : !available || !calendar ? (
-          <p className={noticeClass}>GitHub activity is unavailable right now.</p>
-        ) : (
-          <>
-            <div ref={scrollerRef} className="ui-scroll-quiet overflow-x-auto">
+      {loading ? (
+        <p role="status" className={cn(noticeClass, "grid-flow-col content-center justify-center gap-2.5")}>
+          <ButtonSpinner />
+          Loading activity…
+        </p>
+      ) : !visible ? (
+        <p className={noticeClass}>Visitors don’t see your GitHub activity. Turn it on to show the last year of contributions.</p>
+      ) : !available || !calendar || !summary ? (
+        <p className={noticeClass}>GitHub activity is unavailable right now.</p>
+      ) : (
+        <div className="grid gap-8 lg:grid-cols-[212px_minmax(0,1fr)] lg:gap-12">
+          <div className="flex flex-wrap items-end gap-x-12 gap-y-5 lg:flex-col lg:flex-nowrap lg:items-stretch lg:gap-y-7">
+            <p>
+              <span className="block font-display text-[58px] font-semibold leading-[0.9] tracking-[-0.04em] tabular-nums">
+                {(currentYearContributions ?? calendar.totalContributions).toLocaleString()}
+              </span>
+              <span className="mt-2.5 block text-ink-soft">
+                contributions on GitHub in {contributionYear ?? new Date().getUTCFullYear()}
+              </span>
+            </p>
+            <dl className="grid min-w-[212px] flex-1 gap-2 text-[15px] lg:flex-none">
+              <div className={statRowClass}>
+                <dt className="text-ink-soft">Last 12 months</dt>
+                <dd className="font-semibold tabular-nums">{calendar.totalContributions.toLocaleString()}</dd>
+              </div>
+              <div className={statRowClass}>
+                <dt className="text-ink-soft">Longest streak</dt>
+                <dd className="font-semibold tabular-nums">
+                  {summary.longestStreak} {summary.longestStreak === 1 ? "day" : "days"}
+                </dd>
+              </div>
+              {summary.busiestDay && (
+                <div className={statRowClass}>
+                  <dt className="text-ink-soft">Busiest day</dt>
+                  <dd className="font-semibold tabular-nums">
+                    {summary.busiestDay.contributionCount} on {formatDay(summary.busiestDay.date, false)}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
+
+          <div className="min-w-0">
+            {/* The padding leaves room for a pointed-at day to grow without being cut off by the scroller. */}
+            <div ref={scrollerRef} className="ui-scroll-quiet -m-1.5 overflow-x-auto p-1.5">
               <div
-                className="w-max min-w-full"
-                style={{ "--heatmap-weeks": calendar.weeks.length } as CSSProperties}
+                role="img"
+                aria-label={`GitHub contributions, day by day, over the last 12 months: ${calendar.totalContributions.toLocaleString()} in total.`}
+                onPointerOver={readPointedDay}
+                onPointerLeave={() => setPointedDay(null)}
+                className="grid w-full gap-[3px]"
+                style={{
+                  gridTemplateColumns: `auto repeat(${calendar.weeks.length}, minmax(0, 1fr))`,
+                  minWidth: calendar.weeks.length * MIN_WEEK_WIDTH + DAY_LABEL_WIDTH,
+                }}
               >
-                <div className="mb-2 flex gap-2">
-                  <div className="w-7 shrink-0" aria-hidden="true" />
-                  <div className={cn(weekColumnsClass, "text-[11px] text-ink-soft")}>
-                    {getMonthLabels(calendar).map(({ label, weekIndex }) => (
-                      <span
-                        key={`${label}-${weekIndex}`}
-                        className="whitespace-nowrap"
-                        style={{ gridColumnStart: weekIndex + 1 }}
-                      >
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <div
-                    aria-hidden="true"
-                    className={cn(dayRowsClass, "w-7 shrink-0 text-[11px] leading-none text-ink-soft")}
+                {getMonthLabels(calendar).map(({ label, weekIndex }) => (
+                  <span
+                    key={`${label}-${weekIndex}`}
+                    // Zero width, so a label never widens the week it sits above.
+                    className="mb-1 w-0 whitespace-nowrap text-xs text-ink-soft"
+                    style={{ gridColumnStart: weekIndex + 2, gridRowStart: 1 }}
                   >
-                    {["", "Mon", "", "Wed", "", "Fri", ""].map((label, index) => (
-                      <span key={`${label}-${index}`} className="flex items-center">
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                  <div className={weekColumnsClass}>
-                    {calendar.weeks.map((week, weekIndex) => (
-                      <div key={weekIndex} className={dayRowsClass}>
-                        {week.contributionDays.map((day) => (
-                          <span
-                            key={day.date}
-                            className={cn("size-[11px] rounded-[3px]", contributionLevels[getContributionLevel(day)])}
-                            style={{ gridRowStart: day.weekday + 1 }}
-                            title={`${day.contributionCount} contributions on ${day.date}`}
-                          />
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                    {label}
+                  </span>
+                ))}
+                {["Mon", "Wed", "Fri"].map((label, index) => (
+                  <span
+                    key={label}
+                    className="flex items-center pr-2 text-xs leading-none text-ink-soft"
+                    style={{ gridColumnStart: 1, gridRowStart: index * 2 + 3 }}
+                  >
+                    {label}
+                  </span>
+                ))}
+                {dayCells}
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-sheet-line pt-4 text-sm text-ink-soft">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 text-sm text-ink-soft">
               <p>
-                <span className="font-semibold tabular-nums text-ink">
-                  {(currentYearContributions ?? calendar.totalContributions).toLocaleString()}
-                </span>{" "}
-                contributions on GitHub in {contributionYear ?? new Date().getUTCFullYear()}
+                {pointedDay ? (
+                  <>
+                    <span className="font-semibold text-ink">{countContributions(pointedDay.count)}</span> on{" "}
+                    {formatDay(pointedDay.date)}
+                  </>
+                ) : (
+                  "Each square is a day. Pick one to see its count."
+                )}
               </p>
               <div className="flex items-center gap-2">
                 <span>Less</span>
-                <span aria-hidden="true" className="flex gap-1.5">
+                <span aria-hidden="true" className="flex gap-1">
                   {contributionLevels.map((color) => (
-                    <span key={color} className={cn("size-[11px] rounded-[3px]", color)} />
+                    <span key={color} className={cn("size-3 rounded-[3px]", color)} />
                   ))}
                 </span>
                 <span>More</span>
               </div>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
     </PortfolioSection>
   );
 }

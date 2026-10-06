@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pencil } from "lucide-react";
 import { Button, ButtonSpinner } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import PortfolioSection from "../components/PortfolioSection";
+import { cn } from "@/lib/utils";
 import { useUser } from "../context/UserContext";
 
 const MAX_ABOUT_LENGTH = 1000;
 
+// The hero's lead paragraph. Long ones are cut to a few lines, with the rest a press away.
 export default function About() {
   const { userDetails, isOwner, updateUserDetails } = useUser();
   const aboutText = userDetails.about ?? "";
@@ -18,6 +19,21 @@ export default function About() {
   const [tempAboutText, setTempAboutText] = useState(aboutText);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [isCutShort, setIsCutShort] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
+
+  // Measured while collapsed only: once expanded, nothing is cut and the "Show less" control has to stay.
+  useEffect(() => {
+    const text = textRef.current;
+    if (!text || expanded) return;
+
+    const measure = () => setIsCutShort(text.scrollHeight > text.clientHeight + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(text);
+    return () => observer.disconnect();
+  }, [aboutText, expanded]);
 
   const handleSaveChanges = async () => {
     try {
@@ -57,27 +73,48 @@ export default function About() {
     setIsEditModalOpen(true);
   };
 
+  if (!aboutText && !isOwner) return null;
+
   return (
-    <PortfolioSection
-      id="about"
-      title="About"
-      action={
-        isOwner && (
-          <Button variant="secondary" size="sm" onClick={handleOpenModal} aria-label="Edit about">
-            <Pencil aria-hidden="true" />
-            Edit
-          </Button>
-        )
-      }
-    >
+    <div className="max-w-[62ch]">
       {aboutText ? (
-        <p className="max-w-[68ch] whitespace-pre-wrap text-[17px] leading-[1.7] sm:text-lg sm:leading-[1.7]">
+        <p
+          ref={textRef}
+          id="about-lead"
+          className={cn(
+            "whitespace-pre-wrap text-[17px] leading-[1.65] text-ink-soft sm:text-lg sm:leading-[1.65]",
+            !expanded && "line-clamp-4",
+          )}
+        >
           {aboutText}
         </p>
       ) : (
         <p className="text-ink-soft">
           Nothing here yet. Tell visitors who you are, what you work on and what you’re looking for.
         </p>
+      )}
+
+      {(isCutShort || isOwner) && (
+        <div className="-ml-3.5 mt-2 flex flex-wrap items-center gap-1">
+          {isCutShort && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setExpanded((current) => !current)}
+              aria-expanded={expanded}
+              aria-controls="about-lead"
+              className="font-semibold text-ink"
+            >
+              {expanded ? "Show less" : "Read more"}
+            </Button>
+          )}
+          {isOwner && (
+            <Button variant="ghost" size="sm" onClick={handleOpenModal}>
+              <Pencil aria-hidden="true" />
+              Edit about
+            </Button>
+          )}
+        </div>
       )}
 
       <Dialog
@@ -126,6 +163,6 @@ export default function About() {
           </p>
         )}
       </Dialog>
-    </PortfolioSection>
+    </div>
   );
 }

@@ -111,7 +111,7 @@ function DraftSheet({ form, activeStep }: { form: DetailsForm; activeStep: numbe
 
   return (
     <aside aria-hidden="true" className="hidden lg:block">
-      <div className="ui-sheet pf-sheet rounded-[28px] p-8 [transform:perspective(1600px)_rotateY(-9deg)_rotateX(3deg)]">
+      <div className="ui-sheet ob-sheet rounded-[28px] p-8 [transform:perspective(1600px)_rotateY(-9deg)_rotateX(3deg)]">
         <div
           className={`grid size-[92px] place-items-center rounded-[24px] font-display text-[34px] font-semibold ${
             initials ? "bg-brand text-white" : `border border-dashed ${activeStep === 1 ? "border-brand-text" : "border-line"}`

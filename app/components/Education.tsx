@@ -2,7 +2,7 @@
 
 import type { PortfolioEducation } from "@/types/portfolio";
 import { useState } from "react";
-import { Pencil } from "lucide-react";
+import { GraduationCap, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "../context/UserContext";
 import EducationModal from "./EducationModal";
@@ -45,14 +45,19 @@ export default function Education() {
       {education.length === 0 ? (
         <p className="text-ink-soft">No education yet. Add where you studied and what you studied.</p>
       ) : (
-        <ul className="divide-y divide-line border-y border-line">
+        <ul className="grid gap-7">
           {education.map((edu, index) => (
-            <li key={edu.id || index} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-4">
-              <div className="min-w-0">
-                <h3 className="font-display text-lg font-semibold leading-snug tracking-[-0.01em]">{edu.school}</h3>
-                <p className="mt-0.5 text-ink-soft">{[edu.degree, edu.field].filter(Boolean).join(", ")}</p>
+            <li key={edu.id || index} className="flex gap-4">
+              <span aria-hidden="true" className="grid size-11 flex-none place-items-center rounded-xl bg-well">
+                <GraduationCap className="size-5" />
+              </span>
+              <div className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-5 gap-y-0.5">
+                <div className="min-w-0">
+                  <h3 className="font-display text-xl font-semibold leading-snug tracking-[-0.01em]">{edu.school}</h3>
+                  <p className="mt-0.5 text-ink-soft">{[edu.degree, edu.field].filter(Boolean).join(", ")}</p>
+                </div>
+                <p className="shrink-0 text-sm tabular-nums text-ink-soft">{formatYears(edu)}</p>
               </div>
-              <p className="shrink-0 text-sm tabular-nums text-ink-soft">{formatYears(edu)}</p>
             </li>
           ))}
         </ul>

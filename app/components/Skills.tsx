@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Pencil, Search, X } from "lucide-react";
+import { ChevronDown, Pencil, Search, X } from "lucide-react";
 import { Icon } from "@iconify/react";
 import { Button, ButtonSpinner } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -11,6 +11,9 @@ import { cn } from "@/lib/utils";
 import { useUser } from "../context/UserContext";
 import PortfolioSection from "./PortfolioSection";
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
+
+// Long lists start cut to about three rows, so the section does not turn into a wall of names.
+const COLLAPSED_SKILL_COUNT = 18;
 
 const capitalizeFirst = (skill: string) => skill ? skill.charAt(0).toUpperCase() + skill.slice(1) : skill;
 
@@ -32,6 +35,7 @@ export default function Skills() {
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showAllSkills, setShowAllSkills] = useState(false);
 
   useEffect(() => {
     if (skillInput.length < 2) {
@@ -148,6 +152,10 @@ export default function Skills() {
     }
   };
 
+  // A couple of hidden skills are not worth a control of their own.
+  const collapsible = skills.length > COLLAPSED_SKILL_COUNT + 3;
+  const shownSkills = collapsible && !showAllSkills ? skills.slice(0, COLLAPSED_SKILL_COUNT) : skills;
+
   return (
     <PortfolioSection
       id="skills"
@@ -164,14 +172,28 @@ export default function Skills() {
       {skills.length === 0 ? (
         <p className="text-ink-soft">No skills yet. Add the tools and languages you work with.</p>
       ) : (
-        <ul className="flex flex-wrap gap-2">
-          {skills.map((skill) => (
-            <li key={skill} className="ui-chip">
+        <ul id="skill-list" className="flex flex-wrap gap-2">
+          {shownSkills.map((skill) => (
+            <li key={skill} className="pf-chip">
               <SkillIcon skill={skill} iconMap={skillIcons} />
               {skill}
             </li>
           ))}
         </ul>
+      )}
+
+      {collapsible && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowAllSkills((current) => !current)}
+          aria-expanded={showAllSkills}
+          aria-controls="skill-list"
+          className="-ml-2 mt-4 font-semibold text-ink"
+        >
+          <ChevronDown aria-hidden="true" className={cn("transition-transform duration-200", showAllSkills && "rotate-180")} />
+          {showAllSkills ? "Show fewer" : `Show all ${skills.length}`}
+        </Button>
       )}
 
       {isOwner && (

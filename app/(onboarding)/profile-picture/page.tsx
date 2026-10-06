@@ -217,7 +217,7 @@ export default function ProfilePicturePage() {
         </div>
       </div>
 
-      <div className="ui-sheet pf-sheet grid min-h-[360px] place-items-center rounded-[28px] p-6 sm:min-h-[440px] sm:p-10">
+      <div className="ui-sheet ob-sheet grid min-h-[360px] place-items-center rounded-[28px] p-6 sm:min-h-[440px] sm:p-10">
         <input
           ref={inputRef}
           type="file"

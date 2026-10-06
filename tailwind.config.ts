@@ -21,6 +21,8 @@ export default {
   		colors: {
   			paper: token('paper'),
   			raised: token('raised'),
+  			surface: token('surface'),
+  			well: token('well'),
   			line: token('line'),
   			ink: {
   				DEFAULT: token('ink'),

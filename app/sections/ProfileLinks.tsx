@@ -1,16 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowUpRight, Copy, Pencil } from "lucide-react";
+import { Check, Copy, Pencil, Plus } from "lucide-react";
 import { Button, ButtonSpinner } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SOCIAL_PLATFORMS, type SocialPlatform } from "@/types/portfolio";
-import PortfolioSection from "../components/PortfolioSection";
 import Toast, { type ToastState } from "../components/Toast";
 import {
-  displaySocialLink,
   platformLabel,
   SocialIcon,
   socialLinkHref,
@@ -19,11 +17,15 @@ import {
 } from "../components/socialLinks";
 import { useUser } from "../context/UserContext";
 
-export default function Contact() {
+const linkBodyClass = "flex h-full items-center gap-2.5 rounded-l-full pl-4 pr-2 text-[15px] font-semibold";
+
+// The one place on the portfolio where the owner's links live. Each opens on a press and has its own copy control.
+export default function ProfileLinks() {
   const { isOwner, socialLinks, setSocialLinks } = useUser();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [tempSocialLinks, setTempSocialLinks] = useState<Partial<Record<SocialPlatform, string>>>({});
   const [toast, setToast] = useState<ToastState>(null);
+  const [copiedPlatform, setCopiedPlatform] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const toastTimer = useRef<number | undefined>(undefined);
@@ -31,17 +33,22 @@ export default function Contact() {
   const copyToClipboard = async (link: SocialLink) => {
     try {
       await navigator.clipboard.writeText(link.url);
+      setCopiedPlatform(link.platform);
       setToast({
         message: link.platform === "email" ? "Email address copied." : `${platformLabel(link.platform)} link copied.`,
         success: true,
       });
     } catch (err) {
       console.error("Failed to copy: ", err);
+      setCopiedPlatform(null);
       setToast({ message: "The link could not be copied.", success: false });
     }
     // Restart the timer so a second copy is not hidden early by the first one.
     window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), 3000);
+    toastTimer.current = window.setTimeout(() => {
+      setToast(null);
+      setCopiedPlatform(null);
+    }, 3000);
   };
 
   const handleOpenModal = () => {
@@ -87,65 +94,69 @@ export default function Contact() {
     }
   };
 
-  return (
-    <PortfolioSection
-      id="contact"
-      title="Contact"
-      action={
-        isOwner && (
-          <Button variant="secondary" size="sm" onClick={handleOpenModal} aria-label="Edit social links">
-            <Pencil aria-hidden="true" />
-            Edit
-          </Button>
-        )
-      }
-    >
-      {socialLinks.length === 0 ? (
-        <p className="text-ink-soft">No links yet. Add them so people can find your work and reach you.</p>
-      ) : (
-        <ul className="divide-y divide-line border-y border-line">
-          {socialLinks.map((link) => {
-            const label = platformLabel(link.platform);
-            const href = socialLinkHref(link);
-            const opensNewTab = link.platform !== "email";
+  if (socialLinks.length === 0 && !isOwner) return null;
 
-            return (
-              <li key={link.platform} className="flex items-center gap-3 py-3.5 sm:gap-4">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full border border-line">
-                  <SocialIcon platform={link.platform} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold leading-snug">{label}</p>
-                  <p className="truncate font-mono text-[13px] text-ink-soft">{displaySocialLink(link)}</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(link)}
-                  aria-label={link.platform === "email" ? "Copy email address" : `Copy ${label} link`}
-                  className="max-sm:w-9 max-sm:px-0"
-                >
-                  <Copy aria-hidden="true" />
-                  <span className="max-sm:hidden">Copy</span>
-                </Button>
-                {href && (
-                  <Button asChild variant="secondary" size="sm" className="max-sm:w-9 max-sm:px-0">
-                    <a
-                      href={href}
-                      target={opensNewTab ? "_blank" : undefined}
-                      rel={opensNewTab ? "noopener noreferrer" : undefined}
-                      aria-label={link.platform === "email" ? "Write an email" : `Open ${label}`}
-                    >
-                      <ArrowUpRight aria-hidden="true" />
-                      <span className="max-sm:hidden">{link.platform === "email" ? "Write" : "Open"}</span>
-                    </a>
-                  </Button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+  return (
+    <>
+      {socialLinks.length === 0 && (
+        <p className="mb-3 max-w-[62ch] text-ink-soft">No links yet. Add them so people can find your work and reach you.</p>
       )}
+
+      <ul className="flex flex-wrap items-center gap-2.5">
+        {socialLinks.map((link) => {
+          const label = platformLabel(link.platform);
+          const href = socialLinkHref(link);
+          const opensNewTab = link.platform !== "email";
+          const copied = copiedPlatform === link.platform;
+
+          return (
+            <li
+              key={link.platform}
+              className="flex h-11 items-center rounded-full bg-surface shadow-[var(--surface-shadow)] transition-transform duration-200 ease-out hover:-translate-y-0.5 motion-reduce:transform-none"
+            >
+              {href ? (
+                <a
+                  href={href}
+                  target={opensNewTab ? "_blank" : undefined}
+                  rel={opensNewTab ? "noopener noreferrer" : undefined}
+                  aria-label={link.platform === "email" ? "Write an email" : `Open ${label}`}
+                  className={`${linkBodyClass} transition-colors hover:text-brand-text`}
+                >
+                  <SocialIcon platform={link.platform} className="size-[18px]" />
+                  {label}
+                </a>
+              ) : (
+                <span className={linkBodyClass}>
+                  <SocialIcon platform={link.platform} className="size-[18px]" />
+                  {label}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => copyToClipboard(link)}
+                aria-label={link.platform === "email" ? "Copy email address" : `Copy ${label} link`}
+                title={link.platform === "email" ? "Copy email address" : "Copy link"}
+                className="mr-1.5 grid size-8 place-items-center rounded-full text-ink-faint transition-colors hover:bg-well hover:text-ink"
+              >
+                {copied ? (
+                  <Check aria-hidden="true" className="size-4 text-brand-text" />
+                ) : (
+                  <Copy aria-hidden="true" className="size-[15px]" />
+                )}
+              </button>
+            </li>
+          );
+        })}
+
+        {isOwner && (
+          <li>
+            <Button variant="ghost" size="sm" onClick={handleOpenModal}>
+              {socialLinks.length > 0 ? <Pencil aria-hidden="true" /> : <Plus aria-hidden="true" />}
+              {socialLinks.length > 0 ? "Edit links" : "Add links"}
+            </Button>
+          </li>
+        )}
+      </ul>
 
       <Dialog
         open={isEditModalOpen}
@@ -200,6 +211,6 @@ export default function Contact() {
       </Dialog>
 
       <Toast toast={toast} onDismiss={() => setToast(null)} />
-    </PortfolioSection>
+    </>
   );
 }
