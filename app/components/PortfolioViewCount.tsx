@@ -50,9 +50,9 @@ export default function PortfolioViewCount({ className }: { className?: string }
       role="img"
       aria-label={count === null ? "Loading unique portfolio views" : `${count} unique portfolio views`}
       title="Unique visitors"
-      className={cn("tabular-nums", className)}
+      className={cn("flex items-center gap-1.5 text-[13px] font-medium tabular-nums text-ink-soft", className)}
     >
-      <Eye aria-hidden="true" />
+      <Eye aria-hidden="true" className="size-4" />
       {count === null ? "—" : `${count.toLocaleString("en")} ${count === 1 ? "view" : "views"}`}
     </div>
   );

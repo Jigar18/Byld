@@ -11,6 +11,7 @@ import Education from "../components/Education";
 import GitHubHeatmap from "../components/GitHubHeatmap";
 import PortfolioLoader from "../components/PortfolioLoader";
 import PortfolioTopBar from "../components/PortfolioTopBar";
+import PortfolioViewCount from "../components/PortfolioViewCount";
 import Skills from "../components/Skills";
 import { usePointerLight } from "../components/usePointerLight";
 import { useRevealOnScroll } from "../components/useRevealOnScroll";
@@ -86,7 +87,11 @@ export default function PortfolioPage({ initialData }: { initialData: PortfolioI
         <div aria-hidden="true" className="pf-table" />
         <div aria-hidden="true" className="pf-table-light" />
 
-        <div className="mx-auto w-full max-w-[1240px] px-4 pb-8 pt-3 sm:px-6 sm:pt-4 lg:px-8">
+        {/* The view count is Byldit's figure rather than the owner's, so it sits off the portfolio, in the page's
+            corner: above the top bar, or beside it once the margin is wide enough to hold it. */}
+        <PortfolioViewCount className="absolute left-4 top-2.5 sm:left-6 min-[1400px]:top-4 min-[1400px]:h-[58px]" />
+
+        <div className="mx-auto w-full max-w-[1240px] px-4 pb-8 pt-10 sm:px-6 min-[1400px]:pt-4 lg:px-8">
           <PortfolioTopBar sections={sections} />
           <PortfolioHero />
 

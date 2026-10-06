@@ -3,7 +3,6 @@
 import type { CSSProperties } from "react";
 import { Building2, MapPin } from "lucide-react";
 import EditProfile from "../components/EditProfile";
-import PortfolioViewCount from "../components/PortfolioViewCount";
 import ProfileImage from "../components/ProfileImage";
 import { useUser } from "../context/UserContext";
 import About from "./AboutSection";
@@ -39,9 +38,13 @@ const factClass = "flex items-center gap-2 [&_svg]:size-4 [&_svg]:shrink-0";
 
 function ProfileFacts() {
   const { userDetails } = useUser();
+  if (!userDetails.college && !userDetails.location) return null;
 
   return (
-    <ul className="flex flex-wrap gap-x-6 gap-y-2 text-[15px] text-ink-soft sm:text-base">
+    <ul
+      className="pf-rise mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[15px] text-ink-soft sm:mt-5 sm:text-base"
+      style={riseTurn(2)}
+    >
       {userDetails.college && (
         <li className={factClass}>
           <Building2 aria-hidden="true" />
@@ -54,9 +57,6 @@ function ProfileFacts() {
           {userDetails.location}
         </li>
       )}
-      <li>
-        <PortfolioViewCount className={factClass} />
-      </li>
     </ul>
   );
 }
@@ -90,9 +90,7 @@ export default function PortfolioHero() {
           </p>
         )}
 
-        <div className="pf-rise mt-4 sm:mt-5" style={riseTurn(2)}>
-          <ProfileFacts />
-        </div>
+        <ProfileFacts />
 
         {isOwner && (
           <div className="pf-rise mt-5" style={riseTurn(2)}>
