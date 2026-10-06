@@ -1,22 +1,45 @@
-"use client";
+import { Github } from "lucide-react";
 
-import { ArrowRight, Github } from "lucide-react";
-import { motion } from "framer-motion";
+import { buttonVariants } from "@/components/ui/button";
+import BrandMark from "../components/BrandMark";
+import SheetStack from "../components/SheetStack";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function LoginPage() {
   return (
-    <main className="relative grid min-h-screen place-items-center overflow-hidden bg-zinc-950 px-6 text-zinc-100">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.13),transparent_36rem)]" />
-      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} {...{ className: "relative w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center shadow-2xl backdrop-blur-xl" }}>
-        <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">Portfolio creator</p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight">Build from your real work.</h1>
-        <p className="mt-3 leading-7 text-zinc-400">Connect GitHub securely, choose what to show, and publish a portfolio with intent.</p>
-        {/* OAuth sets cookies and redirects off-site, so this needs a full navigation. */}
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-        <a href="/api/github/auth" className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 font-medium text-zinc-950 transition hover:-translate-y-0.5 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-950">
-          <Github className="h-5 w-5" /> Continue with GitHub <ArrowRight className="h-4 w-4" />
-        </a>
-      </motion.section>
+    <main className="relative flex min-h-dvh flex-col overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="ui-dots pointer-events-none absolute inset-0 [mask-image:linear-gradient(to_left,black,transparent_72%)]"
+      />
+      <header className="relative flex items-center justify-between px-5 py-5 sm:px-10">
+        <BrandMark />
+        <ThemeToggle />
+      </header>
+
+      <div className="relative mx-auto grid w-full max-w-[1180px] flex-1 content-center items-center gap-2 px-5 pb-20 sm:px-10 lg:grid-cols-2 lg:gap-10">
+        <div className="flex justify-center lg:order-last">
+          <SheetStack motion="land" className="[--stack-scale:0.8] sm:[--stack-scale:1.1] lg:[--stack-scale:1.45]" />
+        </div>
+        <div className="max-w-[500px]">
+          <h1 className="font-display text-[44px] font-semibold leading-[1.02] tracking-[-0.035em] sm:text-[62px]">
+            Sign in with GitHub.
+          </h1>
+          <p className="mt-5 text-lg leading-relaxed text-ink-soft">
+            Byldit uses your GitHub account, so there is no new password to keep. You choose which
+            repositories it can read in the next step.
+          </p>
+          {/* OAuth sets cookies and redirects off-site, so this needs a full navigation. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/api/github/auth" className={buttonVariants({ size: "lg", className: "mt-9" })}>
+            <Github aria-hidden="true" />
+            Continue with GitHub
+          </a>
+          <p className="mt-5 text-[15px] text-ink-soft">
+            New here? The same button starts your portfolio.
+          </p>
+        </div>
+      </div>
     </main>
   );
 }

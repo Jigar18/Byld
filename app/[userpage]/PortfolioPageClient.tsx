@@ -1,80 +1,39 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import About from "../sections/AboutSection";
-import Credentials from "../sections/Credentials";
+import Certifications from "../sections/Certifications";
+import Contact from "../sections/Contact";
 import Experience from "../sections/Experience";
-import InfoCard from "../sections/InfoCard";
+import ProfileSheet from "../sections/ProfileSheet";
 import Projects from "../sections/Projects";
 import CertificateModal from "../components/CertificateModal";
-import { UserProvider } from "../context/UserContext";
-import PortfolioViewCount from "../components/PortfolioViewCount";
+import Education from "../components/Education";
 import GitHubHeatmap from "../components/GitHubHeatmap";
 import PortfolioLoader from "../components/PortfolioLoader";
-import { Copyright, LogOut } from "lucide-react";
+import Skills from "../components/Skills";
+import { UserProvider, useUser } from "../context/UserContext";
 import type { PortfolioCertificate, PortfolioInitialData } from "@/types/portfolio";
 
-const sectionVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.1,
-      duration: 0.6,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  }),
-};
-
-const revealSection = (index: number) => ({
-  custom: index,
-  initial: "hidden",
-  animate: "visible",
-  variants: sectionVariants,
-});
-
-function LogoutButton() {
-  const [loggingOut, setLoggingOut] = useState(false);
-  const [logoutFailed, setLogoutFailed] = useState(false);
-
-  const logout = async () => {
-    if (loggingOut) return;
-    setLoggingOut(true);
-    setLogoutFailed(false);
-
-    try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Logout failed");
-      window.location.replace("/");
-    } catch {
-      setLogoutFailed(true);
-      setLoggingOut(false);
-    }
-  };
+function PortfolioFooter() {
+  const { userDetails } = useUser();
+  const name = [userDetails.firstName, userDetails.lastName].filter(Boolean).join(" ");
 
   return (
-    <button
-      type="button"
-      onClick={logout}
-      disabled={loggingOut}
-      className="fixed right-4 top-4 z-40 inline-flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-zinc-900/90 px-3 text-sm font-medium text-zinc-200 shadow-xl shadow-black/25 backdrop-blur-sm transition hover:border-white/30 hover:bg-zinc-800 hover:text-white disabled:cursor-wait disabled:opacity-60 sm:right-8 sm:top-8 sm:h-auto sm:px-4 sm:py-2.5"
-      aria-label="Log out"
-    >
-      <LogOut className="h-4 w-4" />
-      <span className="hidden sm:inline">
-        {loggingOut ? "Logging out…" : logoutFailed ? "Try again" : "Log out"}
-      </span>
-    </button>
+    <footer className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-line pt-6 text-sm text-ink-soft">
+      <p>
+        © {new Date().getFullYear()} {name}
+      </p>
+      <Link href="/" className="font-medium underline-offset-4 hover:text-ink hover:underline">
+        Built with Byldit
+      </Link>
+    </footer>
   );
 }
 
-export default function Home({ initialData }: { initialData: PortfolioInitialData }) {
-  // The loader stays on top until hydration so the first paint is never a half-animated page.
+export default function PortfolioPage({ initialData }: { initialData: PortfolioInitialData }) {
+  // The loader stays on top until hydration, so the sheet settles once and no control shows before it can respond.
   const [hydrated, setHydrated] = useState(false);
   const [selectedCertificate, setSelectedCertificate] = useState<PortfolioCertificate | null>(null);
   const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
@@ -84,6 +43,23 @@ export default function Home({ initialData }: { initialData: PortfolioInitialDat
     setHydrated(true);
   }, []);
 
+  // Visitors only get the sections that have something in them. The owner gets all of them, so each can be filled in.
+  const sections = useMemo(() => {
+    const { details, projects, experiences, skills, education, certifications, socialLinks } = initialData;
+    return [
+      { id: "about", label: "About", hasContent: Boolean(details.about) },
+      { id: "projects", label: "Projects", hasContent: projects.length > 0 },
+      { id: "activity", label: "Activity", hasContent: initialData.showGitHubHeatmap },
+      { id: "experience", label: "Experience", hasContent: experiences.length > 0 },
+      { id: "skills", label: "Skills", hasContent: skills.length > 0 },
+      { id: "education", label: "Education", hasContent: education.length > 0 },
+      { id: "certificates", label: "Certificates", hasContent: certifications.length > 0 },
+      { id: "contact", label: "Contact", hasContent: Object.values(socialLinks).some(Boolean) },
+    ].filter((section) => initialData.isOwner || section.hasContent);
+  }, [initialData]);
+
+  const shows = (id: string) => sections.some((section) => section.id === id);
+
   const handleOpenCertificate = (certificate: PortfolioCertificate, certificates: PortfolioCertificate[]) => {
     setSelectedCertificate(certificate);
     setAllCertificates(certificates);
@@ -92,58 +68,42 @@ export default function Home({ initialData }: { initialData: PortfolioInitialDat
 
   return (
     <UserProvider initialData={initialData}>
-      {!hydrated && <PortfolioLoader username={initialData.username} />}
-      <div className="portfolio-profile relative min-h-screen overflow-hidden bg-[#0a0a0a] text-zinc-200">
-        {initialData.isOwner && <LogoutButton />}
-        <PortfolioViewCount />
-        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_76%_8%,rgba(251,191,36,0.018),transparent_28rem),radial-gradient(circle_at_5%_55%,rgba(244,114,182,0.012),transparent_24rem),radial-gradient(circle_at_80%_92%,rgba(255,255,255,0.012),transparent_26rem)]" />
-        <div className="pointer-events-none fixed inset-0 opacity-[0.018] [background-image:linear-gradient(rgba(255,255,255,.4)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.4)_1px,transparent_1px)] [background-size:72px_72px]" />
-        <main className="relative mx-auto w-full max-w-7xl px-4 pb-6 pt-16 sm:px-8 sm:pb-9 sm:pt-20 lg:px-10 lg:pb-12 lg:pt-20">
-          <div className="space-y-10 sm:space-y-16 lg:space-y-24">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <InfoCard />
-          </motion.div>
+      {!hydrated && (
+        <div className="fixed inset-0 z-50 bg-paper">
+          <PortfolioLoader username={initialData.username} />
+        </div>
+      )}
 
-          <div className="space-y-10 sm:space-y-16 lg:space-y-24">
-            <motion.div {...{ className: "w-full" }} {...revealSection(1)}>
-              <About />
-            </motion.div>
+      <div
+        className="pf mx-auto grid w-full max-w-[1320px] gap-9 p-3 sm:p-5 lg:grid-cols-[372px_minmax(0,1fr)] lg:gap-14 lg:p-7"
+        data-ready={hydrated}
+      >
+        <ProfileSheet sections={sections} />
 
-            <motion.div {...{ className: "w-full" }} {...revealSection(2)}>
-              <Projects />
-            </motion.div>
-
-            <GitHubHeatmap />
-          </div>
-
-          <motion.div {...revealSection(3)}>
-            <Credentials onOpenCertificate={handleOpenCertificate} />
-          </motion.div>
-
-          <motion.div {...revealSection(4)}>
-            <Experience />
-          </motion.div>
-
-          <motion.footer {...{ className: "mt-10 border-t border-white/10 py-8" }} {...revealSection(6)}>
-            <p className="flex items-center justify-center gap-1.5 text-xs text-zinc-500">
-              <Copyright aria-hidden="true" className="h-3.5 w-3.5" />
-              Copyright {new Date().getFullYear()}
-            </p>
-          </motion.footer>
-          </div>
-        </main>
-
-        <CertificateModal
-          isOpen={isCertificateModalOpen}
-          onClose={() => setIsCertificateModalOpen(false)}
-          certificate={selectedCertificate}
-          certificates={allCertificates}
-        />
+        <div className="pf-content min-w-0 px-2 pb-5 sm:px-3 lg:px-0 lg:pb-3 lg:pt-9">
+          <main className="pb-11 sm:pb-14">
+            {shows("about") && <About />}
+            {shows("projects") && <Projects />}
+            {shows("activity") && <GitHubHeatmap />}
+            {shows("experience") && <Experience />}
+            {shows("skills") && <Skills />}
+            {shows("education") && <Education />}
+            {shows("certificates") && <Certifications onOpenCertificate={handleOpenCertificate} />}
+            {shows("contact") && <Contact />}
+            {sections.length === 0 && (
+              <p className="text-lg text-ink-soft">This portfolio is still being put together. Check back soon.</p>
+            )}
+          </main>
+          <PortfolioFooter />
+        </div>
       </div>
+
+      <CertificateModal
+        isOpen={isCertificateModalOpen}
+        onClose={() => setIsCertificateModalOpen(false)}
+        certificate={selectedCertificate}
+        certificates={allCertificates}
+      />
     </UserProvider>
   );
 }

@@ -263,56 +263,6 @@ html[data-lp-theme="dark"] .lp-nav .lp-brand img {
   gap: 10px;
 }
 
-.lp-theme-toggle {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border: 1.5px solid var(--line);
-  border-radius: 50%;
-  transition: border-color 0.2s ease;
-}
-
-.lp-theme-toggle:hover {
-  border-color: var(--ink);
-}
-
-.lp-theme-toggle svg {
-  grid-area: 1 / 1;
-  width: 18px;
-  height: 18px;
-  transition: opacity 0.3s ease, transform 0.45s cubic-bezier(0.2, 0.85, 0.25, 1);
-}
-
-/* The icon shows the theme a press switches to. */
-.lp-theme-sun,
-html[data-lp-theme="dark"] .lp-theme-moon {
-  opacity: 0;
-  transform: rotate(-90deg) scale(0.4);
-}
-
-html[data-lp-theme="dark"] .lp-theme-sun {
-  opacity: 1;
-  transform: none;
-}
-
-/* ThemeToggle starts a view transition; the new theme grows out of the button as a circle. */
-html:has(.lp)::view-transition-old(root),
-html:has(.lp)::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-html:has(.lp)::view-transition-new(root) {
-  animation: lp-theme-reveal 0.6s cubic-bezier(0.3, 0, 0.2, 1);
-}
-
-@keyframes lp-theme-reveal {
-  from { clip-path: circle(0 at var(--lp-switch-x) var(--lp-switch-y)); }
-  to { clip-path: circle(150vmax at var(--lp-switch-x) var(--lp-switch-y)); }
-}
-
 .lp-copy {
   position: absolute;
   inset: 88px var(--gutter) auto;

@@ -3,7 +3,8 @@
 import type { PortfolioProjectData } from "@/types/portfolio";
 import { useRef, useState } from "react";
 import { ImagePlus, LoaderCircle, Trash2 } from "lucide-react";
-import { removeUnsavedProjectMedia, UploadToast, type UploadToastState } from "./projectMedia";
+import { removeUnsavedProjectMedia } from "./projectMedia";
+import Toast, { type ToastState } from "./Toast";
 
 export type ProjectImage = PortfolioProjectData["images"][number];
 
@@ -25,7 +26,7 @@ export default function ProjectImageUploader({ images, onUploaded, onReorder, on
   const targetPositionRef = useRef(0);
   const draggedPositionRef = useRef<number | null>(null);
   const [uploadingPosition, setUploadingPosition] = useState<number | null>(null);
-  const [toast, setToast] = useState<UploadToastState>(null);
+  const [toast, setToast] = useState<ToastState>(null);
   const byPosition = new Map(images.map((image) => [image.position, image]));
 
   const chooseImage = (position: number) => {
@@ -95,40 +96,49 @@ export default function ProjectImageUploader({ images, onUploaded, onReorder, on
 
   return (
     <div>
-      <UploadToast toast={toast} onDismiss={() => setToast(null)} />
-      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif" className="sr-only" onChange={(event) => uploadImage(event.target.files?.[0])} />
-      <div className="grid grid-cols-5 gap-2 sm:gap-3">
+      <Toast toast={toast} onDismiss={() => setToast(null)} />
+      {/* Opened from the slot buttons below, so it stays out of the tab order. */}
+      <input ref={inputRef} type="file" tabIndex={-1} aria-hidden="true" accept="image/jpeg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif" className="sr-only" onChange={(event) => uploadImage(event.target.files?.[0])} />
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3">
         {[0, 1, 2, 3, 4].map((position) => {
           const image = byPosition.get(position);
-          return (
+          return image ? (
             <div
               key={position}
-              className={`group relative aspect-[4/3] overflow-hidden rounded-lg border border-dashed transition ${image ? "cursor-grab border-white/20 bg-black/40" : "cursor-pointer border-white/15 bg-black/20 hover:border-white/35 hover:bg-white/[0.04]"}`}
-              draggable={Boolean(image) && !disabled}
+              className="relative aspect-[4/3] cursor-grab overflow-hidden rounded-xl border border-line bg-black"
+              draggable={!disabled}
               onDragStart={() => { draggedPositionRef.current = position; }}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => { event.preventDefault(); dropAt(position); }}
-              onClick={() => !image && chooseImage(position)}
             >
-              {image ? (
-                <>
-                  <img src={image.imageUrl} alt={`Project screenshot ${position + 1}`} draggable={false} className="h-full w-full object-cover" />
-                  <div className="absolute inset-0 grid place-items-center bg-black/60 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
-                    <button type="button" disabled={disabled} onClick={(event) => { event.stopPropagation(); void removeImage(image); }} className="grid h-9 w-9 place-items-center rounded-full border border-red-300/30 bg-red-950/85 text-red-200 transition hover:scale-105 hover:bg-red-900" aria-label={`Remove screenshot ${position + 1}`}>
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="grid h-full place-items-center text-zinc-600">
-                  {uploadingPosition === position ? <LoaderCircle className="h-5 w-5 animate-spin text-zinc-300" /> : <ImagePlus className="h-5 w-5" />}
-                </div>
-              )}
+              <img src={image.imageUrl} alt={`Project screenshot ${position + 1}`} draggable={false} className="size-full object-cover" />
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => void removeImage(image)}
+                className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-black/70 text-white transition-colors hover:bg-[#c0362c]"
+                aria-label={`Remove screenshot ${position + 1}`}
+              >
+                <Trash2 className="size-3.5" />
+              </button>
             </div>
+          ) : (
+            <button
+              key={position}
+              type="button"
+              disabled={disabled}
+              onClick={() => chooseImage(position)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => { event.preventDefault(); dropAt(position); }}
+              className="grid aspect-[4/3] place-items-center rounded-xl border-[1.5px] border-dashed border-line text-ink-faint transition-colors hover:border-ink-faint hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
+              aria-label={`Add screenshot ${position + 1}`}
+            >
+              {uploadingPosition === position ? <LoaderCircle className="size-5 animate-spin" /> : <ImagePlus className="size-5" />}
+            </button>
           );
         })}
       </div>
-      <p className="mt-2 text-xs leading-5 text-zinc-500">Click a slot to upload · drag images to reorder · up to 5 images</p>
+      <p className="mt-2.5 text-sm leading-relaxed text-ink-soft">Click a slot to upload. Drag images to change their order. Up to 5 images.</p>
     </div>
   );
 }

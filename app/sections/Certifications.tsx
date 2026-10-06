@@ -2,12 +2,10 @@
 
 import type { PortfolioCertificate } from "@/types/portfolio";
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Award } from "lucide-react";
 import CertificateList from "../components/CertificateList";
-import EditCertifications from "../components/EditCertifications";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
-import CredentialCardHeader from "../components/CredentialCardHeader";
+import EditCertifications from "../components/EditCertifications";
+import PortfolioSection from "../components/PortfolioSection";
 import { useUser } from "../context/UserContext";
 
 interface CertificationsProps {
@@ -18,83 +16,74 @@ export default function Certifications({ onOpenCertificate }: CertificationsProp
   const { isOwner, portfolioData } = useUser();
   const [cards, setCards] = useState<PortfolioCertificate[]>(portfolioData.certifications);
   const [certificateToDelete, setCertificateToDelete] = useState<PortfolioCertificate | null>(null);
-  const [certificatesAtTop, setCertificatesAtTop] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [deleteFailed, setDeleteFailed] = useState(false);
 
   const confirmDelete = async () => {
     if (!certificateToDelete) return;
 
     setDeleting(true);
+    setDeleteFailed(false);
     try {
       const response = await fetch(`/api/deleteCertificate?id=${certificateToDelete.id}`, {
         method: "DELETE",
       });
-      if (!response.ok) {
-        console.error("Failed to delete certificate");
-        return;
-      }
+      if (!response.ok) throw new Error("Failed to delete certificate");
+
       setCards((prevCards) => prevCards.filter((card) => card.id !== certificateToDelete.id));
-      setCertificateToDelete(null);
     } catch (error) {
       console.error("Error deleting certificate:", error);
+      setDeleteFailed(true);
     } finally {
+      // Closed on failure too, so the message under the heading is not hidden behind the sheet.
+      setCertificateToDelete(null);
       setDeleting(false);
     }
   };
 
   return (
-    <motion.div
-      {...{
-        className:
-          "profile-card profile-surface-neutral profile-card-lift group flex h-[336px] flex-col rounded-xl border p-5 shadow-md",
-      }}
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.3 }}
-    >
-      <CredentialCardHeader
-        title="Certifications"
-        icon={<Award className="h-5 w-5" />}
-        action={isOwner ? <EditCertifications onAddCard={(certificate) => setCards((current) =>
-          [certificate, ...current].sort((a, b) => b.id.localeCompare(a.id)),
-        )} /> : undefined}
-      />
-
-      <div className="relative min-h-0 flex-1 pt-3">
-        <div
-          className="credential-scrollbar h-full overflow-x-hidden overflow-y-auto pr-1"
-          onScroll={(event) => setCertificatesAtTop(event.currentTarget.scrollTop <= 2)}
-        >
-          {cards.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-center">
-              <p className="text-sm text-slate-400">No certificates added yet.</p>
-            </div>
-          ) : (
-          <CertificateList
-            cards={cards}
-            onOpenCertificate={(certificate) => onOpenCertificate(certificate, cards)}
-            onDeleteCard={setCertificateToDelete}
-            canEdit={isOwner}
+    <PortfolioSection
+      id="certificates"
+      title="Certificates"
+      action={
+        isOwner && (
+          <EditCertifications
+            onAddCard={(certificate) =>
+              setCards((current) => [certificate, ...current].sort((a, b) => b.id.localeCompare(a.id)))
+            }
           />
-          )}
-        </div>
-        {certificatesAtTop && cards.length > 2 && (
-          <span className="pointer-events-none absolute bottom-2 right-3 rounded-full border border-white/10 bg-zinc-950/90 px-2.5 py-1 text-xs font-semibold text-zinc-300 shadow-lg">
-            +{cards.length - 2}
-          </span>
-        )}
-      </div>
+        )
+      }
+    >
+      {deleteFailed && (
+        <p role="alert" className="mb-5 text-[15px] font-medium text-danger">
+          The certificate wasn’t deleted. Check your connection and try again.
+        </p>
+      )}
+
+      {cards.length === 0 ? (
+        <p className="text-ink-soft">No certificates yet. Upload a PDF and visitors can read it right here.</p>
+      ) : (
+        <CertificateList
+          cards={cards}
+          onOpenCertificate={(certificate) => onOpenCertificate(certificate, cards)}
+          onDeleteCard={setCertificateToDelete}
+          canEdit={isOwner}
+        />
+      )}
 
       {isOwner && (
         <ConfirmDeleteModal
           isOpen={Boolean(certificateToDelete)}
-          title="Delete Certificate"
+          title="Delete certificate"
           subject={certificateToDelete?.title}
-          note="This action will permanently delete the certificate and its associated file from storage. This cannot be undone."
+          note="The certificate and its file are deleted for good. This cannot be undone."
+          busyLabel="Deleting…"
           isBusy={deleting}
           onClose={() => setCertificateToDelete(null)}
           onConfirm={confirmDelete}
         />
       )}
-    </motion.div>
+    </PortfolioSection>
   );
 }

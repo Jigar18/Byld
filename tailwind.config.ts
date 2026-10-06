@@ -1,6 +1,8 @@
 import type { Config } from "tailwindcss";
 import daisyui from "daisyui"
-import colors from "tailwindcss/colors";
+
+// globals.css stores each colour as an RGB triplet so opacity modifiers such as bg-ink/10 work.
+const token = (name: string) => `rgb(var(--c-${name}) / <alpha-value>)`;
 
 export default {
     darkMode: ["class"],
@@ -11,49 +13,33 @@ export default {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			sans: ['var(--font-landing-sans)', 'Arial', 'Helvetica', 'sans-serif'],
+  			display: ['var(--font-landing-display)', 'Arial', 'Helvetica', 'sans-serif'],
+  			mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace']
+  		},
   		colors: {
-			// The old UI used Tailwind's blue-tinted slate scale extensively.
-			// Pointing it at neutral zinc makes every authenticated surface truly monochrome.
-			slate: colors.zinc,
-  			background: 'hsl(var(--background))',
-  			foreground: 'hsl(var(--foreground))',
-  			card: {
-  				DEFAULT: 'hsl(var(--card))',
-  				foreground: 'hsl(var(--card-foreground))'
+  			paper: token('paper'),
+  			raised: token('raised'),
+  			line: token('line'),
+  			ink: {
+  				DEFAULT: token('ink'),
+  				soft: token('ink-soft'),
+  				faint: token('ink-faint')
   			},
-  			popover: {
-  				DEFAULT: 'hsl(var(--popover))',
-  				foreground: 'hsl(var(--popover-foreground))'
+  			'on-ink': token('on-ink'),
+  			brand: {
+  				DEFAULT: token('brand'),
+  				text: token('accent')
   			},
-  			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
-  			},
-  			secondary: {
-  				DEFAULT: 'hsl(var(--secondary))',
-  				foreground: 'hsl(var(--secondary-foreground))'
-  			},
-  			muted: {
-  				DEFAULT: 'hsl(var(--muted))',
-  				foreground: 'hsl(var(--muted-foreground))'
-  			},
-  			accent: {
-  				DEFAULT: 'hsl(var(--accent))',
-  				foreground: 'hsl(var(--accent-foreground))'
-  			},
-  			destructive: {
-  				DEFAULT: 'hsl(var(--destructive))',
-  				foreground: 'hsl(var(--destructive-foreground))'
-  			},
-  			border: 'hsl(var(--border))',
-  			input: 'hsl(var(--input))',
-  			ring: 'hsl(var(--ring))',
-  			chart: {
-  				'1': 'hsl(var(--chart-1))',
-  				'2': 'hsl(var(--chart-2))',
-  				'3': 'hsl(var(--chart-3))',
-  				'4': 'hsl(var(--chart-4))',
-  				'5': 'hsl(var(--chart-5))'
+  			danger: token('danger'),
+  			sheet: {
+  				DEFAULT: token('sheet'),
+  				raised: token('sheet-raised'),
+  				line: token('sheet-line'),
+  				edge: token('sheet-edge'),
+  				text: token('sheet-text'),
+  				soft: token('sheet-soft')
   			}
   		},
   		borderRadius: {

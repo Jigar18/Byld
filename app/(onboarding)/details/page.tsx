@@ -1,121 +1,148 @@
 "use client";
 
-import React, { useState, useEffect, useRef, type ReactNode } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { ArrowLeft, BookOpen, GraduationCap, Mail, MapPin, type LucideIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { Input } from "@/components/ui/input";
-import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { Button, ButtonSpinner } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { searchCities } from "@/lib/cities";
 import { getUniversities } from "@/lib/universities";
 
-const inputClassName =
-  "w-full px-3 py-2 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200";
-
 const TOTAL_STEPS = 6;
 
-const Spinner = () => (
-  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-zinc-400"></div>
-);
+const QUESTIONS = [
+  { title: "What’s your name?", hint: "It goes at the top of your portfolio." },
+  { title: "Where can people reach you?", hint: "Visitors see this address on your portfolio." },
+  { title: "Where are you based?", hint: "Start typing and pick your city." },
+  { title: "What do you do?", hint: "Your most recent job title." },
+  { title: "Where did you study?", hint: "Your school, college or university, and the years you were there." },
+  { title: "What did you study?", hint: "Your degree and its field." },
+];
+
+type DetailsForm = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  location: string;
+  jobTitle: string;
+  school: string;
+  startYear: string;
+  endYear: string;
+  degree: string;
+  field: string;
+};
 
 function Field({
   id,
   label,
-  loading,
-  className = "",
+  loading = false,
   ...props
 }: { id: string; label: string; loading?: boolean } & React.ComponentProps<typeof Input>) {
-  const input = <Input id={id} name={id} className={`${inputClassName} ${className}`.trim()} {...props} />;
   return (
-    <>
-      <Label htmlFor={id} className="text-slate-300 font-medium">
-        {label}
-      </Label>
-      {loading === undefined ? input : (
-        <div className="relative">
-          {input}
-          {loading && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Spinner />
-            </div>
-          )}
-        </div>
-      )}
-    </>
+    <div>
+      <Label htmlFor={id}>{label}</Label>
+      <div className="relative mt-2">
+        <Input id={id} name={id} {...props} />
+        {loading && <ButtonSpinner className="absolute right-4 top-1/2 -mt-2 text-ink-soft" />}
+      </div>
+    </div>
   );
 }
 
+// Rendered in the flow rather than floating, so it never covers the Back and Continue buttons.
 function SuggestionList({ items, onSelect }: { items: string[]; onSelect: (item: string) => void }) {
   return (
-    <div className="absolute left-0 right-0 bg-slate-800 border border-slate-700 rounded-b-md shadow-lg max-h-[180px] overflow-y-auto z-10">
-      <ul className="py-1 divide-y divide-slate-700">
-        {items.map((item, index) => (
-          <li
-            key={index}
-            className="px-4 py-2.5 hover:bg-slate-700 cursor-pointer text-slate-200 text-sm transition-colors"
+    <ul className="mt-2 max-h-[232px] overflow-y-auto rounded-[14px] border-[1.5px] border-line bg-raised p-1.5">
+      {items.map((item, index) => (
+        <li key={index}>
+          <button
+            type="button"
             onClick={() => onSelect(item)}
+            className="w-full rounded-[10px] px-3 py-2.5 text-left text-[15px] transition-colors hover:bg-ink/[0.07]"
           >
             {item}
-          </li>
-        ))}
-      </ul>
-    </div>
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 }
 
-function Step({
-  step,
-  currentStep,
-  title,
-  onBack,
-  children,
-  footer,
+// A line on the draft sheet: a dashed slot until it has a value, highlighted while its question is open.
+function DraftSlot({
+  value,
+  width,
+  active,
+  className = "",
 }: {
-  step: number;
-  currentStep: number;
-  title: string;
-  onBack: () => void;
-  children: ReactNode;
-  footer: ReactNode;
+  value: string;
+  width: string;
+  active: boolean;
+  className?: string;
 }) {
-  const completed = currentStep > step;
+  if (value) return <span className={`ob-written block ${className}`}>{value}</span>;
   return (
-    <div
-      className={`transition-all duration-500 ease-in-out transform ${
-        completed ? "-translate-y-2 opacity-80 scale-98 bg-slate-800/50 rounded-lg p-4" : "translate-y-0"
-      }`}
-    >
-      {completed && (
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center">
-            <CheckCircle2 className="h-5 w-5 text-zinc-400 mr-2" />
-            <span className="text-sm font-medium text-slate-300">{title}</span>
-          </div>
-          {currentStep === step + 1 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="text-slate-300 hover:text-slate-100 p-0 h-auto"
-            >
-              <span className="flex items-center">
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Edit
-              </span>
-            </Button>
-          )}
+    <span
+      className={`block h-[1.15em] rounded-md border border-dashed ${active ? "border-brand-text" : "border-line"} ${className}`}
+      style={{ width }}
+    />
+  );
+}
+
+function DraftRow({ icon: Icon, ...slot }: { icon: LucideIcon } & React.ComponentProps<typeof DraftSlot>) {
+  return (
+    <li className="flex items-center gap-3">
+      <Icon className={`size-[18px] shrink-0 ${slot.active ? "text-brand-text" : "text-ink-faint"}`} />
+      <span className="min-w-0 flex-1">
+        <DraftSlot {...slot} className="truncate" />
+      </span>
+    </li>
+  );
+}
+
+function DraftSheet({ form, activeStep }: { form: DetailsForm; activeStep: number }) {
+  const fullName = `${form.firstName} ${form.lastName}`.trim();
+  const initials = `${form.firstName.trim().charAt(0)}${form.lastName.trim().charAt(0)}`.toUpperCase();
+  const years = [form.startYear, form.endYear].filter(Boolean).join(" – ");
+  const school = [form.school, years].filter(Boolean).join(", ");
+  const study = [form.degree, form.field].filter(Boolean).join(", ");
+
+  return (
+    <aside aria-hidden="true" className="hidden lg:block">
+      <div className="ui-sheet pf-sheet rounded-[28px] p-8 [transform:perspective(1600px)_rotateY(-9deg)_rotateX(3deg)]">
+        <div
+          className={`grid size-[92px] place-items-center rounded-[24px] font-display text-[34px] font-semibold ${
+            initials ? "bg-brand text-white" : `border border-dashed ${activeStep === 1 ? "border-brand-text" : "border-line"}`
+          }`}
+        >
+          {initials}
         </div>
-      )}
-      <div className={completed ? "opacity-70" : ""}>{children}</div>
-      {currentStep === step && footer}
-    </div>
+        <DraftSlot
+          value={fullName}
+          width="72%"
+          active={activeStep === 1}
+          className="mt-7 break-words font-display text-[32px] font-semibold leading-[1.1] tracking-[-0.02em]"
+        />
+        <DraftSlot value={form.jobTitle} width="50%" active={activeStep === 4} className="mt-2.5 text-[17px] text-ink-soft" />
+        <ul className="mt-7 space-y-4 border-t border-sheet-line pt-6 text-[15px]">
+          <DraftRow icon={MapPin} value={form.location} width="44%" active={activeStep === 3} />
+          <DraftRow icon={GraduationCap} value={school} width="78%" active={activeStep === 5} />
+          <DraftRow icon={BookOpen} value={study} width="62%" active={activeStep === 6} />
+          <DraftRow icon={Mail} value={form.email} width="56%" active={activeStep === 2} />
+        </ul>
+      </div>
+      <p className="mt-7 max-w-[340px] text-[15px] leading-relaxed text-ink-soft">
+        This is the sheet visitors see first. It fills in as you answer.
+      </p>
+    </aside>
   );
 }
 
 export default function Details() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<DetailsForm>({
     firstName: "",
     lastName: "",
     email: "",
@@ -132,6 +159,7 @@ export default function Details() {
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   const searchTimer = useRef<number | undefined>(undefined);
   const latestSearch = useRef(0);
@@ -190,12 +218,21 @@ export default function Details() {
     }, 300);
   };
 
-  const nextStep = () => setCurrentStep((prev) => prev + 1);
-  const prevStep = () => setCurrentStep((prev) => prev - 1);
+  const goToStep = (step: number) => {
+    // A search still in flight belongs to the question being left.
+    window.clearTimeout(searchTimer.current);
+    latestSearch.current += 1;
+    setIsSearching(false);
+    setCitySuggestions([]);
+    setUniversitySuggestions([]);
+    setSaveFailed(false);
+    setCurrentStep(step);
+  };
 
   const handleCompleteProfile = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setSaveFailed(false);
 
     try {
       const response = await fetch("/api/detailsToDB", {
@@ -208,6 +245,7 @@ export default function Details() {
 
       if (!response.ok) {
         setIsSubmitting(false);
+        setSaveFailed(true);
         return;
       }
 
@@ -215,277 +253,227 @@ export default function Details() {
     } catch (error) {
       console.error("Error saving profile details:", error);
       setIsSubmitting(false);
+      setSaveFailed(true);
     }
   };
 
-  const backButton = (
-    <Button onClick={prevStep} variant="outline" className={secondaryActionButtonClass}>
-      <ArrowLeft className="h-4 w-4 mr-2" />
-      Back
-    </Button>
-  );
+  const canContinueByStep = [
+    Boolean(formData.firstName && formData.lastName),
+    Boolean(formData.email),
+    Boolean(formData.location),
+    Boolean(formData.jobTitle.trim()),
+    Boolean(formData.school.trim() && formData.startYear && formData.endYear),
+    Boolean(formData.degree.trim() && formData.field.trim()),
+  ];
+  const canContinue = canContinueByStep[currentStep - 1];
+  const isLastStep = currentStep === TOTAL_STEPS;
+  const question = QUESTIONS[currentStep - 1];
 
-  // Extra padding keeps the suggestion dropdown from covering the navigation buttons.
-  const navigation = (canContinue: boolean, reserveDropdownSpace = false) => (
-    <div className={`mt-6 flex justify-between ${reserveDropdownSpace ? "pt-48" : ""}`}>
-      {backButton}
-      <Button onClick={nextStep} className={primaryActionButtonClass} disabled={!canContinue}>
-        Continue
-      </Button>
-    </div>
-  );
+  const handleSubmitStep = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canContinue) return;
+    if (isLastStep) void handleCompleteProfile();
+    else goToStep(currentStep + 1);
+  };
 
-  const stepProps = { currentStep, onBack: prevStep };
+  const emailHint = isLoadingEmail
+    ? "Looking for the email on your GitHub profile…"
+    : formData.email
+      ? question.hint
+      : "We couldn’t read an email from GitHub, so type the one you want visitors to use.";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-12 px-4 sm:px-6 flex items-center justify-center">
-      <div className="max-w-2xl mx-auto bg-slate-900 rounded-xl shadow-xl overflow-hidden border border-slate-800">
-        <div className="w-full bg-slate-800 h-2">
+    <main className="mx-auto grid w-full max-w-[1180px] flex-1 items-center gap-14 px-5 pb-20 pt-6 sm:px-10 lg:grid-cols-[minmax(0,1fr)_400px]">
+      <form onSubmit={handleSubmitStep} noValidate className="w-full max-w-[540px]">
+        <p className="text-[15px] font-semibold text-ink-soft">
+          Question {currentStep} of {TOTAL_STEPS}
+        </p>
+        <div className="mt-3 h-1 w-[220px] max-w-full overflow-hidden rounded-full bg-line">
           <div
-            className="bg-zinc-600 h-2 transition-all duration-500 ease-out"
+            className="h-full rounded-full bg-ink transition-[width] duration-500 ease-out"
             style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}
           />
         </div>
 
-        <div className="p-8">
-          <div className="mb-10 text-center">
-            <h1 className="text-3xl font-bold text-slate-100 mb-2">
-              {"Let's fill the details for your portfolio"}
-            </h1>
-            <p className="text-slate-400">
-              Step {currentStep} of {TOTAL_STEPS}
-            </p>
-          </div>
+        <div key={currentStep} className="ob-step mt-9">
+          <h1 className="font-display text-[38px] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[52px]">
+            {question.title}
+          </h1>
+          <p className="mt-4 text-lg leading-relaxed text-ink-soft">{currentStep === 2 ? emailHint : question.hint}</p>
 
-          <div className="space-y-8 max-w-xl mx-auto">
-            <Step
-              {...stepProps}
-              step={1}
-              title="Personal Information"
-              footer={
-                <div className="mt-6 flex justify-end">
-                  <Button
-                    onClick={nextStep}
-                    className={primaryActionButtonClass}
-                    disabled={!formData.firstName || !formData.lastName}
-                  >
-                    Continue
-                  </Button>
-                </div>
-              }
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Field
-                    id="firstName"
-                    label="First Name"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="Enter your first name"
-                    disabled={currentStep > 1}
-                  />
-                </div>
-                <div>
-                  <Field
-                    id="lastName"
-                    label="Last Name"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Enter your last name"
-                    disabled={currentStep > 1}
-                  />
-                </div>
-              </div>
-            </Step>
-
-            {currentStep >= 2 && (
-              <Step {...stepProps} step={2} title="Email" footer={navigation(Boolean(formData.email))}>
+          <div className="mt-9 space-y-5">
+            {currentStep === 1 && (
+              <div className="grid gap-5 sm:grid-cols-2">
                 <Field
-                  id="email"
-                  label="Email Address"
-                  type="email"
-                  value={formData.email}
+                  id="firstName"
+                  label="First name"
+                  value={formData.firstName}
                   onChange={handleInputChange}
-                  placeholder={isLoadingEmail ? "Loading..." : "Enter your email"}
-                  disabled={currentStep > 2 || isLoadingEmail}
-                  autoComplete="off"
+                  placeholder="Ada"
+                  autoComplete="given-name"
+                  autoFocus
                 />
-                {isLoadingEmail && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Spinner />
-                  </div>
-                )}
-                {!isLoadingEmail && !formData.email && (
-                  <p className="text-xs text-slate-400 mt-1">
-                    Note: You need to be logged in with GitHub to auto-fill
-                    your email
-                  </p>
-                )}
-              </Step>
+                <Field
+                  id="lastName"
+                  label="Last name"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  placeholder="Lovelace"
+                  autoComplete="family-name"
+                />
+              </div>
             )}
 
-            {currentStep >= 3 && (
-              <Step
-                {...stepProps}
-                step={3}
-                title="Location"
-                footer={navigation(Boolean(formData.location), citySuggestions.length > 0)}
-              >
-                <div className="relative">
+            {currentStep === 2 && (
+              <Field
+                id="email"
+                label="Email address"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder={isLoadingEmail ? "Loading…" : "you@example.com"}
+                disabled={isLoadingEmail}
+                loading={isLoadingEmail}
+                autoComplete="off"
+                autoFocus
+              />
+            )}
+
+            {currentStep === 3 && (
+              <div>
+                <Field
+                  id="location"
+                  label="City"
+                  value={formData.location}
+                  onChange={(e) => searchWhileTyping(e, searchCities, setCitySuggestions)}
+                  placeholder="Bengaluru"
+                  autoComplete="off"
+                  loading={isSearching}
+                  autoFocus
+                />
+                {citySuggestions.length > 0 && (
+                  <SuggestionList
+                    items={citySuggestions}
+                    onSelect={(city) => {
+                      setFormData((prev) => ({ ...prev, location: city }));
+                      setCitySuggestions([]);
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
+            {currentStep === 4 && (
+              <Field
+                id="jobTitle"
+                label="Most recent job title"
+                value={formData.jobTitle}
+                onChange={handleInputChange}
+                placeholder="Software Engineer"
+                autoComplete="off"
+                autoFocus
+              />
+            )}
+
+            {currentStep === 5 && (
+              <>
+                <div>
                   <Field
-                    id="location"
-                    label="Select your city?"
-                    value={formData.location}
-                    onChange={(e) => searchWhileTyping(e, searchCities, setCitySuggestions)}
-                    className={citySuggestions.length > 0 ? "rounded-b-none border-b-0" : ""}
-                    placeholder="Enter your city"
-                    disabled={currentStep > 3}
+                    id="school"
+                    label="School, college or university"
+                    value={formData.school}
+                    onChange={(e) => searchWhileTyping(e, getUniversities, setUniversitySuggestions)}
+                    placeholder="Stanford University"
                     autoComplete="off"
                     loading={isSearching}
+                    autoFocus
                   />
-                  {citySuggestions.length > 0 && currentStep === 3 && (
+                  {universitySuggestions.length > 0 && (
                     <SuggestionList
-                      items={citySuggestions}
-                      onSelect={(city) => {
-                        setFormData((prev) => ({ ...prev, location: city }));
-                        setCitySuggestions([]);
+                      items={universitySuggestions}
+                      onSelect={(university) => {
+                        setFormData((prev) => ({ ...prev, school: university }));
+                        setUniversitySuggestions([]);
                       }}
                     />
                   )}
                 </div>
-              </Step>
+                <div className="grid grid-cols-2 gap-5">
+                  <Field
+                    id="startYear"
+                    label="Start year"
+                    value={formData.startYear}
+                    onChange={handleInputChange}
+                    placeholder="2018"
+                    inputMode="numeric"
+                    autoComplete="off"
+                  />
+                  <Field
+                    id="endYear"
+                    label="End year"
+                    value={formData.endYear}
+                    onChange={handleInputChange}
+                    placeholder="2022"
+                    inputMode="numeric"
+                    autoComplete="off"
+                  />
+                </div>
+              </>
             )}
 
-            {currentStep >= 4 && (
-              <Step
-                {...stepProps}
-                step={4}
-                title="Professional Experience"
-                footer={navigation(Boolean(formData.jobTitle.trim()))}
-              >
+            {currentStep === 6 && (
+              <div className="grid gap-5 sm:grid-cols-2">
                 <Field
-                  id="jobTitle"
-                  label="Most Recent Job Title"
-                  value={formData.jobTitle}
+                  id="degree"
+                  label="Degree"
+                  value={formData.degree}
                   onChange={handleInputChange}
-                  placeholder="e.g. Software Engineer"
-                  disabled={currentStep > 4}
+                  placeholder="Bachelor of Technology"
+                  autoComplete="off"
+                  autoFocus
+                />
+                <Field
+                  id="field"
+                  label="Field of study"
+                  value={formData.field}
+                  onChange={handleInputChange}
+                  placeholder="Computer Science"
                   autoComplete="off"
                 />
-              </Step>
-            )}
-
-            {currentStep >= 5 && (
-              <Step
-                {...stepProps}
-                step={5}
-                title="School and Study Years"
-                footer={navigation(
-                  Boolean(formData.school.trim() && formData.startYear && formData.endYear),
-                  universitySuggestions.length > 0,
-                )}
-              >
-                <div className="space-y-6">
-                  <div className="relative">
-                    <Field
-                      id="school"
-                      label="School or College/University"
-                      value={formData.school}
-                      onChange={(e) => searchWhileTyping(e, getUniversities, setUniversitySuggestions)}
-                      className={universitySuggestions.length > 0 ? "rounded-b-none border-b-0" : ""}
-                      placeholder="e.g. Stanford University"
-                      autoComplete="off"
-                      disabled={currentStep > 5}
-                      loading={isSearching}
-                    />
-                    {universitySuggestions.length > 0 && currentStep === 5 && (
-                      <SuggestionList
-                        items={universitySuggestions}
-                        onSelect={(university) => {
-                          setFormData((prev) => ({ ...prev, school: university }));
-                          setUniversitySuggestions([]);
-                        }}
-                      />
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <Field
-                        id="startYear"
-                        label="Start Year"
-                        value={formData.startYear}
-                        onChange={handleInputChange}
-                        placeholder="e.g. 2018"
-                        disabled={currentStep > 5}
-                      />
-                    </div>
-                    <div>
-                      <Field
-                        id="endYear"
-                        label="End Year"
-                        value={formData.endYear}
-                        onChange={handleInputChange}
-                        placeholder="e.g. 2022"
-                        disabled={currentStep > 5}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </Step>
-            )}
-
-            {currentStep >= 6 && (
-              <Step
-                {...stepProps}
-                step={6}
-                title="Degree"
-                footer={
-                  <div className="mt-6 flex justify-between">
-                    {backButton}
-                    <Button
-                      className={primaryActionButtonClass}
-                      disabled={!formData.degree.trim() || !formData.field.trim() || isSubmitting}
-                      onClick={handleCompleteProfile}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <ButtonSpinner />
-                          Saving...
-                        </>
-                      ) : (
-                        "Complete Profile"
-                      )}
-                    </Button>
-                  </div>
-                }
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Field
-                      id="degree"
-                      label="Degree"
-                      value={formData.degree}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Bachelor of Technology"
-                      autoComplete="off"
-                    />
-                  </div>
-                  <div>
-                    <Field
-                      id="field"
-                      label="Field of Study"
-                      value={formData.field}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Computer Science"
-                      autoComplete="off"
-                    />
-                  </div>
-                </div>
-              </Step>
+              </div>
             )}
           </div>
         </div>
-      </div>
-    </div>
+
+        {saveFailed && (
+          <p role="alert" className="mt-6 text-[15px] font-medium text-danger">
+            Your details weren’t saved. Check your connection and try again.
+          </p>
+        )}
+
+        <div className="mt-9 flex items-center gap-3">
+          {currentStep > 1 && (
+            <Button variant="secondary" onClick={() => goToStep(currentStep - 1)} disabled={isSubmitting}>
+              <ArrowLeft aria-hidden="true" />
+              Back
+            </Button>
+          )}
+          <Button type="submit" disabled={!canContinue || isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <ButtonSpinner />
+                Saving…
+              </>
+            ) : isLastStep ? (
+              "Save and continue"
+            ) : (
+              "Continue"
+            )}
+          </Button>
+        </div>
+      </form>
+
+      <DraftSheet form={formData} activeStep={currentStep} />
+    </main>
   );
 }

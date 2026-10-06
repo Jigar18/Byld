@@ -1,28 +1,23 @@
 "use client";
 
 import type { PortfolioCertificate } from "@/types/portfolio";
-import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { FileCheck2, FileUp, Plus, X } from "lucide-react";
+import { Button, ButtonSpinner } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
-import { FileUp, Check, Edit3, X } from "lucide-react";
-import { credentialEditButtonClass } from "./CredentialCardHeader";
+import { cn } from "@/lib/utils";
 
 interface FormValues {
   title: string;
   description: string;
   fileInput: FileList;
 }
+
+const fieldErrorClass = "mt-2 text-sm font-medium text-danger";
 
 export default function EditCertifications({
   onAddCard,
@@ -34,15 +29,18 @@ export default function EditCertifications({
     handleSubmit,
     formState: { errors },
     reset,
+    resetField,
     watch,
   } = useForm<FormValues>();
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileName = watch("fileInput")?.[0]?.name ?? "";
 
   const onSubmit = async (data: FormValues) => {
     try {
       setIsUploading(true);
+      setUploadError("");
       const formData = new FormData();
       formData.append("title", data.title);
       formData.append("description", data.description);
@@ -72,175 +70,140 @@ export default function EditCertifications({
       setOpen(false);
     } catch (error) {
       console.error("Error during form submission:", error);
-      alert(
-        `Error: ${
-          error instanceof Error ? error.message : "Unknown error occurred"
-        }`
-      );
+      setUploadError(error instanceof Error ? error.message : "The certificate could not be uploaded.");
     } finally {
       setIsUploading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className={credentialEditButtonClass}
-          aria-label="Add certification"
-          title="Add certification"
-        >
-          <Edit3 className="h-4 w-4" />
-        </button>
-      </DialogTrigger>
-      <DialogContent className="fixed left-[50%] top-[50%] z-[60] max-h-[calc(100dvh-2rem)] translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-xl border border-slate-800 bg-slate-900 text-slate-100 shadow-xl sm:max-w-[600px]">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader className="px-6 pt-6">
-            <DialogTitle className="text-2xl font-bold text-slate-100">
-              Add Certificate
-            </DialogTitle>
-            <p className="text-slate-400 text-sm mt-1.5">
-              Add a new certificate to your portfolio and provide its details.
-            </p>
-          </DialogHeader>
-          <div className="space-y-6 py-6 px-6">
-            {/* Title Input */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="title"
-                className="text-slate-300 font-medium text-sm block"
-              >
-                Certificate Title
-              </Label>
-              <Input
-                id="title"
-                placeholder="e.g. AWS Solutions Architect"
-                className="w-full px-4 py-3 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200"
-                {...register("title", {
-                  required: "Title is required",
-                })}
-              />
-              {errors.title && (
-                <p className="text-zinc-500 text-xs mt-1">
-                  {errors.title.message}
-                </p>
-              )}
-            </div>
+    <>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => {
+          setUploadError("");
+          setOpen(true);
+        }}
+      >
+        <Plus aria-hidden="true" />
+        Add certificate
+      </Button>
 
-            {/* Description Input */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="description"
-                className="text-slate-300 font-medium text-sm block"
-              >
-                Description
-              </Label>
-              <Textarea
-                id="description"
-                placeholder="Briefly describe what this certificate is about..."
-                className="w-full px-4 py-3 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200 resize-none min-h-[120px]"
-                {...register("description", {
-                  required: "Description is required",
-                  validate: (value) =>
-                    value.split(/\s+/).length <= 300 ||
-                    "Maximum 300 words allowed",
-                })}
-              />
-              {errors.description ? (
-                <p className="text-zinc-500 text-xs mt-1">
-                  {errors.description.message}
-                </p>
-              ) : (
-                <p className="text-slate-500 text-xs mt-1">Maximum 300 words</p>
-              )}
-            </div>
-
-            {/* File Input */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="fileInput"
-                className="text-slate-300 font-medium text-sm block"
-              >
-                Upload Certificate (PDF)
-              </Label>
-              <div className="relative">
-                <Input
-                  id="fileInput"
-                  type="file"
-                  accept="application/pdf"
-                  className="hidden"
-                  {...register("fileInput", {
-                    required: "PDF file is required",
-                  })}
-                />
-                <div
-                  className={`w-full px-4 py-3 border border-dashed ${
-                    fileName
-                      ? "border-zinc-500 bg-zinc-500/10"
-                      : "border-slate-600 bg-slate-800"
-                  } rounded-md cursor-pointer flex items-center justify-center h-20 hover:bg-slate-700/50 transition-colors`}
-                  onClick={() => document.getElementById("fileInput")?.click()}
-                >
-                  {fileName ? (
-                    <div className="flex items-center gap-2">
-                      <Check className="h-5 w-5 text-zinc-400" />
-                      <span className="text-slate-200">{fileName.length > 25 ? `${fileName.slice(0, 22)}...` : fileName}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 p-0 text-slate-400 hover:text-zinc-400 hover:bg-slate-700/50 rounded-full transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          reset({ fileInput: undefined });
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-1">
-                      <FileUp className="h-6 w-6 text-zinc-400" />
-                      <span className="text-slate-400 text-sm">
-                        Click to select PDF
-                      </span>
-                    </div>
-                  )}
-                </div>
-                {errors.fileInput && (
-                  <p className="text-zinc-500 text-xs mt-1">
-                    {errors.fileInput.message}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="px-6 pb-6 bg-slate-900 border-t border-slate-800 mt-2 pt-4 flex justify-end gap-2">
-            <Button
-              type="button"
-              onClick={() => setOpen(false)}
-              className={secondaryActionButtonClass}
-            >
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Add certificate"
+        description="Upload the PDF and say what it is for."
+        size="md"
+        busy={isUploading}
+        onSubmit={() => void handleSubmit(onSubmit)()}
+        footer={
+          <>
+            {uploadError && (
+              <p role="alert" className="basis-full text-[15px] font-medium text-danger">
+                {uploadError}
+              </p>
+            )}
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={isUploading}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className={primaryActionButtonClass}
-              disabled={isUploading}
-            >
+            <Button type="submit" disabled={isUploading}>
               {isUploading ? (
                 <>
                   <ButtonSpinner />
-                  <span>Uploading...</span>
+                  Uploading…
                 </>
               ) : (
-                <span>Add Certificate</span>
+                "Add certificate"
               )}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          <div>
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              placeholder="AWS Solutions Architect"
+              aria-invalid={Boolean(errors.title)}
+              className="mt-2"
+              {...register("title", {
+                required: "Title is required",
+              })}
+            />
+            {errors.title && <p className={fieldErrorClass}>{errors.title.message}</p>}
+          </div>
+
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="What this certificate covers"
+              aria-invalid={Boolean(errors.description)}
+              className="mt-2"
+              {...register("description", {
+                required: "Description is required",
+                validate: (value) =>
+                  value.split(/\s+/).length <= 300 ||
+                  "Maximum 300 words allowed",
+              })}
+            />
+            {errors.description ? (
+              <p className={fieldErrorClass}>{errors.description.message}</p>
+            ) : (
+              <p className="mt-2 text-sm text-ink-soft">Up to 300 words.</p>
+            )}
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold">Certificate file</p>
+            {/* A label, so a click or a key press on the hidden input opens the file picker without any script. */}
+            <label
+              className={cn(
+                "mt-2 flex min-h-24 cursor-pointer items-center justify-center gap-3 rounded-2xl border-[1.5px] border-dashed px-4 py-4 text-center transition-colors has-[:focus-visible]:border-ink",
+                fileName ? "border-ink-faint bg-raised" : "border-line hover:border-ink-faint",
+                errors.fileInput && "border-danger",
+              )}
+            >
+              <input
+                type="file"
+                accept="application/pdf"
+                aria-label="Upload a certificate PDF"
+                className="sr-only"
+                {...register("fileInput", {
+                  required: "PDF file is required",
+                })}
+              />
+              {fileName ? (
+                <>
+                  <FileCheck2 aria-hidden="true" className="size-5 shrink-0 text-brand-text" />
+                  <span className="min-w-0 truncate font-medium">{fileName}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Remove the selected file"
+                    onClick={(event) => {
+                      // Otherwise the click also reaches the label and reopens the file picker.
+                      event.preventDefault();
+                      resetField("fileInput");
+                    }}
+                  >
+                    <X aria-hidden="true" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <FileUp aria-hidden="true" className="size-5 shrink-0 text-ink-soft" />
+                  <span className="text-ink-soft">Choose a PDF</span>
+                </>
+              )}
+            </label>
+            {errors.fileInput && <p className={fieldErrorClass}>{errors.fileInput.message}</p>}
+          </div>
+        </div>
+      </Dialog>
+    </>
   );
 }

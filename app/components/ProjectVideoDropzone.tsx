@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Film, LoaderCircle, UploadCloud } from "lucide-react";
 import { compressProjectVideo } from "@/lib/compressProjectVideo";
-import { removeUnsavedProjectMedia, UploadToast, type UploadToastState } from "./projectMedia";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { removeUnsavedProjectMedia } from "./projectMedia";
+import Toast, { type ToastState } from "./Toast";
 
 export interface ProjectVideo {
   videoUrl: string;
@@ -118,7 +121,7 @@ export default function ProjectVideoDropzone({ video, onUploaded, onRemove, disa
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [optimizingProgress, setOptimizingProgress] = useState<number | null>(null);
-  const [toast, setToast] = useState<UploadToastState>(null);
+  const [toast, setToast] = useState<ToastState>(null);
 
   useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
@@ -192,42 +195,60 @@ export default function ProjectVideoDropzone({ video, onUploaded, onRemove, disa
 
   return (
     <div>
-      <UploadToast toast={toast} onDismiss={() => setToast(null)} />
+      <Toast toast={toast} onDismiss={() => setToast(null)} />
 
       {video && (
-        <div className="mb-3 overflow-hidden rounded-xl border border-white/10 bg-black/30">
+        <div className="mb-3 overflow-hidden rounded-2xl border border-line bg-black">
           <video src={video.videoUrl} controls preload="metadata" playsInline className="aspect-video w-full bg-black object-contain" />
           {onRemove && (
-            <div className="flex items-center justify-between gap-3 border-t border-white/10 px-3 py-2 text-xs text-zinc-400">
-              <span>Current project demo</span>
-              <button type="button" onClick={() => onRemove()} disabled={uploading || disabled} className="rounded-lg px-2 py-1 text-red-300 transition hover:bg-red-400/10 hover:text-red-200">Remove</button>
+            <div className="flex items-center justify-between gap-3 border-t border-line bg-paper py-1.5 pl-4 pr-1.5 text-sm text-ink-soft">
+              <span>Current demo video</span>
+              <Button variant="ghost" size="sm" onClick={() => onRemove()} disabled={uploading || disabled} className="text-danger hover:text-danger">
+                Remove
+              </Button>
             </div>
           )}
         </div>
       )}
 
-      <div
+      {/* A label, so a click or a key press on the hidden input opens the file picker without any script. */}
+      <label
         onDragEnter={(event) => { event.preventDefault(); if (!disabled) setIsDragging(true); }}
         onDragOver={(event) => { event.preventDefault(); if (!disabled) setIsDragging(true); }}
         onDragLeave={(event) => { event.preventDefault(); if (!event.currentTarget.contains(event.relatedTarget as Node)) setIsDragging(false); }}
         onDrop={(event) => { event.preventDefault(); setIsDragging(false); uploadFile(event.dataTransfer.files[0]); }}
-        className={`relative grid min-h-40 place-items-center rounded-xl border border-dashed p-5 text-center transition duration-200 ${isDragging ? "border-rose-300 bg-rose-400/10 shadow-[0_0_30px_rgba(251,113,133,0.12)]" : "border-white/15 bg-black/20 hover:border-white/30 hover:bg-white/[0.04]"} ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-        onClick={() => !disabled && !uploading && inputRef.current?.click()}
+        className={cn(
+          "grid min-h-40 place-items-center rounded-2xl border-[1.5px] border-dashed p-5 text-center transition-colors has-[:focus-visible]:border-ink",
+          isDragging ? "border-brand-text bg-brand/10" : "border-line hover:border-ink-faint",
+          disabled ? "cursor-not-allowed opacity-60" : uploading ? "cursor-progress" : "cursor-pointer",
+        )}
       >
-        <input ref={inputRef} type="file" accept="video/mp4,video/webm,.mp4,.webm" className="sr-only" onChange={(event) => uploadFile(event.target.files?.[0])} disabled={disabled || uploading} />
-        <div>
-          <span className={`mx-auto grid h-11 w-11 place-items-center rounded-xl border ${isDragging ? "border-rose-200/40 bg-rose-300/10 text-rose-100" : "border-white/10 bg-white/[0.06] text-zinc-300"}`}>
-            {uploading ? <LoaderCircle className="h-5 w-5 animate-spin" /> : isDragging ? <Film className="h-5 w-5" /> : <UploadCloud className="h-5 w-5" />}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="video/mp4,video/webm,.mp4,.webm"
+          className="sr-only"
+          aria-label="Upload a demo video"
+          onChange={(event) => uploadFile(event.target.files?.[0])}
+          disabled={disabled || uploading}
+        />
+        <span className="block">
+          <span className="mx-auto grid size-11 place-items-center rounded-full border border-line">
+            {uploading ? <LoaderCircle className="size-5 animate-spin" /> : isDragging ? <Film className="size-5" /> : <UploadCloud className="size-5" />}
           </span>
-          <p className={`mt-3 text-sm font-medium ${isDragging ? "text-rose-100" : "text-zinc-200"}`}>{optimizingProgress !== null ? `Optimizing video… ${optimizingProgress}%` : uploading ? "Uploading project demo…" : isDragging ? "Drop the video here" : video ? "Replace the demo video" : "Drag and drop the demo video"}</p>
-          <p className="mt-1 text-xs leading-5 text-zinc-500">or click to browse · MP4 or WebM · up to 2 minutes · optimized to 30 MB</p>
+          <span className="mt-3 block text-[15px] font-semibold">
+            {optimizingProgress !== null ? `Optimizing video… ${optimizingProgress}%` : uploading ? "Uploading project demo…" : isDragging ? "Drop the video here" : video ? "Replace the demo video" : "Drag and drop the demo video"}
+          </span>
+          <span className="mt-1 block text-sm leading-relaxed text-ink-soft">
+            Or click to browse. MP4 or WebM, up to 2 minutes. Larger files are compressed to 30 MB.
+          </span>
           {optimizingProgress !== null && (
-            <div className="mx-auto mt-3 h-1.5 w-48 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full bg-rose-400 transition-[width]" style={{ width: `${optimizingProgress}%` }} />
-            </div>
+            <span className="mx-auto mt-3 block h-1.5 w-48 overflow-hidden rounded-full bg-ink/10">
+              <span className="block h-full rounded-full bg-brand-text transition-[width]" style={{ width: `${optimizingProgress}%` }} />
+            </span>
           )}
-        </div>
-      </div>
+        </span>
+      </label>
     </div>
   );
 }

@@ -1,19 +1,19 @@
 "use client";
 
 import type { PortfolioEducation } from "@/types/portfolio";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { X, Plus, BookOpen } from "lucide-react";
-import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
-import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { Button, ButtonSpinner } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-const inputClassName =
-  "w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-zinc-500";
+const MAX_ENTRIES = 2;
 
 const textFields = [
-  { field: "school", label: "School/University *", placeholder: "Enter school or university name" },
-  { field: "degree", label: "Degree *", placeholder: "e.g., Bachelor of Technology" },
-  { field: "field", label: "Field of Study *", placeholder: "e.g., Computer Science" },
+  { field: "school", label: "School or university", placeholder: "Where you studied" },
+  { field: "degree", label: "Degree", placeholder: "Bachelor of Technology" },
+  { field: "field", label: "Field of study", placeholder: "Computer Science" },
 ] as const;
 
 interface EducationModalProps {
@@ -31,15 +31,19 @@ export default function EducationModal({
 }: EducationModalProps) {
   const [editingEducation, setEditingEducation] = useState<PortfolioEducation[]>([]);
   const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  // Courses can end a few years from now.
+  const latestYear = new Date().getFullYear() + 8;
 
   useEffect(() => {
     if (isOpen) {
       setEditingEducation(education);
+      setSaveFailed(false);
     }
   }, [isOpen, education]);
 
   const addNewEducation = () => {
-    if (editingEducation.length >= 2) return;
+    if (editingEducation.length >= MAX_ENTRIES) return;
     setEditingEducation([
       ...editingEducation,
       { school: "", degree: "", field: "", startYear: new Date().getFullYear(), isCurrently: false },
@@ -57,221 +61,150 @@ export default function EducationModal({
   const handleSave = async () => {
     if (saving) return;
     setSaving(true);
+    setSaveFailed(false);
 
     try {
       await onSave(editingEducation);
       onClose();
     } catch (error) {
       console.error("Error saving education:", error);
+      setSaveFailed(true);
     } finally {
       setSaving(false);
     }
   };
 
-  if (!isOpen) return null;
-
-  return createPortal(
-      <motion.div
-        {...{
-          className:
-            "fixed inset-0 z-[50000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm",
-          onClick: onClose,
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <motion.div
-          {...{
-            className:
-              "relative max-h-[calc(100dvh-2rem)] w-full max-w-4xl overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl sm:max-h-[90vh]",
-            onClick: (e: React.MouseEvent) => e.stopPropagation(),
-          }}
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-        >
-          {/* Header */}
-          <div className="sticky top-0 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-zinc-900/20 p-2 rounded-lg">
-                  <BookOpen className="h-6 w-6 text-zinc-400" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-100">
-                  Manage Education
-                </h2>
-              </div>
-              <Button
-                onClick={onClose}
-                variant="ghost"
-                size="icon"
-                className="rounded-full border border-slate-700 bg-slate-800/80 p-2 text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
-                aria-label="Close education editor"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 space-y-6">
-            {editingEducation.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="bg-slate-800 rounded-full p-4 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                  <BookOpen className="h-8 w-8 text-slate-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-300 mb-2">
-                  No Education Added
-                </h3>
-                <p className="text-slate-500 mb-6">
-                  Add your educational background to showcase your academic
-                  achievements
-                </p>
-                <Button
-                  onClick={addNewEducation}
-                  className={primaryActionButtonClass}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Education
-                </Button>
-              </div>
-            ) : (
+  return (
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      title="Edit education"
+      description="You can add up to two entries."
+      size="lg"
+      busy={saving}
+      onSubmit={handleSave}
+      footer={
+        <>
+          {saveFailed && (
+            <p role="alert" className="basis-full text-[15px] font-medium text-danger">
+              Your education wasn’t saved. Fill in every field and try again.
+            </p>
+          )}
+          <Button variant="ghost" onClick={onClose} disabled={saving}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={saving}>
+            {saving ? (
               <>
-                {editingEducation.map((edu, index) => (
-                  <motion.div
-                    key={index}
-                    {...{
-                      className:
-                        "bg-slate-800/50 rounded-lg p-6 border border-slate-700",
-                    }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-slate-200">
-                        Education {index + 1}
-                      </h3>
-                      <Button
-                        onClick={() => setEditingEducation((current) => current.filter((_, i) => i !== index))}
-                        variant="ghost"
-                        size="sm"
-                        className="text-zinc-400 hover:text-zinc-300 hover:bg-zinc-900/20"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {textFields.map(({ field, label, placeholder }) => (
-                        <div key={field}>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">
-                            {label}
-                          </label>
-                          <input
-                            type="text"
-                            value={edu[field]}
-                            onChange={(e) => updateEducation(index, field, e.target.value)}
-                            className={inputClassName}
-                            placeholder={placeholder}
-                          />
-                        </div>
-                      ))}
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                          Start Year *
-                        </label>
-                        <input
-                          type="number"
-                          value={edu.startYear}
-                          onChange={(e) => updateEducation(index, "startYear", parseInt(e.target.value))}
-                          className={inputClassName}
-                          min="1950"
-                          max="2030"
-                        />
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <div className="flex items-center gap-4 mb-2">
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={edu.isCurrently}
-                              onChange={(e) => updateEducation(index, "isCurrently", e.target.checked)}
-                              className="w-4 h-4 text-zinc-600 bg-slate-700 border-slate-600 rounded focus:ring-zinc-500"
-                            />
-                            <span className="text-sm text-slate-300">
-                              Currently studying here
-                            </span>
-                          </label>
-                        </div>
-                        {!edu.isCurrently && (
-                          <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                              End Year
-                            </label>
-                            <input
-                              type="number"
-                              value={edu.endYear || ""}
-                              onChange={(e) =>
-                                updateEducation(index, "endYear", e.target.value ? parseInt(e.target.value) : undefined)
-                              }
-                              className={inputClassName}
-                              min="1950"
-                              max="2030"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    onClick={addNewEducation}
-                    variant="outline"
-                    disabled={editingEducation.length >= 2}
-                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Another Education
-                  </Button>
-                  {editingEducation.length >= 2 && (
-                    <p className="text-xs text-slate-500">You can add up to two education entries.</p>
-                  )}
-                </div>
+                <ButtonSpinner />
+                Saving…
               </>
+            ) : (
+              "Save changes"
             )}
+          </Button>
+        </>
+      }
+    >
+      {editingEducation.length === 0 ? (
+        <div className="py-8 text-center">
+          <p className="font-display text-xl font-semibold">No education added yet</p>
+          <p className="mx-auto mt-1.5 max-w-[42ch] text-[15px] leading-relaxed text-ink-soft">
+            Add where you studied, what you studied and when.
+          </p>
+          <Button onClick={addNewEducation} className="mt-6">
+            <Plus aria-hidden="true" />
+            Add education
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div className="divide-y divide-line">
+            {editingEducation.map((edu, index) => (
+              <fieldset key={index} className="py-6 first:pt-0">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <legend className="float-left font-display text-lg font-semibold">Education {index + 1}</legend>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingEducation((current) => current.filter((_, i) => i !== index))}
+                    aria-label={`Remove education ${index + 1}`}
+                    className="hover:text-danger"
+                  >
+                    <Trash2 aria-hidden="true" />
+                    Remove
+                  </Button>
+                </div>
+
+                <div className="grid clear-both gap-5 md:grid-cols-2">
+                  {textFields.map(({ field, label, placeholder }) => (
+                    <div key={field} className={field === "school" ? "md:col-span-2" : undefined}>
+                      <Label htmlFor={`education-${index}-${field}`}>{label}</Label>
+                      <Input
+                        id={`education-${index}-${field}`}
+                        value={edu[field]}
+                        onChange={(e) => updateEducation(index, field, e.target.value)}
+                        placeholder={placeholder}
+                        className="mt-2"
+                      />
+                    </div>
+                  ))}
+
+                  <div>
+                    <Label htmlFor={`education-${index}-start`}>Start year</Label>
+                    <Input
+                      id={`education-${index}-start`}
+                      type="number"
+                      value={Number.isNaN(edu.startYear) ? "" : edu.startYear}
+                      onChange={(e) => updateEducation(index, "startYear", parseInt(e.target.value))}
+                      min={1950}
+                      max={latestYear}
+                      className="mt-2"
+                    />
+                  </div>
+
+                  {!edu.isCurrently && (
+                    <div>
+                      <Label htmlFor={`education-${index}-end`}>End year</Label>
+                      <Input
+                        id={`education-${index}-end`}
+                        type="number"
+                        value={edu.endYear || ""}
+                        onChange={(e) =>
+                          updateEducation(index, "endYear", e.target.value ? parseInt(e.target.value) : undefined)
+                        }
+                        min={1950}
+                        max={latestYear}
+                        className="mt-2"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2.5 md:col-span-2">
+                    <input
+                      type="checkbox"
+                      id={`education-${index}-current`}
+                      checked={edu.isCurrently}
+                      onChange={(e) => updateEducation(index, "isCurrently", e.target.checked)}
+                      className="size-[18px] accent-brand"
+                    />
+                    <Label htmlFor={`education-${index}-current`} className="font-medium">
+                      Currently studying here
+                    </Label>
+                  </div>
+                </div>
+              </fieldset>
+            ))}
           </div>
 
-          {/* Footer */}
-          <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700 p-6">
-            <div className="flex gap-3 justify-end">
-              <Button
-                onClick={onClose}
-                variant="ghost"
-                className={secondaryActionButtonClass}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                className={primaryActionButtonClass}
-              >
-                {saving ? (
-                  <><ButtonSpinner />Saving...</>
-                ) : (
-                  "Save Changes"
-                )}
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>,
-    document.body
+          {editingEducation.length < MAX_ENTRIES && (
+            <Button variant="secondary" size="sm" onClick={addNewEducation}>
+              <Plus aria-hidden="true" />
+              Add another
+            </Button>
+          )}
+        </>
+      )}
+    </Dialog>
   );
 }

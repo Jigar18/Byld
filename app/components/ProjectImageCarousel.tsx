@@ -4,6 +4,9 @@ import { useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProjectImage } from "./ProjectImageUploader";
 
+const arrowClass =
+  "absolute top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/65 text-white backdrop-blur transition-colors hover:bg-black/90 disabled:opacity-30";
+
 export default function ProjectImageCarousel({ images }: { images: ProjectImage[] }) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ active: false, startX: 0, scrollLeft: 0 });
@@ -23,10 +26,10 @@ export default function ProjectImageCarousel({ images }: { images: ProjectImage[
   };
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black/35 shadow-lg">
+    <div className="relative overflow-hidden rounded-2xl border border-line bg-black">
       <div
         ref={carouselRef}
-        className="flex cursor-grab snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] active:cursor-grabbing [&::-webkit-scrollbar]:hidden"
+        className="ui-scroll-quiet flex cursor-grab snap-x snap-mandatory overflow-x-auto scroll-smooth active:cursor-grabbing"
         onScroll={updateIndex}
         onPointerDown={(event) => {
           if (event.pointerType !== "mouse" || event.button !== 0) return;
@@ -46,17 +49,41 @@ export default function ProjectImageCarousel({ images }: { images: ProjectImage[
         onDragStart={(event) => event.preventDefault()}
       >
         {orderedImages.map((image, index) => (
-          <div key={image.imagePublicId} className="aspect-video w-full shrink-0 snap-center bg-black">
-            <img src={image.imageUrl} alt={`Project screenshot ${index + 1}`} draggable={false} className="h-full w-full select-none object-contain" />
+          <div key={image.imagePublicId} className="aspect-video w-full shrink-0 snap-center">
+            <img src={image.imageUrl} alt={`Project screenshot ${index + 1}`} draggable={false} className="size-full select-none object-contain" />
           </div>
         ))}
       </div>
       {orderedImages.length > 1 && (
         <>
-          <button type="button" onClick={() => showImage(Math.max(0, activeIndex - 1))} disabled={activeIndex === 0} className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/70 text-white backdrop-blur transition hover:bg-black/90 disabled:opacity-30" aria-label="Previous screenshot"><ChevronLeft className="h-5 w-5" /></button>
-          <button type="button" onClick={() => showImage(Math.min(orderedImages.length - 1, activeIndex + 1))} disabled={activeIndex === orderedImages.length - 1} className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/70 text-white backdrop-blur transition hover:bg-black/90 disabled:opacity-30" aria-label="Next screenshot"><ChevronRight className="h-5 w-5" /></button>
+          <button
+            type="button"
+            onClick={() => showImage(Math.max(0, activeIndex - 1))}
+            disabled={activeIndex === 0}
+            className={`${arrowClass} left-3`}
+            aria-label="Previous screenshot"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => showImage(Math.min(orderedImages.length - 1, activeIndex + 1))}
+            disabled={activeIndex === orderedImages.length - 1}
+            className={`${arrowClass} right-3`}
+            aria-label="Next screenshot"
+          >
+            <ChevronRight className="size-5" />
+          </button>
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-black/65 px-2.5 py-2 backdrop-blur">
-            {orderedImages.map((image, index) => <button key={image.imagePublicId} type="button" onClick={() => showImage(index)} className={`h-1.5 rounded-full transition-all ${index === activeIndex ? "w-5 bg-white" : "w-1.5 bg-white/45 hover:bg-white/70"}`} aria-label={`Show screenshot ${index + 1}`} />)}
+            {orderedImages.map((image, index) => (
+              <button
+                key={image.imagePublicId}
+                type="button"
+                onClick={() => showImage(index)}
+                className={`h-1.5 rounded-full transition-all ${index === activeIndex ? "w-5 bg-white" : "w-1.5 bg-white/45 hover:bg-white/70"}`}
+                aria-label={`Show screenshot ${index + 1}`}
+              />
+            ))}
           </div>
         </>
       )}

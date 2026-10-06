@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Eye } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useUser } from "../context/UserContext";
@@ -46,22 +45,14 @@ export default function PortfolioViewCount() {
   }, [portfolioUsername]);
 
   return (
-    <motion.div
-      {...{
-        className:
-          "absolute left-5 top-6 z-10 inline-flex items-center gap-1.5 text-rose-300/55 sm:left-8 lg:left-10 lg:top-8",
-        "aria-label": count === null
-          ? "Loading unique portfolio views"
-          : `${count} unique portfolio views`,
-      }}
-      initial={{ opacity: 0, x: -6 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+    <div
+      role="img"
+      aria-label={count === null ? "Loading unique portfolio views" : `${count} unique portfolio views`}
+      title="Unique visitors"
+      className="inline-flex items-center gap-1.5 text-sm font-medium tabular-nums text-ink-soft"
     >
-      <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
-      <span className="min-w-3 text-xs font-medium tabular-nums">
-        {count ?? "—"}
-      </span>
-    </motion.div>
+      <Eye aria-hidden="true" className="size-4" strokeWidth={1.8} />
+      {count ?? "—"}
+    </div>
   );
 }

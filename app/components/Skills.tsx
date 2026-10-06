@@ -1,22 +1,22 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
-import { X, Edit3, Pencil, Search, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Pencil, Search, X } from "lucide-react";
 import { Icon } from "@iconify/react";
-import CredentialCardHeader, { credentialEditButtonClass } from "./CredentialCardHeader";
+import { Button, ButtonSpinner } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { useUser } from "../context/UserContext";
+import PortfolioSection from "./PortfolioSection";
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
-import { ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
-
-const skillVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 0.8 },
-};
 
 const capitalizeFirst = (skill: string) => skill ? skill.charAt(0).toUpperCase() + skill.slice(1) : skill;
+
+const suggestionChipClass =
+  "ui-chip border-dashed bg-transparent transition-colors hover:border-ink-faint disabled:cursor-not-allowed disabled:opacity-50";
+const iconChoiceClass = "grid h-12 place-items-center rounded-xl border-[1.5px] transition-colors";
 
 export default function Skills() {
   const { isOwner, skills, setSkills, skillIcons, setSkillIcons } = useUser();
@@ -30,44 +30,8 @@ export default function Skills() {
   const [iconChoices, setIconChoices] = useState<string[]>([]);
   const [isSearchingIcons, setIsSearchingIcons] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const skillsViewportRef = useRef<HTMLDivElement>(null);
-  const [hiddenSkillCount, setHiddenSkillCount] = useState(0);
-  const [skillsAtTop, setSkillsAtTop] = useState(true);
-
-  const measureHiddenSkills = useCallback(() => {
-    const viewport = skillsViewportRef.current;
-    if (!viewport) return;
-
-    if (viewport.scrollHeight <= viewport.clientHeight + 1) {
-      setHiddenSkillCount(0);
-      return;
-    }
-
-    const viewportBottom = viewport.getBoundingClientRect().bottom;
-    const hidden = Array.from(
-      viewport.querySelectorAll<HTMLElement>("[data-skill]")
-    ).filter((item) => item.getBoundingClientRect().bottom > viewportBottom + 1);
-    setHiddenSkillCount(hidden.length);
-  }, []);
-
-  useEffect(() => {
-    const viewport = skillsViewportRef.current;
-    if (!viewport) return;
-
-    const frame = requestAnimationFrame(measureHiddenSkills);
-    const settledMeasurement = window.setTimeout(measureHiddenSkills, 400);
-    const observer = new ResizeObserver(measureHiddenSkills);
-    observer.observe(viewport);
-    viewport
-      .querySelectorAll<HTMLElement>("[data-skill]")
-      .forEach((item) => observer.observe(item));
-    return () => {
-      cancelAnimationFrame(frame);
-      window.clearTimeout(settledMeasurement);
-      observer.disconnect();
-    };
-  }, [skills, measureHiddenSkills]);
 
   useEffect(() => {
     if (skillInput.length < 2) {
@@ -104,7 +68,14 @@ export default function Skills() {
     setTempSkillIcons({ ...skillIcons });
     setIconPickerSkill(null);
     setIconChoices([]);
+    setSkillInput("");
+    setSaveFailed(false);
     setIsEditModalOpen(true);
+  };
+
+  const closeIconPicker = () => {
+    setIconPickerSkill(null);
+    setIconChoices([]);
   };
 
   const loadIconChoices = async (skill: string, autoSelect: boolean) => {
@@ -132,6 +103,8 @@ export default function Skills() {
     }
   };
 
+  const isAdded = (skill: string) => tempSkills.includes(capitalizeFirst(skill));
+
   const addSkill = (skill: string) => {
     const formattedSkill = capitalizeFirst(skill);
     if (!tempSkills.includes(formattedSkill)) {
@@ -150,352 +123,219 @@ export default function Skills() {
       delete updated[skillToRemove];
       return updated;
     });
-    if (iconPickerSkill === skillToRemove) {
-      setIconPickerSkill(null);
-      setIconChoices([]);
-    }
+    if (iconPickerSkill === skillToRemove) closeIconPicker();
   };
 
   const handleSaveSkills = async () => {
     try {
       setSaving(true);
+      setSaveFailed(false);
       const response = await fetch("/api/skillsToDB", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ skills: tempSkills, iconMap: tempSkillIcons }),
       });
+      if (!response.ok) throw new Error("Failed to save skills");
 
-      if (response.ok) {
-        setSkills([...tempSkills]);
-        setSkillIcons({ ...tempSkillIcons });
-        setIsEditModalOpen(false);
-      }
+      setSkills([...tempSkills]);
+      setSkillIcons({ ...tempSkillIcons });
+      setIsEditModalOpen(false);
     } catch (error) {
       console.error("Error saving skills:", error);
+      setSaveFailed(true);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <>
-      <motion.div
-        {...{
-          className:
-            "profile-card profile-surface-neutral profile-card-lift group flex h-[336px] flex-col rounded-xl border p-5 shadow-md",
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -5 }}
-        transition={{ duration: 0.3 }}
-      >
-        <CredentialCardHeader
-          title="Skills"
-          icon={<Sparkles className="h-5 w-5" />}
-          action={isOwner ?
-          <button
-            onClick={handleEditClick}
-            className={credentialEditButtonClass}
-            aria-label="Edit skills"
-            title="Edit skills"
-          >
-            <Edit3 className="h-4 w-4" />
-          </button>
-          : undefined}
-        />
+    <PortfolioSection
+      id="skills"
+      title="Skills"
+      action={
+        isOwner && (
+          <Button variant="secondary" size="sm" onClick={handleEditClick} aria-label="Edit skills">
+            <Pencil aria-hidden="true" />
+            Edit
+          </Button>
+        )
+      }
+    >
+      {skills.length === 0 ? (
+        <p className="text-ink-soft">No skills yet. Add the tools and languages you work with.</p>
+      ) : (
+        <ul className="flex flex-wrap gap-2">
+          {skills.map((skill) => (
+            <li key={skill} className="ui-chip">
+              <SkillIcon skill={skill} iconMap={skillIcons} />
+              {skill}
+            </li>
+          ))}
+        </ul>
+      )}
 
-        <div className="relative min-h-0 flex-1 pt-3">
-          <motion.div
-            ref={skillsViewportRef}
-            {...{
-              className: "credential-scrollbar h-full overflow-x-hidden overflow-y-auto pr-1",
-              onScroll: (event: React.UIEvent<HTMLDivElement>) =>
-                setSkillsAtTop(event.currentTarget.scrollTop <= 2),
-            }}
-          >
-          <AnimatePresence>
-            <motion.div {...{ className: "flex min-h-full flex-wrap content-center items-center gap-2 py-1" }}>
-            {skills.map((skill) => (
-              <motion.span
-                key={skill}
-                data-skill
-                variants={skillVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                {...{
-                  className:
-                    "profile-chip inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium transition-colors",
-                }}
-              >
-                <SkillIcon skill={skill} iconMap={skillIcons} />
-                {skill}
-              </motion.span>
-            ))}
-            </motion.div>
-          </AnimatePresence>
-
-          {skills.length === 0 && (
-            <p className="flex h-full items-center justify-center text-sm text-slate-400">No skills added yet.</p>
-          )}
-          </motion.div>
-          {skillsAtTop && hiddenSkillCount > 0 && (
-            <span className="pointer-events-none absolute bottom-2 right-3 rounded-full border border-white/10 bg-zinc-950/90 px-2.5 py-1 text-xs font-semibold text-zinc-300 shadow-lg">
-              +{hiddenSkillCount}
-            </span>
-          )}
-        </div>
-      </motion.div>
-
-      {isOwner &&
-        isEditModalOpen &&
-        createPortal(
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setIsEditModalOpen(false)}
-          >
-            <div
-              className="max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-lg border border-slate-700 bg-slate-800 shadow-xl sm:max-h-[80vh]"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-slate-200 flex items-center gap-2">
-                    <span className="p-2 bg-zinc-600/20 rounded-lg">
-                      <Pencil className="h-5 w-5" />
-                    </span>
-                    Edit Skills
-                  </h2>
-                  <button
-                    className="p-2 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700"
-                    onClick={() => setIsEditModalOpen(false)}
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Add Skills
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Search className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <input
-                      type="text"
-                      value={skillInput}
-                      onChange={(e) => {
-                        setSkillInput(e.target.value);
-                        setShowSuggestions(true);
-                      }}
-                      onFocus={() => setShowSuggestions(true)}
-                      placeholder="Search for skills..."
-                      className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-200 text-sm focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
-                    />
-
-                    {showSuggestions &&
-                      (suggestions.length > 0 || isSearching) && (
-                        <div className="absolute z-10 mt-1 w-full bg-slate-800 border border-slate-600 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                          {isSearching && (
-                            <div className="px-4 py-2 text-slate-400 text-sm flex items-center gap-2">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-zinc-500"></div>
-                              Searching...
-                            </div>
-                          )}
-                          {suggestions.map((suggestion) => (
-                            <button
-                              key={suggestion}
-                              onClick={() => addSkill(suggestion)}
-                              className="w-full text-left px-4 py-2 text-slate-200 hover:bg-slate-700 transition-colors text-sm"
-                              disabled={tempSkills.includes(suggestion)}
-                            >
-                              {suggestion}
-                              {tempSkills.includes(suggestion) && (
-                                <span className="ml-2 text-xs text-slate-400">
-                                  (already added)
-                                </span>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                  </div>
-                </div>
-
-                {iconPickerSkill && (
-                  <div className="mb-6 rounded-xl border border-slate-700 bg-slate-900/45 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-slate-200">
-                          Choose a logo for {iconPickerSkill}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          Icons load from Iconify and are not stored as project assets.
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIconPickerSkill(null);
-                          setIconChoices([]);
-                        }}
-                        className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-700 hover:text-slate-200"
-                        aria-label="Close icon picker"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {isSearchingIcons ? (
-                        <div className="flex h-12 items-center gap-2 px-2 text-sm text-slate-400">
-                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-slate-200" />
-                          Finding logos...
-                        </div>
-                      ) : (
-                        <>
-                          {iconChoices.map((iconName) => {
-                            const selected = tempSkillIcons[iconPickerSkill] === iconName;
-                            return (
-                              <button
-                                key={iconName}
-                                type="button"
-                                onClick={() =>
-                                  setTempSkillIcons((current) => ({
-                                    ...current,
-                                    [iconPickerSkill]: iconName,
-                                  }))
-                                }
-                                className={`grid h-12 w-12 place-items-center rounded-xl border transition-all hover:-translate-y-0.5 ${
-                                  selected
-                                    ? "border-white/50 bg-white/15 ring-2 ring-white/15"
-                                    : "border-slate-700 bg-slate-800 hover:border-slate-500"
-                                }`}
-                                title={iconName}
-                                aria-label={`Use ${iconName} for ${iconPickerSkill}`}
-                              >
-                                <Icon icon={iconName} className="h-7 w-7" aria-hidden="true" />
-                              </button>
-                            );
-                          })}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setTempSkillIcons((current) => ({
-                                ...current,
-                                [iconPickerSkill]: null,
-                              }))
-                            }
-                            className={`h-12 rounded-xl border px-3 text-xs font-medium transition-all hover:-translate-y-0.5 ${
-                              tempSkillIcons[iconPickerSkill] === null
-                                ? "border-white/50 bg-white/15 text-white ring-2 ring-white/15"
-                                : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200"
-                            }`}
-                          >
-                            No icon
-                          </button>
-                        </>
-                      )}
-                    </div>
-
-                    {!isSearchingIcons && iconChoices.length === 0 && (
-                      <p className="mt-3 text-xs text-slate-500">
-                        No matching logo was found. This skill will remain text-only.
-                      </p>
-                    )}
-                  </div>
+      {isOwner && (
+        <Dialog
+          open={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          title="Edit skills"
+          description="Search to add a skill. Select one you’ve added to change its logo."
+          size="md"
+          busy={saving}
+          footer={
+            <>
+              {saveFailed && (
+                <p role="alert" className="basis-full text-[15px] font-medium text-danger">
+                  Your skills weren’t saved. Check your connection and try again.
+                </p>
+              )}
+              <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} disabled={saving}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveSkills} disabled={saving}>
+                {saving ? (
+                  <>
+                    <ButtonSpinner />
+                    Saving…
+                  </>
+                ) : (
+                  "Save changes"
                 )}
+              </Button>
+            </>
+          }
+        >
+          <Label htmlFor="skill-search">Add a skill</Label>
+          <div className="relative mt-2">
+            <Search aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-ink-soft" />
+            <Input
+              id="skill-search"
+              value={skillInput}
+              autoComplete="off"
+              onChange={(e) => {
+                setSkillInput(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return;
+                event.preventDefault();
+                const firstNewSuggestion = suggestions.find((suggestion) => !isAdded(suggestion));
+                if (firstNewSuggestion) addSkill(firstNewSuggestion);
+              }}
+              placeholder="Search for a skill"
+              className="pl-11"
+            />
+          </div>
 
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-slate-300 mb-3">
-                    Current Skills ({tempSkills.length})
-                  </label>
-                  <AnimatePresence>
-                    <div className="flex flex-wrap gap-2 min-h-[3rem] p-3 bg-slate-700/30 rounded-lg border border-slate-700">
-                      {tempSkills.length === 0 ? (
-                        <p className="text-slate-400 text-sm py-2">
-                          No skills selected yet.
-                        </p>
-                      ) : (
-                        tempSkills.map((skill) => (
-                          <motion.span
-                            key={skill}
-                            variants={skillVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                            {...{
-                              className:
-                                "inline-flex items-center gap-1 px-2.5 py-1 bg-zinc-600/20 text-zinc-300 rounded-full text-sm font-medium border border-zinc-600/30",
-                            }}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => void loadIconChoices(skill, false)}
-                              className="inline-flex items-center gap-1.5 rounded-full px-0.5 transition-colors hover:text-white"
-                              title={`Choose an icon for ${skill}`}
-                            >
-                              <SkillIcon skill={skill} iconMap={tempSkillIcons} />
-                              {skill}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeSkill(skill)}
-                              className="ml-1 hover:text-zinc-400 transition-colors"
-                              aria-label={`Remove ${skill}`}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </motion.span>
-                        ))
-                      )}
-                    </div>
-                  </AnimatePresence>
-                </div>
-
-                <div className="flex justify-end gap-3 pt-6 border-t border-slate-700">
-                  <button
-                    onClick={() => setIsEditModalOpen(false)}
-                    className={secondaryActionButtonClass}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveSkills}
-                    disabled={saving}
-                    className={primaryActionButtonClass}
-                  >
-                    {saving ? (
-                      <>
-                        <ButtonSpinner />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9"
-                          />
-                        </svg>
-                        Save Changes
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
+          {showSuggestions && (suggestions.length > 0 || isSearching) && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {isSearching && (
+                <span role="status" className="inline-flex h-9 items-center gap-2 text-sm text-ink-soft">
+                  <ButtonSpinner />
+                  Searching…
+                </span>
+              )}
+              {suggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => addSkill(suggestion)}
+                  disabled={isAdded(suggestion)}
+                  className={suggestionChipClass}
+                >
+                  {suggestion}
+                  {isAdded(suggestion) && <span className="text-ink-soft">(added)</span>}
+                </button>
+              ))}
             </div>
-          </div>,
-          document.body
-        )}
-    </>
+          )}
+
+          {iconPickerSkill && (
+            <div className="mt-5 rounded-2xl border border-line p-4">
+              <div className="flex items-center justify-between gap-4">
+                <p className="font-semibold">Choose a logo for {iconPickerSkill}</p>
+                <Button variant="ghost" size="icon-sm" onClick={closeIconPicker} aria-label="Close icon picker">
+                  <X aria-hidden="true" />
+                </Button>
+              </div>
+
+              {isSearchingIcons ? (
+                <p role="status" className="mt-3 flex h-12 items-center gap-2 text-sm text-ink-soft">
+                  <ButtonSpinner />
+                  Finding logos…
+                </p>
+              ) : (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {iconChoices.map((iconName) => {
+                    const selected = tempSkillIcons[iconPickerSkill] === iconName;
+                    return (
+                      <button
+                        key={iconName}
+                        type="button"
+                        onClick={() => setTempSkillIcons((current) => ({ ...current, [iconPickerSkill]: iconName }))}
+                        className={cn(iconChoiceClass, "w-12", selected ? "border-ink bg-raised" : "border-line hover:border-ink-faint")}
+                        title={iconName}
+                        aria-label={`Use ${iconName} for ${iconPickerSkill}`}
+                        aria-pressed={selected}
+                      >
+                        <Icon icon={iconName} className="size-7" aria-hidden="true" />
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => setTempSkillIcons((current) => ({ ...current, [iconPickerSkill]: null }))}
+                    aria-pressed={tempSkillIcons[iconPickerSkill] === null}
+                    className={cn(
+                      iconChoiceClass,
+                      "px-3.5 text-sm font-medium",
+                      tempSkillIcons[iconPickerSkill] === null
+                        ? "border-ink bg-raised"
+                        : "border-line text-ink-soft hover:border-ink-faint hover:text-ink",
+                    )}
+                  >
+                    No icon
+                  </button>
+                </div>
+              )}
+
+              {!isSearchingIcons && iconChoices.length === 0 && (
+                <p className="mt-3 text-sm text-ink-soft">No matching logo was found. This skill will stay text-only.</p>
+              )}
+            </div>
+          )}
+
+          <p className="mt-6 text-sm font-semibold">Your skills ({tempSkills.length})</p>
+          {tempSkills.length === 0 ? (
+            <p className="mt-2 text-[15px] text-ink-soft">No skills selected yet.</p>
+          ) : (
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {tempSkills.map((skill) => (
+                <li key={skill} className="ui-chip gap-1 pr-1.5">
+                  <button
+                    type="button"
+                    onClick={() => void loadIconChoices(skill, false)}
+                    className="inline-flex items-center gap-2 rounded-full"
+                    title={`Choose an icon for ${skill}`}
+                  >
+                    <SkillIcon skill={skill} iconMap={tempSkillIcons} />
+                    {skill}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeSkill(skill)}
+                    className="grid size-6 place-items-center rounded-full text-ink-soft transition-colors hover:bg-ink/10 hover:text-ink"
+                    aria-label={`Remove ${skill}`}
+                  >
+                    <X aria-hidden="true" className="size-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Dialog>
+      )}
+    </PortfolioSection>
   );
 }

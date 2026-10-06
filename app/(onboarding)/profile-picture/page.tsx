@@ -3,45 +3,20 @@
 import type React from "react";
 
 import { useState, useRef } from "react";
-import { Label } from "@/components/ui/label";
-import { motion } from "framer-motion";
-import { User, Upload, Check, Loader2 } from "lucide-react";
+import { Upload, Check } from "lucide-react";
 import ReactCrop, { type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { UploadResponse } from "@/types/api";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
-
-const cropStyles = `
-  .ReactCrop {
-    position: relative;
-    max-width: 400px;
-    max-height: 400px;
-    margin: 0 auto;
-  }
-  
-  .ReactCrop__crop-selection {
-    border-radius: 50% !important;
-    box-shadow: 0 0 0 9999em rgba(0, 0, 0, 0.7);
-  }
-  
-  /* Ensure buttons stay visible during cropping */
-  .crop-buttons {
-    position: relative;
-    z-index: 1000;
-    backdrop-filter: blur(10px);
-    border-radius: 0.5rem;
-    padding: 1rem;
-  }
-`;
+import { Button, ButtonSpinner } from "@/components/ui/button";
 
 export default function ProfilePicturePage() {
   const [image, setImage] = useState<string | null>(null);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
-  const [isHovering, setIsHovering] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [isCropping, setIsCropping] = useState(false);
   const [crop, setCrop] = useState<Crop>({
     unit: "%",
@@ -65,6 +40,7 @@ export default function ProfilePicturePage() {
           setImage(event.target.result as string);
           setCroppedImage(null);
           setUploadSuccess(false);
+          setUploadError(null);
           setIsCropping(true);
         }
       };
@@ -141,6 +117,7 @@ export default function ProfilePicturePage() {
     if (!croppedImage) return;
 
     setIsUploading(true);
+    setUploadError(null);
 
     try {
       const response = await fetch(croppedImage);
@@ -170,188 +147,131 @@ export default function ProfilePicturePage() {
       }
     } catch (error) {
       console.error("Error uploading image:", error);
+      setUploadError(error instanceof Error ? error.message : "Upload failed");
       setIsUploading(false);
     }
   };
 
+  const hint = !image
+    ? "A clear photo of your face works best. You can change it from your portfolio at any time."
+    : isCropping
+      ? "Drag the circle to choose what shows. The picture is cropped to a circle."
+      : "This is how it appears on your portfolio.";
+
   return (
-    <>
-      <style jsx global>
-        {cropStyles}
-      </style>
+    <main className="mx-auto grid w-full max-w-[1180px] flex-1 items-center gap-10 px-5 pb-20 pt-6 sm:px-10 lg:grid-cols-2 lg:gap-14">
+      <div className="max-w-[500px]">
+        <h1 className="font-display text-[38px] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[52px]">
+          Add your profile picture.
+        </h1>
+        <p className="mt-4 text-lg leading-relaxed text-ink-soft">{hint}</p>
 
-      <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-12 px-4 sm:px-6 flex items-center justify-center">
-        <div className="w-full max-w-2xl mx-auto bg-slate-900 rounded-xl shadow-xl overflow-hidden border border-slate-800">
-          <div className="p-8">
-            <div className="mb-12 text-center">
-              <h1 className="text-3xl font-bold text-slate-100 mb-3">
-                {"Add your profile picture"}
-              </h1>
-              <p className="text-slate-400 max-w-md mx-auto">
-                Upload a profile picture to personalize your portfolio. A
-                professional headshot works best.
-              </p>
-            </div>
+        {uploadError && (
+          <p role="alert" className="mt-6 text-[15px] font-medium text-danger">
+            The picture wasn’t uploaded: {uploadError}. Try again.
+          </p>
+        )}
+        {uploadSuccess && (
+          <p role="status" className="mt-6 text-[15px] font-medium text-ink-soft">
+            Picture uploaded. Opening your portfolio…
+          </p>
+        )}
 
-            <div className="space-y-8 max-w-xl mx-auto">
-              {/* Profile picture input */}
-              <div className="flex flex-col items-center">
-                <Label className="text-slate-300 font-medium text-base mb-6 block">
-                  Select an image
-                </Label>
-
-                {!image ? (
-                  <motion.div
-                    {...{
-                      className:
-                        "w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-slate-800 border-2 border-dashed border-slate-700 flex items-center justify-center cursor-pointer overflow-hidden relative",
-                      onClick: () => inputRef.current?.click(),
-                      onMouseEnter: () => setIsHovering(true),
-                      onMouseLeave: () => setIsHovering(false),
-                      whileHover: { borderColor: "#a1a1aa" },
-                    }}
-                  >
-                    <input
-                      ref={inputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-
-                    <motion.div
-                      {...{
-                        className:
-                          "flex flex-col items-center justify-center text-slate-400",
-                      }}
-                      animate={{ opacity: isHovering ? 0 : 1 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Upload className="h-12 w-12 mb-3" />
-                      <p className="text-sm">Click to upload</p>
-                    </motion.div>
-
-                    <motion.div
-                      {...{
-                        className:
-                          "absolute inset-0 flex items-center justify-center",
-                      }}
-                      initial={{ y: 100, opacity: 0 }}
-                      animate={{
-                        y: isHovering ? 0 : 100,
-                        opacity: isHovering ? 1 : 0,
-                      }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    >
-                      <div className="bg-zinc-600/20 rounded-full p-6">
-                        <User className="h-16 w-16 text-zinc-400" />
-                      </div>
-                    </motion.div>
-                  </motion.div>
+        <div className="mt-9 flex flex-wrap items-center gap-3">
+          {!image && (
+            <Button size="lg" onClick={() => inputRef.current?.click()}>
+              <Upload aria-hidden="true" />
+              Choose a picture
+            </Button>
+          )}
+          {image && isCropping && (
+            <>
+              <Button variant="secondary" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button onClick={handleDone}>Use this crop</Button>
+            </>
+          )}
+          {image && !isCropping && (
+            <>
+              <Button variant="secondary" onClick={handleRecrop} disabled={isUploading}>
+                Adjust crop
+              </Button>
+              <Button onClick={handleSubmit} disabled={isUploading || uploadSuccess}>
+                {isUploading ? (
+                  <>
+                    <ButtonSpinner />
+                    Uploading…
+                  </>
+                ) : uploadSuccess ? (
+                  <>
+                    <Check aria-hidden="true" />
+                    Uploaded
+                  </>
                 ) : (
-                  <div className="space-y-6">
-                    {isCropping ? (
-                      <div className="max-w-md mx-auto">
-                        <ReactCrop
-                          crop={crop}
-                          onChange={(c) => setCrop(c)}
-                          onComplete={setCompletedCrop}
-                          circularCrop
-                          aspect={1}
-                        >
-                          <Image
-                            ref={imgRef}
-                            src={image}
-                            alt="Upload preview"
-                            width={400}
-                            height={400}
-                            onLoad={(e) => onImageLoad(e.currentTarget)}
-                            className="max-w-full"
-                          />
-                        </ReactCrop>
-                        <div className="mt-6 flex justify-center">
-                          <div className="crop-buttons flex space-x-4">
-                            <button
-                              onClick={handleCancel}
-                              className={secondaryActionButtonClass}
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={handleDone}
-                              className={primaryActionButtonClass}
-                            >
-                              Done
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center">
-                        <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full overflow-hidden border-2 border-zinc-500">
-                          <Image
-                            src={croppedImage || "/placeholder.svg"}
-                            alt="Cropped preview"
-                            width={320}
-                            height={320}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="mt-6 flex justify-center space-x-4">
-                          <button
-                            onClick={handleRecrop}
-                            className={secondaryActionButtonClass}
-                          >
-                            Crop Image
-                          </button>
-                          <button
-                            onClick={handleSubmit}
-                            disabled={isUploading || uploadSuccess}
-                            className={primaryActionButtonClass}
-                          >
-                            {isUploading ? (
-                              <>
-                                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                                Uploading...
-                              </>
-                            ) : uploadSuccess ? (
-                              <>
-                                <Check className="h-5 w-5 mr-2" />
-                                Uploaded Successfully
-                              </>
-                            ) : (
-                              "Save Profile Picture"
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  "Save and open my portfolio"
                 )}
-              </div>
-
-              {/* Instructions */}
-              {image && isCropping && (
-                <div className="text-center text-slate-400 text-sm">
-                  <p>
-                    Drag to adjust the crop area. The image will be cropped to a
-                    circle.
-                  </p>
-                </div>
-              )}
-
-              {/* Success message */}
-              {uploadSuccess && (
-                <div className="mt-6 text-center">
-                  <p className="text-zinc-400">
-                    Your profile picture has been uploaded successfully!
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+              </Button>
+            </>
+          )}
         </div>
       </div>
-    </>
+
+      <div className="ui-sheet pf-sheet grid min-h-[360px] place-items-center rounded-[28px] p-6 sm:min-h-[440px] sm:p-10">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="hidden"
+        />
+
+        {!image && (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="grid size-60 place-items-center rounded-full border-2 border-dashed border-line text-ink-soft transition-colors hover:border-ink hover:text-ink sm:size-72"
+          >
+            <span className="flex flex-col items-center gap-3 text-[15px] font-medium">
+              <Upload aria-hidden="true" className="size-8" />
+              Choose a picture
+            </span>
+          </button>
+        )}
+
+        {image && isCropping && (
+          <ReactCrop
+            crop={crop}
+            onChange={(c) => setCrop(c)}
+            onComplete={setCompletedCrop}
+            circularCrop
+            aspect={1}
+            className="crop-circle"
+          >
+            <Image
+              ref={imgRef}
+              src={image}
+              alt="Upload preview"
+              width={400}
+              height={400}
+              onLoad={(e) => onImageLoad(e.currentTarget)}
+              className="max-w-full"
+            />
+          </ReactCrop>
+        )}
+
+        {image && !isCropping && (
+          <div className="size-60 overflow-hidden rounded-full shadow-[0_0_0_4px_rgb(var(--c-sheet-edge))] sm:size-72">
+            <Image
+              src={croppedImage || "/placeholder.svg"}
+              alt="Cropped preview"
+              width={320}
+              height={320}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

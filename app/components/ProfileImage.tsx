@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useState } from "react";
 import { Camera } from "lucide-react";
 import ProfileImageModal from "./ProfileImageModal";
@@ -10,47 +9,45 @@ export default function ProfileImage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { userDetails, isOwner, updateUserDetails } = useUser();
 
+  const initials = [userDetails.firstName, userDetails.lastName]
+    .map((name) => name?.trim().charAt(0).toUpperCase() ?? "")
+    .join("");
+
   return (
-    <>
-      <motion.div
-        {...{ className: "group relative" }}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        whileHover={{ scale: 1.05 }}
-      >
-        <div className="relative z-10 h-16 w-16 overflow-hidden rounded-full border-[3px] border-slate-700 sm:h-28 sm:w-28 sm:border-4">
-          <img
-            src={userDetails.imageUrl || "/placeholder.png"}
-            alt="Profile"
-            className="object-cover w-full h-full"
-          />
-        </div>
-        <div className="absolute inset-0 rounded-full blur-xl "></div>
-
-        {/* Edit button that appears on hover */}
-        {isOwner && <motion.button
-          {...{
-            className:
-              "absolute bottom-0 right-0 z-20 cursor-pointer rounded-full border-2 border-slate-700 bg-zinc-600 p-2 text-white opacity-100 shadow-lg transition-opacity hover:bg-zinc-700 sm:opacity-0 sm:group-hover:opacity-100",
-            onClick: (e: React.MouseEvent<HTMLDivElement>) => {
-              e.stopPropagation();
-              setIsModalOpen(true);
-            },
-          }}
-          aria-label="Edit profile picture"
+    <div className="relative size-[104px] shrink-0">
+      {userDetails.imageUrl ? (
+        <img
+          src={userDetails.imageUrl}
+          alt="Profile picture"
+          className="size-full rounded-full object-cover shadow-[0_0_0_4px_rgb(var(--c-sheet-edge))]"
+        />
+      ) : (
+        <div
+          aria-hidden="true"
+          className="grid size-full place-items-center rounded-full bg-brand font-display text-[40px] font-semibold text-white"
         >
-          <Camera size={16} />
-        </motion.button>}
-      </motion.div>
+          {initials}
+        </div>
+      )}
 
-      {/* Profile Image Modal */}
-      {isOwner && <ProfileImageModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onImageChange={(imageUrl) => updateUserDetails({ imageUrl })}
-        currentImage={userDetails.imageUrl || ""}
-      />}
-    </>
+      {isOwner && (
+        <>
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            aria-label="Edit profile picture"
+            className="absolute -bottom-1 -right-1 grid size-9 place-items-center rounded-full border border-sheet-edge bg-sheet-raised text-ink transition-colors hover:bg-ink hover:text-on-ink"
+          >
+            <Camera className="size-4" />
+          </button>
+          <ProfileImageModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onImageChange={(imageUrl) => updateUserDetails({ imageUrl })}
+            currentImage={userDetails.imageUrl || ""}
+          />
+        </>
+      )}
+    </div>
   );
 }

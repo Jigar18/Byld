@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 import type { PortfolioDetails, PortfolioInitialData } from "@/types/portfolio";
+import { toSocialLinks, type SocialLink } from "../components/socialLinks";
 
 type SkillIconMap = PortfolioInitialData["iconMap"];
 
@@ -12,11 +13,14 @@ interface UserContextType {
   portfolioData: PortfolioInitialData;
   portfolioApiUrl: (path: string) => string;
   updateUserDetails: (details: Partial<PortfolioDetails>) => void;
-  // Shared by the Skills card and the project editor, which both change them.
+  // Shared by the Skills section and the project editor, which both change them.
   skills: string[];
   setSkills: (skills: string[]) => void;
   skillIcons: SkillIconMap;
   setSkillIcons: (icons: SkillIconMap) => void;
+  // Shown as icons on the profile sheet and as rows in the Contact section.
+  socialLinks: SocialLink[];
+  setSocialLinks: (links: SocialLink[]) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -41,6 +45,7 @@ export const UserProvider = ({ children, initialData }: UserProviderProps) => {
   const [userDetails, setUserDetails] = useState(initialData.details);
   const [skills, setSkillList] = useState(() => initialData.skills.map(capitalizeFirst));
   const [skillIcons, setSkillIcons] = useState(initialData.iconMap);
+  const [socialLinks, setSocialLinks] = useState(() => toSocialLinks(initialData.socialLinks));
 
   const portfolioApiUrl = useCallback((path: string) => {
     const separator = path.includes("?") ? "&" : "?";
@@ -64,6 +69,8 @@ export const UserProvider = ({ children, initialData }: UserProviderProps) => {
     setSkills,
     skillIcons,
     setSkillIcons,
+    socialLinks,
+    setSocialLinks,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

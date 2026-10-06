@@ -1,8 +1,8 @@
 "use client";
 
 import type { PortfolioCertificate } from "@/types/portfolio";
-import { motion } from "framer-motion";
-import { Download, Eye, X } from "lucide-react";
+import { Download, Eye, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface CertificateListProps {
   cards: PortfolioCertificate[];
@@ -18,64 +18,44 @@ export default function CertificateList({
   canEdit = false,
 }: CertificateListProps) {
   return (
-    <div className="space-y-1">
-      {cards.map((card, index) => (
-        <motion.div
-          key={card.id}
-          {...{
-            className:
-              "relative group min-h-[108px] cursor-pointer rounded-lg px-2 py-4 transition-colors hover:bg-white/[0.035] sm:px-4",
-            onClick: () => onOpenCertificate(card),
-          }}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.2 }}
-        >
-          {index > 0 && (
-            <span className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          )}
-          {canEdit && <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteCard(card);
-            }}
-            className="absolute right-1 top-3 rounded-md p-1.5 text-zinc-500 opacity-100 transition-all duration-200 hover:bg-white/5 hover:text-zinc-200 sm:opacity-0 sm:group-hover:opacity-100"
-            title="Delete certificate"
-          >
-            <X className="h-4 w-4" />
-          </button>}
-
-          <div>
-            <div>
-              <h3 className="portfolio-display pr-8 font-medium text-slate-100">{card.title}</h3>
-              <p className="text-slate-400 text-sm mt-1 line-clamp-2">
-                {card.description}
-              </p>
-              <div className="mt-2 flex gap-4">
-                <a
-                  href={`/api/download-certificate?id=${card.id}`}
-                  className="inline-flex items-center gap-1.5 text-xs text-zinc-400 transition-colors hover:text-white"
-                  onClick={(e) => e.stopPropagation()}
-                  download
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  <span>Download</span>
-                </a>
-                <button
-                  className="inline-flex items-center gap-1.5 text-xs text-zinc-400 transition-colors hover:text-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenCertificate(card);
-                  }}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  <span>View Certificate</span>
-                </button>
-              </div>
-            </div>
+    <ul className="divide-y divide-line border-y border-line">
+      {cards.map((card) => (
+        <li key={card.id} className="flex flex-wrap items-center gap-x-5 gap-y-3 py-4 sm:flex-nowrap">
+          <div className="min-w-0 flex-1 basis-full sm:basis-0">
+            <h3 className="font-display text-lg font-semibold leading-snug tracking-[-0.01em]">{card.title}</h3>
+            <p className="mt-1 line-clamp-2 text-[15px] leading-relaxed text-ink-soft">{card.description}</p>
           </div>
-        </motion.div>
+
+          <div className="flex shrink-0 items-center gap-1.5">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onOpenCertificate(card)}
+              aria-label={`View ${card.title}`}
+            >
+              <Eye aria-hidden="true" />
+              View
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <a href={`/api/download-certificate?id=${card.id}`} download aria-label={`Download ${card.title}`}>
+                <Download aria-hidden="true" />
+                Download
+              </a>
+            </Button>
+            {canEdit && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => onDeleteCard(card)}
+                aria-label={`Delete ${card.title}`}
+                className="hover:text-danger"
+              >
+                <Trash2 aria-hidden="true" />
+              </Button>
+            )}
+          </div>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }

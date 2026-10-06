@@ -2,15 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Button, ButtonSpinner, primaryActionButtonClass } from "@/components/ui/button";
+import { Button, ButtonSpinner } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Github, X, Plus, Search } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import SkillIcon, { SkillIconMap } from "@/app/components/SkillIcon";
-
-const inputClassName =
-  "w-full px-4 py-3 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 bg-slate-800 text-slate-200";
 
 export default function SkillsPage() {
   const [skillInput, setSkillInput] = useState("");
@@ -20,6 +16,7 @@ export default function SkillsPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [isDiscovering, setIsDiscovering] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [discoveredRepositoryCount, setDiscoveredRepositoryCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasEditedSkillsRef = useRef(false);
@@ -111,6 +108,7 @@ export default function SkillsPage() {
   const handleContinue = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setSaveFailed(false);
 
     try {
       const response = await fetch("/api/skillsToDB", {
@@ -123,6 +121,7 @@ export default function SkillsPage() {
 
       if (!response.ok) {
         setIsSubmitting(false);
+        setSaveFailed(true);
         return;
       }
 
@@ -130,200 +129,150 @@ export default function SkillsPage() {
     } catch (error) {
       console.error("Error saving skills:", error);
       setIsSubmitting(false);
+      setSaveFailed(true);
     }
   };
 
+  const canAddCustomSkill = Boolean(skillInput.trim()) && !suggestions.length && !isSearching;
+
+  // Enter takes the first match, or the typed text when nothing matches.
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (suggestions.length > 0) addSkill(suggestions[0], true);
+    else if (canAddCustomSkill) addSkill(skillInput.trim(), true);
+  };
+
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 py-12 px-4 sm:px-6 flex items-center justify-center">
-        <div className="w-full max-w-2xl mx-auto bg-slate-900 rounded-xl shadow-xl overflow-hidden border border-slate-800">
-          <div className="p-8">
-            <div className="mb-12 text-center">
-              <h1 className="text-3xl font-bold text-slate-100 mb-3">
-                {"What skills do you have?"}
-              </h1>
-              <p className="text-slate-400 max-w-md mx-auto">
-                {
-                  "Add your technical skills, programming languages, frameworks, and tools you're proficient with."
-                }
-              </p>
-            </div>
+    <main className="mx-auto grid w-full max-w-[1180px] flex-1 items-center gap-10 px-5 pb-20 pt-6 sm:px-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-14">
+      <div className="w-full max-w-[540px]">
+        <h1 className="font-display text-[38px] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[52px]">
+          Which skills should it list?
+        </h1>
+        <p className="mt-4 text-lg leading-relaxed text-ink-soft">
+          Languages, frameworks and tools you work with. We start the list from your recent repositories.
+        </p>
 
-            <div className="space-y-8 max-w-xl mx-auto">
-              {/* Skills input */}
-              <div className="relative">
-                <Label
-                  htmlFor="skills"
-                  className="text-slate-300 font-medium text-base mb-3 block"
-                >
-                  Add your skills
-                </Label>
-                <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                    <Search className="h-4 w-4" />
-                  </div>
-                  <Input
-                    ref={inputRef}
-                    id="skills"
-                    value={skillInput}
-                    onChange={(e) => setSkillInput(e.target.value)}
-                    className={`${inputClassName} pl-10 pr-10`}
-                    placeholder="Type to search skills (e.g. React, TypeScript)"
-                    autoComplete="off"
-                  />
-                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                    {isSearching ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-zinc-400"></div>
-                    ) : (
-                      skillInput && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 p-0 text-slate-400 hover:text-zinc-400 hover:bg-slate-700/50 rounded-full transition-colors"
-                          onClick={() => setSkillInput("")}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )
-                    )}
-                  </div>
-                </div>
-
-                {/* Suggestions dropdown */}
-                <AnimatePresence>
-                  {suggestions.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -5 }}
-                      transition={{ duration: 0.2 }}
-                      {...{
-                        className:
-                          "absolute left-0 right-0 bg-slate-800 border border-slate-700 rounded-md shadow-lg max-h-[220px] overflow-y-auto z-10 mt-3",
-                      }}
-                    >
-                      <ul className="py-1 divide-y divide-slate-700/50">
-                        {suggestions.map((skill, index) => (
-                          <motion.li
-                            key={index}
-                            initial={{ opacity: 0, x: -5 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.03 }}
-                            {...{
-                              className:
-                                "px-4 py-3 hover:bg-slate-700 cursor-pointer text-slate-200 text-sm transition-colors flex items-center",
-                              onClick: () => addSkill(skill, true),
-                            }}
-                          >
-                            <span className="flex flex-1 items-center gap-2">
-                              <SkillIcon skill={skill} />
-                              {skill}
-                            </span>
-                            <span className="bg-slate-700/50 hover:bg-zinc-600/30 p-1 rounded-full text-zinc-400 transition-colors">
-                              <Plus className="h-3.5 w-3.5" />
-                            </span>
-                          </motion.li>
-                        ))}
-                      </ul>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Add custom skill button */}
-                {skillInput && !suggestions.length && !isSearching && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    {...{ className: "mt-3" }}
-                  >
-                    <Button
-                      onClick={() => addSkill(skillInput.trim())}
-                      className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 w-full justify-start rounded-md transition-colors"
-                    >
-                      <Plus className="h-4 w-4 mr-2 text-zinc-400" />
-                      {`Add "${skillInput}" as a new skill`}
-                    </Button>
-                  </motion.div>
-                )}
-              </div>
-
-              {/* Selected skills */}
-              <div className="mt-8">
-                <Label className="text-slate-300 font-medium text-base mb-3 block">
-                  Your skills
-                </Label>
-                <div className="flex flex-wrap gap-2.5 mt-3 min-h-[50px]">
-                  {isDiscovering && (
-                    <div className="flex w-full items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/70 px-4 py-3">
-                      <span className="relative grid h-9 w-9 place-items-center rounded-full border border-slate-600">
-                        <Github className="h-4 w-4 text-slate-200" />
-                        <span className="absolute inset-[-4px] animate-spin rounded-full border border-transparent border-t-zinc-300" />
-                      </span>
-                      <div><p className="text-sm text-slate-200">Finding your strongest GitHub skills</p><p className="text-xs text-slate-500">Scanning the languages in your recent repositories…</p></div>
-                    </div>
-                  )}
-                  {!isDiscovering && selectedSkills.length === 0 && (
-                    <div className="flex items-center w-full">
-                      <p className="text-slate-500 text-sm italic">
-                        No skills added yet
-                      </p>
-                    </div>
-                  )}
-                  <AnimatePresence>
-                    {selectedSkills.map((skill) => (
-                      <motion.div
-                        key={skill}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8, y: 5 }}
-                        transition={{ duration: 0.2 }}
-                        {...{
-                          className:
-                            "bg-slate-800 border border-slate-700 rounded-full px-3.5 py-1.5 flex items-center gap-2 group hover:border-zinc-500/50 transition-colors",
-                        }}
-                      >
-                        <SkillIcon skill={skill} iconMap={selectedSkillIcons} />
-                        <span className="text-slate-200 text-sm">{skill}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5 p-0 text-slate-500 hover:text-zinc-400 hover:bg-slate-700/50 rounded-full opacity-80 group-hover:opacity-100 transition-all"
-                          onClick={() => handleRemoveSkill(skill)}
-                          aria-label={`Remove ${skill}`}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-                {!isDiscovering && discoveredRepositoryCount > 0 && selectedSkills.length > 0 && (
-                  <p className="mt-3 flex items-center gap-2 text-xs text-slate-500"><Github className="h-3.5 w-3.5" />Suggested from {discoveredRepositoryCount} recent {discoveredRepositoryCount === 1 ? "repository" : "repositories"}. Remove or add anything before continuing.</p>
-                )}
-              </div>
-
-              {/* Continue button */}
-              <div className="mt-12 flex justify-end">
+        <form onSubmit={handleSearchSubmit} className="mt-9">
+          <Label htmlFor="skills">Add a skill</Label>
+          <div className="relative mt-2">
+            <Search aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-ink-faint" />
+            <Input
+              ref={inputRef}
+              id="skills"
+              value={skillInput}
+              onChange={(e) => setSkillInput(e.target.value)}
+              className="px-11"
+              placeholder="Search skills, e.g. React or TypeScript"
+              autoComplete="off"
+            />
+            {isSearching ? (
+              <ButtonSpinner className="absolute right-4 top-1/2 -mt-2 text-ink-soft" />
+            ) : (
+              skillInput && (
                 <Button
-                  className={primaryActionButtonClass}
-                  disabled={selectedSkills.length === 0 || isSubmitting}
-                  onClick={handleContinue}
+                  variant="ghost"
+                  size="icon-sm"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 active:scale-100"
+                  onClick={() => setSkillInput("")}
+                  aria-label="Clear search"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <ButtonSpinner />
-                      Saving...
-                    </>
-                  ) : (
-                    "Continue"
-                  )}
+                  <X />
                 </Button>
-              </div>
+              )
+            )}
+          </div>
+
+          {suggestions.length > 0 && (
+            <ul className="mt-2 max-h-[264px] overflow-y-auto rounded-[14px] border-[1.5px] border-line bg-raised p-1.5">
+              {suggestions.map((skill, index) => (
+                <li key={index}>
+                  <button
+                    type="button"
+                    onClick={() => addSkill(skill, true)}
+                    className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-left text-[15px] transition-colors hover:bg-ink/[0.07]"
+                  >
+                    <SkillIcon skill={skill} />
+                    <span className="flex-1">{skill}</span>
+                    <Plus aria-hidden="true" className="size-4 text-ink-faint" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {canAddCustomSkill && (
+            <Button variant="secondary" className="mt-3 max-w-full" onClick={() => addSkill(skillInput.trim())}>
+              <Plus aria-hidden="true" />
+              <span className="truncate">{`Add “${skillInput.trim()}” as a new skill`}</span>
+            </Button>
+          )}
+        </form>
+
+        {saveFailed && (
+          <p role="alert" className="mt-6 text-[15px] font-medium text-danger">
+            Your skills weren’t saved. Check your connection and try again.
+          </p>
+        )}
+
+        <Button className="mt-9" disabled={selectedSkills.length === 0 || isSubmitting} onClick={handleContinue}>
+          {isSubmitting ? (
+            <>
+              <ButtonSpinner />
+              Saving…
+            </>
+          ) : (
+            "Continue"
+          )}
+        </Button>
+      </div>
+
+      <section aria-labelledby="your-skills" className="ui-sheet pf-sheet rounded-[28px] p-6 sm:p-8">
+        <h2 id="your-skills" className="font-display text-2xl font-semibold tracking-[-0.02em]">
+          Your skills
+        </h2>
+
+        {isDiscovering && (
+          <div role="status" className="mt-5 flex items-center gap-3.5">
+            <ButtonSpinner className="h-5 w-5 text-brand-text" />
+            <div>
+              <p className="text-[15px] font-semibold">Finding your strongest GitHub skills</p>
+              <p className="text-sm text-ink-soft">Scanning the languages in your recent repositories…</p>
             </div>
           </div>
-        </div>
-      </div>
-    </>
+        )}
+
+        {!isDiscovering && selectedSkills.length === 0 && (
+          <p className="mt-5 rounded-[14px] border border-dashed border-line px-4 py-5 text-[15px] text-ink-soft">
+            No skills added yet. Search for one to start the list.
+          </p>
+        )}
+
+        {selectedSkills.length > 0 && (
+          <ul className="mt-5 flex flex-wrap gap-2">
+            {selectedSkills.map((skill) => (
+              <li key={skill} className="ui-chip ob-written pr-1.5">
+                <SkillIcon skill={skill} iconMap={selectedSkillIcons} />
+                {skill}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSkill(skill)}
+                  aria-label={`Remove ${skill}`}
+                  className="grid size-6 place-items-center rounded-full text-ink-faint transition-colors hover:bg-ink/10 hover:text-ink"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {!isDiscovering && discoveredRepositoryCount > 0 && selectedSkills.length > 0 && (
+          <p className="mt-6 flex items-start gap-2.5 border-t border-sheet-line pt-5 text-sm leading-relaxed text-ink-soft">
+            <Github aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            Suggested from {discoveredRepositoryCount} recent {discoveredRepositoryCount === 1 ? "repository" : "repositories"}. Remove or add anything before continuing.
+          </p>
+        )}
+      </section>
+    </main>
   );
 }

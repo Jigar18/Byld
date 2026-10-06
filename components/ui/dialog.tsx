@@ -5,118 +5,120 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { buttonVariants } from "./button"
 
-const Dialog = DialogPrimitive.Root
+const widthBySize = {
+  sm: "sm:max-w-[440px]",
+  md: "sm:max-w-[580px]",
+  lg: "sm:max-w-[800px]",
+  xl: "sm:max-w-[1160px]",
+}
 
-const DialogTrigger = DialogPrimitive.Trigger
+interface DialogProps {
+  open: boolean
+  onClose: () => void
+  title: string
+  description?: React.ReactNode
+  size?: keyof typeof widthBySize
+  footer?: React.ReactNode
+  /** Blocks Escape, the backdrop and the close button while a save or upload is running. */
+  busy?: boolean
+  /** Wraps the body and footer in a form, so Enter submits and a footer button can be type="submit". */
+  onSubmit?: () => void
+  bodyClassName?: string
+  children: React.ReactNode
+}
 
-const DialogPortal = DialogPrimitive.Portal
-
-const DialogClose = DialogPrimitive.Close
-
-const DialogOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    className={cn(
-      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-      className
-    )}
-    {...props}
-  />
-))
-DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
-
-const DialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto border bg-background p-4 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:w-full sm:rounded-lg sm:p-6",
-        className
+/**
+ * Every editor and viewer in the app opens in this sheet: a bottom sheet on phones, a centred one from 640px up.
+ * Radix handles the focus trap, Escape, scroll lock and dialogs opened from inside another dialog.
+ */
+export function Dialog({
+  open,
+  onClose,
+  title,
+  description,
+  size = "md",
+  footer,
+  busy = false,
+  onSubmit,
+  bodyClassName,
+  children,
+}: DialogProps) {
+  const body = (
+    <>
+      <div className={cn("min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7", bodyClassName)}>
+        {children}
+      </div>
+      {footer && (
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2.5 border-t border-sheet-line px-5 py-4 sm:px-7">
+          {footer}
+        </div>
       )}
-      {...props}
+    </>
+  )
+
+  return (
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && !busy) onClose()
+      }}
     >
-      {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-full border border-slate-700 bg-slate-800/80 p-2 text-slate-300 transition-colors hover:bg-slate-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:pointer-events-none">
-        <X className="h-5 w-5" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </DialogPortal>
-))
-DialogContent.displayName = DialogPrimitive.Content.displayName
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[200] flex items-end justify-center bg-[rgb(4_5_10/0.62)] backdrop-blur-[6px] duration-300 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0 motion-reduce:!animate-none sm:items-center sm:p-4">
+          <DialogPrimitive.Content
+            // Radix warns about a missing description unless the attribute is explicitly cleared.
+            {...(description ? {} : { "aria-describedby": undefined })}
+            onOpenAutoFocus={(event) => {
+              // Focus the sheet itself: focusing the first field would open the keyboard on phones.
+              event.preventDefault()
+              ;(event.currentTarget as HTMLElement).focus()
+            }}
+            className={cn(
+              "ui-sheet flex max-h-[calc(100dvh-1.5rem)] w-full flex-col rounded-t-[28px] shadow-[0_40px_90px_-30px_rgb(0_0_0/0.7)] outline-none duration-300 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-6 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-6 motion-reduce:!animate-none sm:max-h-[calc(100dvh-2rem)] sm:rounded-[28px]",
+              widthBySize[size],
+            )}
+          >
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-sheet-line py-4 pl-5 pr-3 sm:pl-7 sm:pr-4">
+              <div className="min-w-0 py-1">
+                <DialogPrimitive.Title className="font-display text-[22px] font-semibold leading-tight tracking-[-0.02em]">
+                  {title}
+                </DialogPrimitive.Title>
+                {description && (
+                  <DialogPrimitive.Description className="mt-1.5 text-[15px] leading-relaxed text-ink-soft">
+                    {description}
+                  </DialogPrimitive.Description>
+                )}
+              </div>
+              <DialogPrimitive.Close
+                disabled={busy}
+                aria-label="Close"
+                className={buttonVariants({ variant: "ghost", size: "icon" })}
+              >
+                <X />
+              </DialogPrimitive.Close>
+            </div>
 
-const DialogHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
-      className
-    )}
-    {...props}
-  />
-)
-DialogHeader.displayName = "DialogHeader"
-
-const DialogFooter = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-      className
-    )}
-    {...props}
-  />
-)
-DialogFooter.displayName = "DialogFooter"
-
-const DialogTitle = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
-      className
-    )}
-    {...props}
-  />
-))
-DialogTitle.displayName = DialogPrimitive.Title.displayName
-
-const DialogDescription = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description
-    ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
-    {...props}
-  />
-))
-DialogDescription.displayName = DialogPrimitive.Description.displayName
-
-export {
-  Dialog,
-  DialogPortal,
-  DialogOverlay,
-  DialogTrigger,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
+            {onSubmit ? (
+              <form
+                noValidate
+                className="flex min-h-0 flex-1 flex-col"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  // React bubbles events through portals, so a nested dialog's submit would reach the parent form.
+                  event.stopPropagation()
+                  onSubmit()
+                }}
+              >
+                {body}
+              </form>
+            ) : (
+              body
+            )}
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Overlay>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  )
 }

@@ -1,19 +1,22 @@
 "use client";
 
 import type { PortfolioEducation } from "@/types/portfolio";
-import { motion } from "framer-motion";
 import { useState } from "react";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useUser } from "../context/UserContext";
 import EducationModal from "./EducationModal";
-import { BookOpen, Edit3 } from "lucide-react";
-import CredentialCardHeader, { credentialEditButtonClass } from "./CredentialCardHeader";
-import { primaryActionButtonClass } from "@/components/ui/button";
+import PortfolioSection from "./PortfolioSection";
+
+const formatYears = (edu: PortfolioEducation) => {
+  if (edu.isCurrently) return `${edu.startYear} – Present`;
+  return edu.endYear ? `${edu.startYear} – ${edu.endYear}` : String(edu.startYear);
+};
 
 export default function Education() {
   const { isOwner, portfolioData } = useUser();
   const [education, setEducation] = useState<PortfolioEducation[]>(portfolioData.education);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [educationAtTop, setEducationAtTop] = useState(true);
 
   const handleSaveEducation = async (updatedEducation: PortfolioEducation[]) => {
     const response = await fetch("/api/education", {
@@ -27,88 +30,42 @@ export default function Education() {
   };
 
   return (
-    <>
-      <motion.div
-        {...{
-          className: "profile-card profile-surface-neutral profile-card-lift group relative flex h-[250px] flex-col rounded-xl border p-5 shadow-md"
-        }}
-        whileHover={{ y: -5 }}
-        transition={{ duration: 0.3 }}
-      >
-        <CredentialCardHeader
-          title="Education"
-          icon={<BookOpen className="h-5 w-5" />}
-          action={isOwner ?
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className={credentialEditButtonClass}
-              aria-label="Edit education"
-              title="Edit education"
-            >
-              <Edit3 className="h-4 w-4" />
-            </button>
-          : undefined}
-        />
-        
-        <div className="relative min-h-0 flex-1 pt-3">
-        <div
-          className="credential-scrollbar h-full space-y-2 overflow-x-hidden overflow-y-auto pr-1"
-          onScroll={(event) => setEducationAtTop(event.currentTarget.scrollTop <= 2)}
-        >
-          {education.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-slate-400 mb-4">No education information added yet</p>
-              {isOwner && <button
-                onClick={() => setIsModalOpen(true)}
-                className={primaryActionButtonClass}
-              >
-                Add Education
-              </button>}
-            </div>
-          ) : (
-            education.map((edu, index) => (
-              <motion.div
-                key={edu.id || index}
-                {...{
-                  className: "relative min-h-[118px] rounded-lg px-2 py-4 transition-colors hover:bg-white/[0.035] sm:px-4"
-                }}
-              >
-                {index > 0 && (
-                  <span className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                )}
-                <div>
-                  <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                    <h3 className="portfolio-display text-lg font-semibold text-slate-100">
-                      {edu.school}
-                    </h3>
-                    <span className="shrink-0 text-xs font-medium text-slate-400 sm:text-sm">
-                      {edu.isCurrently
-                        ? `${edu.startYear} - Present`
-                        : edu.endYear ? `${edu.startYear} - ${edu.endYear}` : edu.startYear}
-                    </span>
-                  </div>
-                  <p className="mb-1 font-medium text-zinc-300">{edu.degree}</p>
-                  <p className="text-sm text-slate-300">{edu.field}</p>
-                </div>
-              </motion.div>
-            ))
-          )}
-        </div>
-        {educationAtTop && education.length > 1 && (
-          <span className="pointer-events-none absolute bottom-2 right-3 rounded-full border border-white/10 bg-zinc-950/90 px-2.5 py-1 text-xs font-semibold text-zinc-300 shadow-lg">
-            +{education.length - 1}
-          </span>
-        )}
-        </div>
-      </motion.div>
+    <PortfolioSection
+      id="education"
+      title="Education"
+      action={
+        isOwner && (
+          <Button variant="secondary" size="sm" onClick={() => setIsModalOpen(true)} aria-label="Edit education">
+            <Pencil aria-hidden="true" />
+            Edit
+          </Button>
+        )
+      }
+    >
+      {education.length === 0 ? (
+        <p className="text-ink-soft">No education yet. Add where you studied and what you studied.</p>
+      ) : (
+        <ul className="divide-y divide-line border-y border-line">
+          {education.map((edu, index) => (
+            <li key={edu.id || index} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-4">
+              <div className="min-w-0">
+                <h3 className="font-display text-lg font-semibold leading-snug tracking-[-0.01em]">{edu.school}</h3>
+                <p className="mt-0.5 text-ink-soft">{[edu.degree, edu.field].filter(Boolean).join(", ")}</p>
+              </div>
+              <p className="shrink-0 text-sm tabular-nums text-ink-soft">{formatYears(edu)}</p>
+            </li>
+          ))}
+        </ul>
+      )}
 
-      {/* Education Modal */}
-      {isOwner && <EducationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        education={education}
-        onSave={handleSaveEducation}
-      />}
-    </>
+      {isOwner && (
+        <EducationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          education={education}
+          onSave={handleSaveEducation}
+        />
+      )}
+    </PortfolioSection>
   );
 }

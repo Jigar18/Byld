@@ -1,11 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Github, LoaderCircle } from "lucide-react";
 import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ButtonSpinner } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useUser } from "../context/UserContext";
 import { contributionLevels } from "./contributionHeatmapStyles";
+import PortfolioSection from "./PortfolioSection";
 
 type ContributionDay = {
   contributionCount: number;
@@ -123,6 +124,11 @@ const getMonthLabels = (calendar: ContributionCalendar) =>
     }];
   });
 
+// Fixed 11px days: a year of them fits the content column at full width, and narrower screens scroll.
+const weekColumnsClass = "grid flex-1 grid-cols-[repeat(var(--heatmap-weeks),11px)] justify-between gap-x-[3px]";
+const dayRowsClass = "grid grid-rows-[repeat(7,11px)] gap-[3px]";
+const noticeClass = "grid min-h-36 place-items-center px-4 text-center text-[15px] text-ink-soft";
+
 export default function GitHubHeatmap() {
   const { isOwner, portfolioApiUrl, portfolioData } = useUser();
   // Visitors never load (or see) a heatmap the owner has hidden.
@@ -136,6 +142,8 @@ export default function GitHubHeatmap() {
   >(null);
   const [loading, setLoading] = useState(shouldLoad);
   const [saving, setSaving] = useState(false);
+  const [visibilityFailed, setVisibilityFailed] = useState(false);
+  const scrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!shouldLoad) return;
@@ -168,6 +176,7 @@ export default function GitHubHeatmap() {
     if (!isOwner || saving) return;
     const nextVisible = !visible;
     setSaving(true);
+    setVisibilityFailed(false);
     try {
       const response = await fetch("/api/github/contributions", {
         method: "PATCH",
@@ -175,77 +184,80 @@ export default function GitHubHeatmap() {
         credentials: "include",
         body: JSON.stringify({ visible: nextVisible }),
       });
-      if (response.ok) setVisible(nextVisible);
+      if (!response.ok) throw new Error("Failed to update heatmap visibility");
+      setVisible(nextVisible);
     } catch (error) {
       console.error("Unable to update GitHub heatmap visibility", error);
+      setVisibilityFailed(true);
     } finally {
       setSaving(false);
     }
   };
 
+  // Where the year does not fit, start at the most recent weeks; older ones are a scroll to the left.
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (scroller) scroller.scrollLeft = scroller.scrollWidth;
+  }, [calendar, visible]);
+
   if (!isOwner && !loading && !visible) return null;
 
   return (
-    <section className="profile-accent-green profile-section-rule w-full border-t pt-8">
-      <motion.div
-        {...{
-          className:
-            "profile-card profile-surface-neutral profile-card-lift w-full overflow-hidden rounded-3xl border p-5 shadow-xl shadow-black/20 sm:p-7",
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -5 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <p className="profile-section-label flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em]">
-            <span className="profile-icon inline-flex rounded-lg border p-2">
-              <Github className="h-4 w-4" />
-            </span>
-            GitHub activity
-          </p>
-
-          {isOwner && (
-            <button
-              type="button"
-              role="switch"
-              aria-checked={visible}
-              disabled={saving}
-              onClick={updateVisibility}
-              className="inline-flex items-center gap-2.5 rounded-full bg-black/20 px-3 py-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-black/30 hover:text-white disabled:cursor-wait disabled:opacity-60"
+    <PortfolioSection
+      id="activity"
+      title="Activity"
+      action={
+        isOwner && (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={visible}
+            disabled={saving}
+            onClick={updateVisibility}
+            className="inline-flex h-9 items-center gap-2.5 text-sm font-medium text-ink-soft transition-colors hover:text-ink disabled:cursor-wait disabled:opacity-60"
+          >
+            <span>{visible ? "Shown to visitors" : "Hidden from visitors"}</span>
+            <span
+              aria-hidden="true"
+              className={cn("relative h-[22px] w-10 rounded-full transition-colors duration-200", visible ? "bg-brand" : "bg-ink/25")}
             >
-              <span>{visible ? "Shown publicly" : "Hidden publicly"}</span>
-              <span className={`relative h-5 w-9 rounded-full border shadow-inner ring-1 ring-black/30 transition-colors ${visible ? "border-white/30 bg-zinc-600" : "border-white/10 bg-zinc-800"}`}>
-                <span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full border border-zinc-300 bg-white shadow-md transition-transform duration-200 ${visible ? "translate-x-4" : "translate-x-0"}`} />
-              </span>
-            </button>
-          )}
-        </div>
+              <span
+                className={cn(
+                  "absolute left-0.5 top-0.5 size-[18px] rounded-full bg-white shadow-sm transition-transform duration-200",
+                  visible && "translate-x-[18px]",
+                )}
+              />
+            </span>
+          </button>
+        )
+      }
+    >
+      {visibilityFailed && (
+        <p role="alert" className="mb-5 text-[15px] font-medium text-danger">
+          That setting wasn’t saved. Check your connection and try again.
+        </p>
+      )}
 
+      <div className="ui-sheet overflow-hidden rounded-[24px] p-5 sm:p-7">
         {loading ? (
-          <div className="mt-7 flex h-36 items-center justify-center rounded-2xl border border-white/10 bg-black/15 text-zinc-500">
-            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Loading activity
-          </div>
+          <p role="status" className={cn(noticeClass, "grid-flow-col content-center justify-center gap-2.5")}>
+            <ButtonSpinner />
+            Loading activity…
+          </p>
         ) : !visible ? (
-          <div className="mt-7 rounded-2xl border border-dashed border-white/10 bg-black/15 px-5 py-10 text-center text-sm text-zinc-500">
-            This heatmap is hidden from public visitors.
-          </div>
+          <p className={noticeClass}>Visitors don’t see your GitHub activity. Turn it on to show the last year of contributions.</p>
         ) : !available || !calendar ? (
-          <div className="mt-7 rounded-2xl border border-dashed border-white/10 bg-black/15 px-5 py-10 text-center text-sm text-zinc-500">
-            GitHub contribution activity is currently unavailable.
-          </div>
+          <p className={noticeClass}>GitHub activity is unavailable right now.</p>
         ) : (
           <>
-            <div className="mt-6 overflow-x-auto">
+            <div ref={scrollerRef} className="ui-scroll-quiet overflow-x-auto">
               <div
-                className="w-[920px] px-1.5 py-2 sm:w-full sm:min-w-[760px]"
+                className="w-max min-w-full"
                 style={{ "--heatmap-weeks": calendar.weeks.length } as CSSProperties}
               >
-                <div className="mb-2 flex gap-2 pl-1">
-                  <div className="w-5 shrink-0 pr-1" aria-hidden="true" />
-                  <div
-                    className="grid min-w-0 flex-1 grid-cols-[repeat(var(--heatmap-weeks),12px)] gap-x-[4.5px] text-[9px] text-zinc-600 sm:grid-cols-[repeat(var(--heatmap-weeks),minmax(10px,1fr))]"
-                  >
+                <div className="mb-2 flex gap-2">
+                  <div className="w-7 shrink-0" aria-hidden="true" />
+                  <div className={cn(weekColumnsClass, "text-[11px] text-ink-soft")}>
                     {getMonthLabels(calendar).map(({ label, weekIndex }) => (
                       <span
                         key={`${label}-${weekIndex}`}
@@ -257,23 +269,24 @@ export default function GitHubHeatmap() {
                     ))}
                   </div>
                 </div>
-                <div className="flex gap-2 pl-1">
-                  <div className="grid w-5 shrink-0 grid-rows-[repeat(7,12px)] gap-[4.5px] pr-1 text-[9px] text-zinc-600 sm:grid-rows-7">
+                <div className="flex gap-2">
+                  <div
+                    aria-hidden="true"
+                    className={cn(dayRowsClass, "w-7 shrink-0 text-[11px] leading-none text-ink-soft")}
+                  >
                     {["", "Mon", "", "Wed", "", "Fri", ""].map((label, index) => (
-                      <span key={`${label}-${index}`} className="flex items-center justify-end">
+                      <span key={`${label}-${index}`} className="flex items-center">
                         {label}
                       </span>
                     ))}
                   </div>
-                  <div
-                    className="grid min-w-0 flex-1 grid-cols-[repeat(var(--heatmap-weeks),12px)] gap-[4.5px] sm:grid-cols-[repeat(var(--heatmap-weeks),minmax(10px,1fr))]"
-                  >
+                  <div className={weekColumnsClass}>
                     {calendar.weeks.map((week, weekIndex) => (
-                      <div key={weekIndex} className="grid grid-rows-[repeat(7,12px)] gap-[4.5px] sm:grid-rows-7">
+                      <div key={weekIndex} className={dayRowsClass}>
                         {week.contributionDays.map((day) => (
                           <span
                             key={day.date}
-                            className={`relative h-3 w-3 rounded-[2.5px] border border-white/[0.05] transition-transform duration-150 hover:z-10 hover:scale-125 sm:aspect-square sm:h-auto sm:w-full ${contributionLevels[getContributionLevel(day)]}`}
+                            className={cn("size-[11px] rounded-[3px]", contributionLevels[getContributionLevel(day)])}
                             style={{ gridRowStart: day.weekday + 1 }}
                             title={`${day.contributionCount} contributions on ${day.date}`}
                           />
@@ -285,20 +298,18 @@ export default function GitHubHeatmap() {
               </div>
             </div>
 
-            <div className="mt-5 flex flex-col gap-3 border-t border-white/[0.08] pt-4 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-              <span>
-                {(currentYearContributions ?? calendar.totalContributions).toLocaleString()} contributions in{" "}
-                {contributionYear ?? new Date().getUTCFullYear()}
-              </span>
-              <div className="flex items-center gap-2" aria-label="Contribution intensity from less to more">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-sheet-line pt-4 text-sm text-ink-soft">
+              <p>
+                <span className="font-semibold tabular-nums text-ink">
+                  {(currentYearContributions ?? calendar.totalContributions).toLocaleString()}
+                </span>{" "}
+                contributions on GitHub in {contributionYear ?? new Date().getUTCFullYear()}
+              </p>
+              <div className="flex items-center gap-2">
                 <span>Less</span>
-                <span className="flex gap-1.5">
-                  {contributionLevels.map((color, index) => (
-                    <span
-                      key={color}
-                      className={`h-3 w-3 rounded-[2.5px] border border-white/[0.06] ${color}`}
-                      title={index === 0 ? "No contributions" : `Intensity level ${index}`}
-                    />
+                <span aria-hidden="true" className="flex gap-1.5">
+                  {contributionLevels.map((color) => (
+                    <span key={color} className={cn("size-[11px] rounded-[3px]", color)} />
                   ))}
                 </span>
                 <span>More</span>
@@ -306,7 +317,7 @@ export default function GitHubHeatmap() {
             </div>
           </>
         )}
-      </motion.div>
-    </section>
+      </div>
+    </PortfolioSection>
   );
 }

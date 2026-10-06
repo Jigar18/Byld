@@ -1,8 +1,9 @@
 "use client";
+
 import type { PortfolioProjectData } from "@/types/portfolio";
-import { motion } from "framer-motion";
-import { ExternalLink, Github, Eye, Pencil, X } from "lucide-react";
-import { useRandomImage } from "@/utils/randomImageSelect";
+import { ExternalLink, Github, Pencil, Play, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import SkillIcon, { SkillIconMap } from "./SkillIcon";
 
 interface ProjectProps {
@@ -11,7 +12,12 @@ interface ProjectProps {
   onEditProject?: () => void;
   onDeleteProject?: () => void;
   skillIcons?: SkillIconMap;
+  /** Lays the card out as a full-width row, used for the first project when the count is odd. */
+  wide?: boolean;
 }
+
+const footerLinkClass =
+  "inline-flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold text-ink-soft transition-colors hover:bg-ink/[0.07] hover:text-ink [&_svg]:size-4";
 
 export default function ProjectCard({
   project,
@@ -19,103 +25,85 @@ export default function ProjectCard({
   onEditProject,
   onDeleteProject,
   skillIcons = {},
+  wide = false,
 }: ProjectProps) {
-  const randomBg = useRandomImage();
+  const coverImage = [...project.images].sort((left, right) => left.position - right.position)[0];
 
   return (
-    <motion.div
-      {...{className:"profile-card profile-surface-neutral profile-card-lift relative group flex min-h-[17.5rem] flex-col overflow-hidden rounded-2xl border shadow-lg shadow-black/20 sm:min-h-[23.75rem]"}}
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.3 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <article
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-[24px] border border-line bg-raised transition-colors duration-300 hover:border-ink-faint",
+        wide && "sm:grid sm:grid-cols-[1.15fr_1fr]",
+      )}
     >
-      {/* Project actions appear without competing with the content. */}
-      {onEditProject && <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onEditProject();
-        }}
-        className="absolute right-11 top-2 z-10 rounded-full bg-zinc-800/90 p-2 text-white opacity-100 transition-all duration-200 hover:scale-110 hover:bg-zinc-700 sm:opacity-0 sm:group-hover:opacity-100"
-        aria-label="Edit project"
-        title="Edit project"
-      >
-        <Pencil className="h-4 w-4" />
-      </button>}
-      {onDeleteProject && <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDeleteProject();
-        }}
-        className="absolute right-2 top-2 z-10 rounded-full bg-zinc-600/80 p-2 text-white opacity-100 transition-all duration-200 hover:scale-110 hover:bg-zinc-500 sm:opacity-0 sm:group-hover:opacity-100"
-        aria-label="Delete project"
-        title="Delete project"
-      >
-        <X className="h-4 w-4" />
-      </button>}
-
-      <button
-        type="button"
-        className="group/preview relative block h-[7.5rem] w-full cursor-pointer sm:h-[13.3rem]"
-        onClick={onOpenProject}
-        aria-label={`View ${project.title}`}
-      >
-        <span
-          aria-hidden="true"
-          className="absolute inset-0"
-          style={{ backgroundColor: "#18181b", backgroundImage: randomBg }}
-        />
-        <span className="absolute inset-0 flex items-center justify-center bg-slate-900/70 opacity-0 transition-opacity duration-300 group-hover/preview:opacity-100">
-          <motion.span
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            {...{className:"text-slate-200/90 transition-colors hover:text-white"}}
+      <div className={cn("relative aspect-[16/10] overflow-hidden bg-sheet", wide && "sm:aspect-auto sm:min-h-[280px]")}>
+        {coverImage ? (
+          <img
+            src={coverImage.imageUrl}
+            alt=""
+            className="absolute inset-0 size-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
+          />
+        ) : (
+          // No screenshot yet: the title is set as a plate on a drafting sheet.
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 flex items-end bg-[radial-gradient(circle,rgb(var(--c-sheet-edge))_1px,transparent_1.4px)] p-5 [background-size:22px_22px] sm:p-6"
           >
-            <Eye size={30} />
-          </motion.span>
-        </span>
-      </button>
+            <span className="absolute left-5 top-5 size-3 rounded-[4px] bg-brand sm:left-6 sm:top-6" />
+            <span className="line-clamp-2 font-display text-[34px] font-semibold leading-[1.02] tracking-[-0.03em] text-sheet-text [overflow-wrap:anywhere]">
+              {project.title}
+            </span>
+          </div>
+        )}
+        {project.videoUrl && (
+          <span className="absolute right-3 top-3 inline-flex h-7 items-center gap-1.5 rounded-full bg-black/65 pl-2.5 pr-3 text-[13px] font-semibold text-white backdrop-blur">
+            <Play aria-hidden="true" className="size-3 fill-current" />
+            Demo video
+          </span>
+        )}
+      </div>
 
-      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
-        <h3
-          className="portfolio-display cursor-pointer text-base font-semibold text-slate-100 transition-colors hover:text-white sm:text-lg"
-          onClick={onOpenProject}
-        >
-          {project.title}
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <h3 className="font-display text-[22px] font-semibold leading-tight tracking-[-0.015em] [overflow-wrap:anywhere]">
+          {/* The button's hit area is stretched over the whole card, so the cover and text open the project too. */}
+          <button
+            type="button"
+            onClick={onOpenProject}
+            aria-label={`View ${project.title}`}
+            className="text-left after:absolute after:inset-0 after:content-['']"
+          >
+            {project.title}
+          </button>
         </h3>
-        <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-slate-300 sm:mt-2 sm:text-sm">
-          {project.description}
-        </p>
+        <p className="mt-2 line-clamp-2 text-[15px] leading-relaxed text-ink-soft">{project.description}</p>
 
-        <div className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-3 sm:gap-2">
-          {project.techStack.slice(0, 3).map((tech) => (
-            <span
-              key={tech}
-              className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.025] px-1.5 py-1 text-[10px] text-zinc-300 shadow-sm sm:gap-1.5 sm:px-2 sm:text-xs"
-            >
-              <SkillIcon skill={tech} iconMap={skillIcons} className="h-3.5 w-3.5 shrink-0" />
-              {tech}
-            </span>
-          ))}
-          {project.techStack.length > 3 && (
-            <span className="rounded-md border border-white/10 bg-white/[0.025] px-1.5 py-1 text-[10px] text-zinc-300 shadow-sm sm:px-2 sm:text-xs">
-              +{project.techStack.length - 3} more
-            </span>
-          )}
-        </div>
+        {project.techStack.length > 0 && (
+          <ul className="mt-4 flex flex-wrap gap-1.5">
+            {project.techStack.slice(0, 3).map((tech) => (
+              <li key={tech} className="ui-chip h-7 gap-1.5 bg-transparent px-2.5 text-[13px]">
+                <SkillIcon skill={tech} iconMap={skillIcons} className="size-3.5 shrink-0" />
+                {tech}
+              </li>
+            ))}
+            {project.techStack.length > 3 && (
+              <li className="ui-chip h-7 bg-transparent px-2.5 text-[13px] text-ink-soft">
+                +{project.techStack.length - 3} more
+              </li>
+            )}
+          </ul>
+        )}
 
-        <div className="mt-auto flex justify-end gap-3 pt-4">
+        <div className="relative z-10 -mx-3 -mb-2 mt-auto flex items-center pt-5">
           {project.githubUrl && (
             <a
               href={project.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-slate-300 transition-colors hover:text-white"
-              onClick={(e) => e.stopPropagation()}
-              aria-label="Open project on GitHub"
+              className={footerLinkClass}
               title="Open project on GitHub"
             >
-              <Github size={18} />
+              <Github aria-hidden="true" />
+              Code
             </a>
           )}
           {project.liveUrl && (
@@ -123,16 +111,34 @@ export default function ProjectCard({
               href={project.liveUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-slate-300 transition-colors hover:text-white"
-              onClick={(e) => e.stopPropagation()}
-              aria-label="Open live project"
+              className={footerLinkClass}
               title="Open live project"
             >
-              <ExternalLink size={18} />
+              <ExternalLink aria-hidden="true" />
+              Live site
             </a>
           )}
+          <div className="ml-auto flex items-center">
+            {onEditProject && (
+              <Button variant="ghost" size="icon" onClick={onEditProject} aria-label="Edit project" title="Edit project">
+                <Pencil />
+              </Button>
+            )}
+            {onDeleteProject && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onDeleteProject}
+                aria-label="Delete project"
+                title="Delete project"
+                className="hover:text-danger"
+              >
+                <Trash2 />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
-    </motion.div>
+    </article>
   );
 }

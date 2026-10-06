@@ -1,27 +1,28 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
-import { useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { X, Edit3, Save, User } from "lucide-react";
-import { Button, ButtonSpinner, primaryActionButtonClass, secondaryActionButtonClass } from "@/components/ui/button";
+import { useState } from "react";
+import { Pencil } from "lucide-react";
+import { Button, ButtonSpinner } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import PortfolioSection from "../components/PortfolioSection";
 import { useUser } from "../context/UserContext";
 
+const MAX_ABOUT_LENGTH = 1000;
+
 export default function About() {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref as React.RefObject<HTMLElement>, {
-    once: true,
-    margin: "-100px",
-  });
   const { userDetails, isOwner, updateUserDetails } = useUser();
   const aboutText = userDetails.about ?? "";
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [tempAboutText, setTempAboutText] = useState(aboutText);
   const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   const handleSaveChanges = async () => {
     try {
       setSaving(true);
+      setSaveFailed(false);
       const response = await fetch("/api/updateUserDetails", {
         method: "PUT",
         headers: {
@@ -38,9 +39,11 @@ export default function About() {
         setIsEditModalOpen(false);
       } else {
         console.error("Failed to update about text:", data.error);
+        setSaveFailed(true);
       }
     } catch (error) {
       console.error("Error updating about text:", error);
+      setSaveFailed(true);
     } finally {
       setSaving(false);
     }
@@ -50,124 +53,79 @@ export default function About() {
 
   const handleOpenModal = () => {
     setTempAboutText(aboutText);
+    setSaveFailed(false);
     setIsEditModalOpen(true);
   };
 
   return (
-    <>
-      <div ref={ref} className="w-full">
-        <motion.div
-          {...{
-            className:
-              "profile-accent-rose profile-section-rule relative group border-l py-2 pl-4 pr-2 sm:py-3 sm:pl-8 sm:pr-4",
-            initial: { y: 50, opacity: 0 },
-            animate: isInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 },
-            transition: { duration: 0.8, ease: "easeOut" },
-            whileHover: { x: 4 },
-          }}
-        >
-          {/* Edit Button */}
-          {isOwner && <button
-            className="absolute right-2 top-3 p-2 rounded-lg bg-slate-700/80 hover:bg-slate-600 text-slate-300 hover:text-white border border-slate-600 opacity-100 sm:right-4 sm:top-4 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:scale-105"
-            onClick={handleOpenModal}
-            type="button"
-          >
-            <Edit3 className="h-4 w-4" />
-          </button>}
+    <PortfolioSection
+      id="about"
+      title="About"
+      action={
+        isOwner && (
+          <Button variant="secondary" size="sm" onClick={handleOpenModal} aria-label="Edit about">
+            <Pencil aria-hidden="true" />
+            Edit
+          </Button>
+        )
+      }
+    >
+      {aboutText ? (
+        <p className="max-w-[68ch] whitespace-pre-wrap text-[17px] leading-[1.7] sm:text-lg sm:leading-[1.7]">
+          {aboutText}
+        </p>
+      ) : (
+        <p className="text-ink-soft">
+          Nothing here yet. Tell visitors who you are, what you work on and what you’re looking for.
+        </p>
+      )}
 
-          <h2 className="profile-section-label mb-4 flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.22em] sm:mb-6 sm:text-xs">
-            <span className="profile-icon inline-flex rounded-lg border p-2">
-              <User className="h-5 w-5" />
-            </span>
-            About Me
-          </h2>
+      <Dialog
+        open={isEditModalOpen}
+        onClose={handleCloseModal}
+        title="Edit about"
+        busy={saving}
+        onSubmit={handleSaveChanges}
+        footer={
+          <>
+            <Button variant="ghost" onClick={handleCloseModal} disabled={saving}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? (
+                <>
+                  <ButtonSpinner />
+                  Saving…
+                </>
+              ) : (
+                "Save changes"
+              )}
+            </Button>
+          </>
+        }
+      >
+        <Label htmlFor="about-text">About you</Label>
+        <Textarea
+          id="about-text"
+          value={tempAboutText}
+          onChange={(e) => setTempAboutText(e.target.value)}
+          placeholder="Write something about yourself…"
+          className="mt-2 min-h-[240px]"
+          maxLength={MAX_ABOUT_LENGTH}
+        />
+        <div className="mt-2 flex justify-between gap-4 text-sm text-ink-soft">
+          <span>Line breaks are kept, so you can write in paragraphs.</span>
+          <span className="shrink-0 tabular-nums">
+            {tempAboutText.length}/{MAX_ABOUT_LENGTH}
+          </span>
+        </div>
 
-          <div className="whitespace-pre-wrap text-sm leading-6 text-slate-300 sm:text-base sm:leading-relaxed">
-            {aboutText || (isOwner
-              ? "Click the edit button to add information about yourself..."
-              : "No about information has been added yet.")}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Edit Modal */}
-      {isOwner &&
-        isEditModalOpen &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={handleCloseModal}
-          >
-            <div
-              className="relative max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-2xl animate-in zoom-in-95 duration-200 sm:max-h-[90vh]"
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            >
-              {/* Close button */}
-              <Button
-                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700"
-                onClick={handleCloseModal}
-                aria-label="Close modal"
-                size="icon"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-
-              <div className="p-4 sm:p-6">
-                <h2 className="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
-                  <span className="bg-zinc-900/20 p-1.5 rounded text-zinc-400">
-                    <Edit3 className="h-5 w-5" />
-                  </span>
-                  Edit About Section
-                </h2>
-
-                {/* Text Area */}
-                <div className="mb-6">
-                  <label
-                    htmlFor="about-text"
-                    className="block text-sm font-medium text-slate-300 mb-2"
-                  >
-                    About Me ({tempAboutText.length}/1000 characters)
-                  </label>
-                  <textarea
-                    id="about-text"
-                    value={tempAboutText}
-                    onChange={(e) => setTempAboutText(e.target.value)}
-                    placeholder="Write something about yourself..."
-                    className="w-full h-40 p-4 bg-slate-800 border border-slate-700 rounded-lg text-slate-300 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent resize-none"
-                    maxLength={1000}
-                  />
-                  <p className="text-xs text-slate-500 mt-1">
-                    Tip: Use line breaks to create paragraphs. Your formatting
-                    will be preserved.
-                  </p>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-                  <Button
-                    variant="outline"
-                    onClick={handleCloseModal}
-                    className={secondaryActionButtonClass}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSaveChanges}
-                    disabled={saving}
-                    className={primaryActionButtonClass}
-                  >
-                    {saving ? (
-                      <><ButtonSpinner />Saving...</>
-                    ) : (
-                      <><Save className="h-4 w-4" />Save Changes</>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body
+        {saveFailed && (
+          <p role="alert" className="mt-4 text-[15px] font-medium text-danger">
+            Your changes weren’t saved. Check your connection and try again.
+          </p>
         )}
-    </>
+      </Dialog>
+    </PortfolioSection>
   );
 }

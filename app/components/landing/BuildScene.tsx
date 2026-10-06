@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 
 import GitHubButton from "./GitHubButton";
 import { fetchGitHubPreview, GITHUB_USERNAME, GitHubPreviewError, samplePortfolio } from "./githubPreview";
 import { ActivitySheet, ExperienceSheet, ProfileSheet, ProjectsSheet, SkillsSheet } from "./PortfolioSheets";
-import ThemeToggle from "./ThemeToggle";
+import ThemeToggle from "../ThemeToggle";
 
 const layers = [
   {
